@@ -250,6 +250,28 @@ h1, h2, h3, h4, h5, h6 {
   gap: 1.25rem;
 }
 
+/* ── Listing Detail Grid ── */
+.listing-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+/* ── Responsive Utils ── */
+.actions-wrap {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 860px) {
+  .listing-detail-grid {
+    grid-template-columns: 1.2fr 1fr;
+    align-items: flex-start;
+  }
+}
+
 /* ── Category pill ── */
 .category-pill {
   padding: 6px 16px;

@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Navbar from '@/components/Navbar'
 import ListingCard from '@/components/ListingCard'
+import LightRays from '@/components/LightRays'
 import { createClient } from '@/lib/supabase/client'
 import { CATEGORIES } from '@/types'
 import type { Listing } from '@/types'
@@ -20,8 +21,7 @@ export default function HomePage() {
   const [hasMore, setHasMore] = useState(true)
   const ITEMS_PER_PAGE = 12
   
-  const supabase = createClient()
-
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null))
@@ -95,11 +95,28 @@ export default function HomePage() {
 
         {/* ── Hero ── */}
         <section style={{
+          position: 'relative',
           paddingTop: '4rem', paddingBottom: '3rem',
           background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99,102,241,0.15), transparent)',
           textAlign: 'center',
+          overflow: 'hidden',
         }}>
-          <div className="page-container">
+          {/* Light Rays Background */}
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, opacity: 0.9 }}>
+            <LightRays
+              raysOrigin="top-center"
+              raysColor="#a5b4fc"
+              raysSpeed={1.5}
+              lightSpread={0.8}
+              rayLength={1.2}
+              followMouse={true}
+              mouseInfluence={0.1}
+              noiseAmount={0.05}
+              distortion={0.05}
+            />
+          </div>
+
+          <div className="page-container" style={{ position: 'relative', zIndex: 1 }}>
             <div className="animate-fade-in-up">
               <h1 style={{
                 fontSize: 'clamp(2rem, 5vw, 3.5rem)',

@@ -101,3 +101,80 @@ export async function toggleFreePublishingAction(enabled: boolean) {
 
   return { success: true }
 }
+
+export async function toggleListingApprovalAction(enabled: boolean) {
+  const { supabase, user } = await getAdminSupabase()
+
+  await supabase.from('platform_settings').upsert({
+    key: 'listings_require_approval',
+    value: enabled,
+    updated_at: new Date().toISOString(),
+    updated_by: user.id
+  })
+
+  await supabase.from('admin_actions').insert({
+    admin_id: user.id,
+    action: 'toggle_listings_require_approval',
+    target_id: 'global',
+    details: { enabled }
+  })
+
+  return { success: true }
+}
+
+export async function approveListingAction(listingId: string) {
+  const { supabase, user } = await getAdminSupabase()
+
+  await supabase.from('listings').update({ status: 'active' }).eq('id', listingId)
+
+  await supabase.from('admin_actions').insert({
+    admin_id: user.id,
+    action: 'approve_listing_manual',
+    target_id: listingId
+  })
+
+  return { success: true }
+}
+
+export async function rejectListingAction(listingId: string) {
+  const { supabase, user } = await getAdminSupabase()
+
+  await supabase.from('listings').update({ status: 'removed' }).eq('id', listingId)
+
+  await supabase.from('admin_actions').insert({
+    admin_id: user.id,
+    action: 'reject_listing_manual',
+    target_id: listingId
+  })
+
+  return { success: true }
+}
+
+export async function banUserAction(userId: string) {
+  const { supabase, user } = await getAdminSupabase()
+
+  await supabase.from('profiles').update({ is_active: false }).eq('id', userId)
+  await supabase.from('listings').update({ status: 'removed' }).eq('seller_id', userId).eq('status', 'active')
+
+  await supabase.from('admin_actions').insert({
+    admin_id: user.id,
+    action: 'ban_user_manual',
+    target_id: userId
+  })
+
+  return { success: true }
+}
+
+export async function unbanUserAction(userId: string) {
+  const { supabase, user } = await getAdminSupabase()
+
+  await supabase.from('profiles').update({ is_active: true }).eq('id', userId)
+
+  await supabase.from('admin_actions').insert({
+    admin_id: user.id,
+    action: 'unban_user_manual',
+    target_id: userId
+  })
+
+  return { success: true }
+}

@@ -49,6 +49,8 @@ export default function LoginPage() {
       if (loginAttempts.current >= 5) {
         startCooldown()
         setError('Demasiados intentos. Espera 1 minuto antes de intentar de nuevo.')
+      } else if (authError.message.toLowerCase().includes('confirm') || authError.message.toLowerCase().includes('verified')) {
+        setError('Por favor, confirma tu correo electrónico usando el enlace enviado a tu bandeja de entrada.')
       } else {
         setError('Correo o contraseña incorrectos')
       }

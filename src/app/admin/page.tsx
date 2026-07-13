@@ -8,7 +8,16 @@ import Navbar from '@/components/Navbar'
 import { createClient } from '@/lib/supabase/client'
 import type { Report, Profile } from '@/types'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { approveSellerAction, revokeSellerAction, toggleFreePublishingAction } from '@/actions/admin'
+import { 
+  approveSellerAction, 
+  revokeSellerAction, 
+  toggleFreePublishingAction, 
+  toggleListingApprovalAction, 
+  approveListingAction, 
+  rejectListingAction,
+  banUserAction,
+  unbanUserAction
+} from '@/actions/admin'
 
 interface ReportWithListing extends Omit<Report, 'listings'> {
   listings: {
@@ -26,15 +35,18 @@ interface UserWithSub extends Profile {
 export default function AdminPage() {
   const [reports, setReports] = useState<ReportWithListing[]>([])
   const [users, setUsers] = useState<UserWithSub[]>([])
+  const [pendingListings, setPendingListings] = useState<any[]>([])
   const [stats, setStats] = useState({
-    listings: { total: 0, active: 0, paused: 0 },
+    listings: { total: 0, active: 0, paused: 0, pending: 0 },
     users: { total: 0, sellers: 0, buyers: 0, admins: 0 },
     activeSubs: 0
   })
   const [weeklyStats, setWeeklyStats] = useState<any[]>([])
   const [weeklyStatsError, setWeeklyStatsError] = useState<string | null>(null)
   const [freePublishingMode, setFreePublishingMode] = useState(false)
-  const [tab, setTab] = useState<'reports' | 'users'>('reports')
+  const [requireApprovalMode, setRequireApprovalMode] = useState(false)
+  const [tab, setTab] = useState<'reports' | 'users' | 'approvals'>('reports')
+  const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const router = useRouter()
@@ -50,7 +62,7 @@ export default function AdminPage() {
     if (profile?.role !== 'admin') { router.push('/dashboard'); return }
     setIsAdmin(true)
 
-    const [reportsRes, usersRes, settingsRes, weeklyStatsRes] = await Promise.all([
+    const [reportsRes, usersRes, settingsRes, approvalSettingsRes, pendingListingsRes, weeklyStatsRes] = await Promise.all([
       supabase.from('reports')
         .select('*, listings(id, title, seller_id, status)')
         .eq('status', 'pending')
@@ -62,6 +74,14 @@ export default function AdminPage() {
         .select('value')
         .eq('key', 'free_publishing_mode')
         .single(),
+      supabase.from('platform_settings')
+        .select('value')
+        .eq('key', 'listings_require_approval')
+        .single(),
+      supabase.from('listings')
+        .select('*, profiles(full_name, avatar_url)')
+        .eq('status', 'pending_approval')
+        .order('created_at', { ascending: false }),
       supabase.rpc('get_weekly_stats')
     ])
 
@@ -69,6 +89,7 @@ export default function AdminPage() {
       { count: totalListings },
       { count: activeListings },
       { count: pausedListings },
+      { count: pendingListingsCount },
       { count: totalUsers },
       { count: sellerUsers },
       { count: buyerUsers },
@@ -78,6 +99,7 @@ export default function AdminPage() {
       supabase.from('listings').select('*', { count: 'exact', head: true }),
       supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'active'),
       supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'paused'),
+      supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'pending_approval'),
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
       supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'seller'),
       supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'buyer'),
@@ -88,7 +110,7 @@ export default function AdminPage() {
     ])
 
     setStats({
-      listings: { total: totalListings || 0, active: activeListings || 0, paused: pausedListings || 0 },
+      listings: { total: totalListings || 0, active: activeListings || 0, paused: pausedListings || 0, pending: pendingListingsCount || 0 },
       users: { total: totalUsers || 0, sellers: sellerUsers || 0, buyers: buyerUsers || 0, admins: adminUsers || 0 },
       activeSubs: activeSubs || 0
     })
@@ -97,10 +119,15 @@ export default function AdminPage() {
       setFreePublishingMode(settingsRes.data.value === 'true' || settingsRes.data.value === true)
     }
 
+    if (approvalSettingsRes.data) {
+      setRequireApprovalMode(approvalSettingsRes.data.value === 'true' || approvalSettingsRes.data.value === true)
+    }
+
     if (weeklyStatsRes.error) {
       console.error('Error fetching weekly stats:', weeklyStatsRes.error)
       setWeeklyStatsError(weeklyStatsRes.error.message)
     } else if (weeklyStatsRes.data) {
+      console.log('Weekly Stats Data:', weeklyStatsRes.data)
       const formattedStats = weeklyStatsRes.data.map((d: any) => {
         // Asegurar que la fecha se procese correctamente usando UTC para evitar desfases
         const date = new Date(d.day + 'T00:00:00Z')
@@ -114,6 +141,7 @@ export default function AdminPage() {
 
     setReports((reportsRes.data as ReportWithListing[]) ?? [])
     setUsers((usersRes.data as UserWithSub[]) ?? [])
+    setPendingListings((pendingListingsRes.data as any[]) ?? [])
     setLoading(false)
   }, [])
 
@@ -205,6 +233,95 @@ export default function AdminPage() {
     }
   }
 
+  const handleToggleRequireApproval = async () => {
+    const newState = !requireApprovalMode
+    if (!confirm(`¿${newState ? 'Activar' : 'Desactivar'} la aprobación obligatoria de publicaciones?`)) return
+    
+    setRequireApprovalMode(newState)
+    try {
+      const res = await toggleListingApprovalAction(newState)
+      if (!res.success) throw new Error('Falló la acción')
+    } catch (error: any) {
+      setRequireApprovalMode(!newState) // Revert on error
+      alert('Error al cambiar configuración: ' + error.message)
+    }
+  }
+
+  const handleApproveListing = async (listingId: string) => {
+    if (!confirm('¿Aprobar esta publicación para hacerla pública?')) return
+    try {
+      const res = await approveListingAction(listingId)
+      if (res.success) {
+        setPendingListings(prev => prev.filter(l => l.id !== listingId))
+        setStats(prev => ({
+          ...prev,
+          listings: {
+            ...prev.listings,
+            active: prev.listings.active + 1,
+            pending: Math.max(0, prev.listings.pending - 1)
+          }
+        }))
+        alert('Publicación aprobada con éxito.')
+      }
+    } catch (error: any) {
+      alert('Error al aprobar: ' + error.message)
+    }
+  }
+
+  const handleRejectListing = async (listingId: string) => {
+    if (!confirm('¿Rechazar y eliminar esta publicación?')) return
+    try {
+      const res = await rejectListingAction(listingId)
+      if (res.success) {
+        setPendingListings(prev => prev.filter(l => l.id !== listingId))
+        setStats(prev => ({
+          ...prev,
+          listings: {
+            ...prev.listings,
+            pending: Math.max(0, prev.listings.pending - 1)
+          }
+        }))
+        alert('Publicación rechazada y eliminada.')
+      }
+    } catch (error: any) {
+      alert('Error al rechazar: ' + error.message)
+    }
+  }
+
+  const handleBanUser = async (userId: string) => {
+    if (!confirm('¿Banear a este usuario? Se suspenderá su cuenta y se eliminarán todas sus publicaciones activas de inmediato.')) return
+    try {
+      const res = await banUserAction(userId)
+      if (res.success) {
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_active: false } : u))
+        alert('Usuario suspendido y publicaciones retiradas con éxito.')
+      }
+    } catch (error: any) {
+      alert('Error al suspender: ' + error.message)
+    }
+  }
+
+  const handleUnbanUser = async (userId: string) => {
+    if (!confirm('¿Reactivar la cuenta de este usuario?')) return
+    try {
+      const res = await unbanUserAction(userId)
+      if (res.success) {
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_active: true } : u))
+        alert('Cuenta de usuario reactivada con éxito.')
+      }
+    } catch (error: any) {
+      alert('Error al reactivar: ' + error.message)
+    }
+  }
+
+  const filteredUsers = users.filter(user => {
+    const q = searchQuery.toLowerCase().trim()
+    if (!q) return true
+    const nameMatch = user.full_name?.toLowerCase().includes(q)
+    const emailMatch = user.email?.toLowerCase().includes(q)
+    return nameMatch || emailMatch
+  })
+
   if (!isAdmin) {
     return (
       <>
@@ -233,13 +350,22 @@ export default function AdminPage() {
                 Gestiona reportes, usuarios y suscripciones de U-Market
               </p>
             </div>
-            <button 
-              onClick={handleToggleFreeMode} 
-              className={freePublishingMode ? 'btn-danger' : 'btn-primary'}
-              style={{ fontWeight: 700 }}
-            >
-              {freePublishingMode ? '🔴 Desactivar Publicación Libre' : '🟢 Activar Publicación Libre'}
-            </button>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <button 
+                onClick={handleToggleFreeMode} 
+                className={freePublishingMode ? 'btn-danger' : 'btn-primary'}
+                style={{ fontWeight: 700, padding: '0.625rem 1.25rem' }}
+              >
+                {freePublishingMode ? '🔴 Desactivar Publicación Libre' : '🟢 Activar Publicación Libre'}
+              </button>
+              <button 
+                onClick={handleToggleRequireApproval} 
+                className={requireApprovalMode ? 'btn-danger' : 'btn-primary'}
+                style={{ fontWeight: 700, padding: '0.625rem 1.25rem', background: requireApprovalMode ? undefined : 'linear-gradient(135deg, var(--accent-amber), #d97706)' }}
+              >
+                {requireApprovalMode ? '🔴 Desactivar Aprobación' : '🛡️ Activar Aprobación'}
+              </button>
+            </div>
           </div>
 
           {freePublishingMode && (
@@ -283,6 +409,11 @@ export default function AdminPage() {
               <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#ef4444' }}>{reports.length}</div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Reportes Pendientes</div>
             </div>
+
+            <div className="glass-card" style={{ padding: '1rem 1.5rem', cursor: 'default' }}>
+              <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#f59e0b' }}>{stats.listings.pending}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Publicaciones por Aprobar</div>
+            </div>
           </div>
 
           {/* Weekly Stats Chart */}
@@ -324,14 +455,14 @@ export default function AdminPage() {
 
           {/* Tabs */}
           <div style={{ display: 'flex', gap: 4, marginBottom: '1.5rem', background: 'var(--bg-card)', borderRadius: 12, padding: 4, width: 'fit-content' }}>
-            {(['reports', 'users'] as const).map(t => (
+            {(['reports', 'users', 'approvals'] as const).map(t => (
               <button key={t} onClick={() => setTab(t)} style={{
                 padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer',
                 fontWeight: 600, fontSize: '0.875rem', transition: 'all 0.2s ease',
                 background: tab === t ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'transparent',
                 color: tab === t ? 'white' : 'var(--text-secondary)',
               }}>
-                {t === 'reports' ? `Reportes (${reports.length})` : `Usuarios (${users.length})`}
+                {t === 'reports' ? `Reportes (${reports.length})` : t === 'users' ? `Usuarios (${filteredUsers.length})` : `Aprobaciones (${pendingListings.length})`}
               </button>
             ))}
           </div>
@@ -387,58 +518,187 @@ export default function AdminPage() {
           {/* Users tab */}
           {tab === 'users' && (
             <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {users.map(user => {
-                const sub = user.subscriptions?.find(s => s.is_active) || user.subscriptions?.[0]
-                const subActive = sub?.is_active && (!sub.ends_at || new Date(sub.ends_at) > new Date())
-                return (
-                  <div key={user.id} className="glass-card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                    <div style={{
-                      width: 40, height: 40, borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '0.9rem', fontWeight: 700, color: 'white', flexShrink: 0,
-                    }}>
-                      {user.full_name?.[0]?.toUpperCase() ?? '?'}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 2 }}>
-                        {user.full_name || 'Sin nombre'}
+              
+              {/* Buscador por Correo / Nombre */}
+              <div style={{ position: 'relative', marginBottom: '0.5rem' }}>
+                <span style={{
+                  position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)',
+                  color: 'var(--text-muted)',
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  placeholder="Buscar por correo o nombre..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="input-field"
+                  style={{
+                    paddingLeft: '2.75rem', paddingRight: '1rem',
+                    fontSize: '0.9rem', borderRadius: 12,
+                    background: 'rgba(255,255,255,0.05)',
+                  }}
+                />
+              </div>
+
+              {filteredUsers.length === 0 ? (
+                <div className="glass-card" style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  No se encontraron usuarios que coincidan con "{searchQuery}"
+                </div>
+              ) : (
+                filteredUsers.map(user => {
+                  const sub = user.subscriptions?.find(s => s.is_active) || user.subscriptions?.[0]
+                  const subActive = sub?.is_active && (!sub.ends_at || new Date(sub.ends_at) > new Date())
+                  return (
+                    <div key={user.id} className="glass-card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                      <div style={{
+                        width: 40, height: 40, borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '0.9rem', fontWeight: 700, color: 'white', flexShrink: 0,
+                      }}>
+                        {user.full_name?.[0]?.toUpperCase() ?? '?'}
                       </div>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        <span className={`badge ${user.role === 'admin' ? 'badge-red' : user.role === 'seller' ? 'badge-indigo' : 'badge-amber'}`}>
-                          {user.role}
-                        </span>
-                        <span className={`badge ${subActive ? 'badge-green' : 'badge-amber'}`}>
-                          {subActive ? `✅ ${sub?.plan ?? 'free'}` : '⏱ sin sub'}
-                        </span>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                      {user.role !== 'admin' && (
-                        <>
-                          {user.role === 'buyer' || !subActive ? (
-                            <button
-                              onClick={() => handleApproveSeller(user.id)}
-                              className="btn-primary"
-                              style={{ padding: '6px 12px', fontSize: '0.75rem', background: '#10b981' }}
-                            >
-                              ✅ Aprobar Vendedor (30 días)
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleRevokeSeller(user.id)}
-                              className="btn-danger"
-                              style={{ padding: '6px 12px', fontSize: '0.75rem' }}
-                            >
-                              ❌ Revocar Vendedor
-                            </button>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 2 }}>
+                          {user.full_name || 'Sin nombre'}
+                        </div>
+                        {user.email && (
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 4 }}>
+                            📧 {user.email}
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {user.is_active === false && (
+                            <span className="badge badge-red">
+                              🚫 Suspendido
+                            </span>
                           )}
-                        </>
-                      )}
+                          <span className={`badge ${user.role === 'admin' ? 'badge-red' : user.role === 'seller' ? 'badge-indigo' : 'badge-amber'}`}>
+                            {user.role}
+                          </span>
+                          <span className={`badge ${subActive ? 'badge-green' : 'badge-amber'}`}>
+                            {subActive ? `✅ ${sub?.plan ?? 'free'}` : '⏱ sin sub'}
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                        {user.role !== 'admin' && (
+                          <>
+                            {user.is_active === false ? (
+                              <button
+                                onClick={() => handleUnbanUser(user.id)}
+                                className="btn-primary"
+                                style={{ padding: '6px 12px', fontSize: '0.75rem', background: '#10b981' }}
+                              >
+                                🟢 Activar Cuenta
+                              </button>
+                            ) : (
+                              <>
+                                {user.role === 'buyer' || !subActive ? (
+                                  <button
+                                    onClick={() => handleApproveSeller(user.id)}
+                                    className="btn-primary"
+                                    style={{ padding: '6px 12px', fontSize: '0.75rem', background: '#10b981' }}
+                                  >
+                                    ✅ Aprobar Vendedor (30 días)
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleRevokeSeller(user.id)}
+                                    className="btn-danger"
+                                    style={{ padding: '6px 12px', fontSize: '0.75rem' }}
+                                  >
+                                    ❌ Revocar Vendedor
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleBanUser(user.id)}
+                                  className="btn-danger"
+                                  style={{ padding: '6px 12px', fontSize: '0.75rem', background: '#ef4444' }}
+                                >
+                                  🚫 Banear
+                                </button>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })
+              )}
+            </div>
+          )}
+
+          {/* Approvals tab */}
+          {tab === 'approvals' && (
+            <div className="animate-fade-in">
+              {loading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {[...Array(3)].map((_, i) => <div key={i} className="skeleton" style={{ height: 80, borderRadius: 12 }} />)}
+                </div>
+              ) : pendingListings.length === 0 ? (
+                <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
+                  <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🎉</div>
+                  <h3 style={{ fontWeight: 700, marginBottom: 8 }}>Sin publicaciones pendientes</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>¡Todo al día!</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {pendingListings.map(listing => (
+                    <div key={listing.id} className="glass-card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                      {/* Image thumb */}
+                      <div style={{
+                        width: 56, height: 56, borderRadius: 10, flexShrink: 0,
+                        background: listing.image_url
+                          ? `url(${listing.image_url}) center/cover`
+                          : 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2))',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem',
+                      }}>
+                        {!listing.image_url && '📦'}
+                      </div>
+
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: 2 }}>
+                          {listing.title}
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 4 }}>
+                          <span style={{ color: 'var(--accent-amber)', fontWeight: 800, fontSize: '0.9rem' }}>
+                            ${listing.price}
+                          </span>
+                          <span className="badge badge-indigo">
+                            {listing.category}
+                          </span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                            Por: <strong>{listing.profiles?.full_name || 'Vendedor UTA'}</strong>
+                          </span>
+                        </div>
+                        {listing.description && (
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 }}>
+                            {listing.description}
+                          </p>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                        <a href={`/listings/${listing.id}`} target="_blank" style={{ textDecoration: 'none' }}>
+                          <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
+                            👁️ Ver Detalles
+                          </button>
+                        </a>
+                        <button onClick={() => handleApproveListing(listing.id)} className="btn-primary" style={{ padding: '6px 12px', fontSize: '0.78rem', background: '#10b981' }}>
+                          ✅ Aprobar
+                        </button>
+                        <button onClick={() => handleRejectListing(listing.id)} className="btn-danger" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
+                          ❌ Rechazar
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

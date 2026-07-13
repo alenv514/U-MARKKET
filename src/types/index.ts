@@ -7,6 +7,7 @@ export interface Profile {
   avatar_url: string | null
   role: UserRole
   is_active: boolean
+  email?: string | null
   rating_avg?: number | null
   review_count?: number | null
   created_at: string
@@ -32,7 +33,7 @@ export interface Listing {
   category: string
   image_url: string | null
   whatsapp_number: string | null
-  status: 'active' | 'paused' | 'removed'
+  status: 'active' | 'paused' | 'removed' | 'pending_approval'
   report_count: number
   views: number
   created_at: string

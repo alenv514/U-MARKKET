@@ -107,7 +107,7 @@ export default function ListingDetailPage() {
     <>
       <Navbar />
       <main style={{ paddingTop: 64, minHeight: '100vh', paddingBottom: '4rem' }}>
-        <div className="page-container" style={{ paddingTop: '2rem', maxWidth: 800 }}>
+        <div className="page-container" style={{ paddingTop: '2rem', maxWidth: 1000 }}>
 
           {/* Back */}
           <button onClick={() => router.back()} style={{
@@ -121,7 +121,28 @@ export default function ListingDetailPage() {
             Volver
           </button>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }}>
+          {/* Status banner */}
+          {listing.status === 'pending_approval' && (
+            <div style={{
+              background: 'rgba(99,102,241,0.1)',
+              border: '1px solid rgba(99,102,241,0.25)',
+              borderRadius: 12,
+              padding: '1rem',
+              marginBottom: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              color: '#a5b4fc'
+            }}>
+              <span style={{ fontSize: '1.25rem' }}>⏳</span>
+              <div>
+                <strong style={{ display: 'block', color: 'white', fontSize: '0.9rem' }}>Publicación en revisión</strong>
+                <span style={{ fontSize: '0.8rem', opacity: 0.85 }}>Esta publicación solo es visible para ti. Estará disponible públicamente una vez que el administrador la apruebe.</span>
+              </div>
+            </div>
+          )}
+
+          <div className="listing-detail-grid">
 
             {/* Carousel */}
             <div className="glass-card animate-fade-in-up" style={{ overflow: 'hidden', position: 'relative' }}>

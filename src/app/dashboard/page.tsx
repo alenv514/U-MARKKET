@@ -107,7 +107,27 @@ export default function DashboardPage() {
       </>
     )
   }
-
+  if (profile && profile.is_active === false) {
+    return (
+      <>
+        <Navbar />
+        <main style={{ paddingTop: 64, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="page-container glass-card animate-fade-in-up" style={{ maxWidth: 500, padding: '3rem 2rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚫</div>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--accent-red)', marginBottom: '1rem' }}>
+              Acceso Restringido
+            </h1>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+              Tu cuenta en U-Market ha sido suspendida por infringir las políticas de la comunidad. No puedes acceder a tu panel de control ni publicar productos.
+            </p>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              Si crees que esto es un error, por favor ponte en contacto con el soporte administrativo de la plataforma.
+            </p>
+          </div>
+        </main>
+      </>
+    )
+  }
   return (
     <>
       <Navbar />
@@ -216,8 +236,8 @@ export default function DashboardPage() {
                         <span style={{ color: 'var(--accent-amber)', fontWeight: 800, fontSize: '0.9rem' }}>
                           ${listing.price}
                         </span>
-                        <span className={`badge ${listing.status === 'active' ? 'badge-green' : 'badge-amber'}`}>
-                          {listing.status === 'active' ? 'Activa' : 'Pausada'}
+                        <span className={`badge ${listing.status === 'active' ? 'badge-green' : listing.status === 'pending_approval' ? 'badge-indigo' : 'badge-amber'}`}>
+                          {listing.status === 'active' ? 'Activa' : listing.status === 'pending_approval' ? 'En revisión' : 'Pausada'}
                         </span>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                           {listing.views} vistas
@@ -225,14 +245,16 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                      <button
-                        onClick={() => handleToggleStatus(listing)}
-                        className="btn-secondary"
-                        style={{ padding: '6px 12px', fontSize: '0.78rem' }}
-                      >
-                        {listing.status === 'active' ? 'Pausar' : 'Activar'}
-                      </button>
+                    <div className="actions-wrap">
+                      {listing.status !== 'pending_approval' && (
+                        <button
+                          onClick={() => handleToggleStatus(listing)}
+                          className="btn-secondary"
+                          style={{ padding: '6px 12px', fontSize: '0.78rem' }}
+                        >
+                          {listing.status === 'active' ? 'Pausar' : 'Activar'}
+                        </button>
+                      )}
                       <Link href={`/listings/${listing.id}/edit`}>
                         <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
                           Editar

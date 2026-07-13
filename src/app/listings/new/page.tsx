@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import { createClient } from '@/lib/supabase/client'
 import { CATEGORIES } from '@/types'
-import { sanitize, isValidPrice, isValidEcuadorPhone } from '@/lib/utils'
+import { sanitize, isValidPrice, isValidEcuadorPhone, checkBannedWords } from '@/lib/utils'
 import { useImageUpload } from '@/hooks/useImageUpload'
 
 const MAX_PHOTOS = 6
@@ -20,6 +20,8 @@ export default function NewListingPage() {
   const [initialCheckLoading, setInitialCheckLoading] = useState(true)
   const [userRole, setUserRole] = useState<'buyer' | 'seller' | 'admin' | null>(null)
   const [freePublishingMode, setFreePublishingMode] = useState(false)
+  const [requireApproval, setRequireApproval] = useState(false)
+  const [userIsActive, setUserIsActive] = useState(true)
   const [userEmail, setUserEmail] = useState('')
   const [error, setError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -43,13 +45,16 @@ export default function NewListingPage() {
       if (!user) { router.push('/login'); return }
       setUserEmail(user.email ?? '')
 
-      const [profileRes, settingsRes] = await Promise.all([
-        supabase.from('profiles').select('role').eq('id', user.id).single(),
-        supabase.from('platform_settings').select('value').eq('key', 'free_publishing_mode').single()
+      const [profileRes, settingsRes, approvalSettingsRes] = await Promise.all([
+        supabase.from('profiles').select('role, is_active').eq('id', user.id).single(),
+        supabase.from('platform_settings').select('value').eq('key', 'free_publishing_mode').single(),
+        supabase.from('platform_settings').select('value').eq('key', 'listings_require_approval').single()
       ])
 
       setUserRole(profileRes.data?.role ?? 'buyer')
+      setUserIsActive(profileRes.data?.is_active !== false)
       setFreePublishingMode(settingsRes.data?.value === true || settingsRes.data?.value === 'true')
+      setRequireApproval(approvalSettingsRes.data?.value === true || approvalSettingsRes.data?.value === 'true')
       setInitialCheckLoading(false)
     }
     checkRole()
@@ -67,6 +72,19 @@ export default function NewListingPage() {
 
     if (!title.trim()) { setError('El título es obligatorio'); return }
     if (!isValidPrice(price)) { setError('Ingresa un precio válido (máx. $100.000)'); return }
+    
+    // Validar censura automática
+    const titleCheck = checkBannedWords(title)
+    if (titleCheck.hasBanned) {
+      setError(`El título contiene vocabulario no permitido en la plataforma ("${titleCheck.word}"). Evita contenido inapropiado o fraudulento.`)
+      return
+    }
+    const descCheck = checkBannedWords(description)
+    if (descCheck.hasBanned) {
+      setError(`La descripción contiene vocabulario no permitido en la plataforma ("${descCheck.word}"). Evita contenido inapropiado o fraudulento.`)
+      return
+    }
+
     if (whatsapp.trim() && !isValidEcuadorPhone(whatsapp)) {
       setError('Formato de WhatsApp inválido. Usa +593XXXXXXXXX o 09XXXXXXXX'); return
     }
@@ -105,6 +123,8 @@ export default function NewListingPage() {
     }
 
     // Crear listing con array de imágenes
+    const finalStatus = requireApproval ? 'pending_approval' : 'active'
+
     const { data: listing, error: insertError } = await supabase
       .from('listings')
       .insert({
@@ -115,6 +135,7 @@ export default function NewListingPage() {
         category,
         image_url: imageUrls[0] ?? null,
         whatsapp_number: whatsapp.trim() || null,
+        status: finalStatus,
       })
       .select()
       .single()
@@ -125,7 +146,12 @@ export default function NewListingPage() {
       return
     }
 
-    router.push(`/listings/${listing.id}`)
+    if (requireApproval) {
+      alert('¡Publicación creada con éxito! Se ha enviado a revisión por el administrador antes de ser pública.')
+      router.push('/dashboard')
+    } else {
+      router.push(`/listings/${listing.id}`)
+    }
   }
 
   const categories = CATEGORIES.filter(c => c !== 'Todos')
@@ -136,6 +162,29 @@ export default function NewListingPage() {
         <Navbar />
         <main style={{ paddingTop: 64, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="animate-spin" style={{ width: 32, height: 32, border: '3px solid var(--border)', borderTopColor: 'var(--accent-primary)', borderRadius: '50%' }} />
+        </main>
+      </>
+    )
+  }
+
+  // --- UI DE SUSPENSIÓN (Cumpliendo Regla 4: no crear archivos nuevos innecesarios) ---
+  if (!initialCheckLoading && userIsActive === false) {
+    return (
+      <>
+        <Navbar />
+        <main style={{ paddingTop: 64, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="page-container glass-card animate-fade-in-up" style={{ maxWidth: 500, padding: '3rem 2rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚫</div>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--accent-red)', marginBottom: '1rem' }}>
+              Cuenta Suspendida
+            </h1>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+              Tu cuenta ha sido suspendida temporal o permanentemente por infringir las normas de la comunidad o publicar contenido no permitido en U-Market.
+            </p>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              Si crees que esto es un error, por favor ponte en contacto con el soporte administrativo de la plataforma.
+            </p>
+          </div>
         </main>
       </>
     )
