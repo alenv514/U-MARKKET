@@ -83,10 +83,11 @@ export async function POST(request: NextRequest) {
     })
 
     if (error) {
+      console.error('Registration error detail:', error)
       if (error.message.includes('already registered')) {
         return NextResponse.json({ error: 'Este correo ya está registrado' }, { status: 409 })
       }
-      return NextResponse.json({ error: error.message }, { status: 400 })
+      return NextResponse.json({ error: error.message || JSON.stringify(error) }, { status: 400 })
     }
 
     if (safePhone && data.user) {

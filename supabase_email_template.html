@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirma tu cuenta de U-Market</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #0b0f19; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <!-- Tarjeta Principal -->
+        <table width="100%" max-width="500px" style="max-width: 500px; background-color: #111827; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; overflow: hidden; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);">
+          
+          <!-- Gradiente de Fondo de Cabecera y Logo -->
+          <tr>
+            <td align="center" style="padding: 40px 40px 20px 40px; background: linear-gradient(180deg, rgba(99, 102, 241, 0.12) 0%, rgba(99, 102, 241, 0) 100%);">
+              <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 16px; display: inline-block; text-align: center; line-height: 64px; box-shadow: 0 0 24px rgba(99, 102, 241, 0.35);">
+                <span style="font-size: 28px; font-weight: 900; color: #ffffff; font-family: Arial, sans-serif;">U</span>
+              </div>
+              <h1 style="color: #ffffff; font-size: 26px; font-weight: 900; margin: 20px 0 0 0; letter-spacing: -0.5px;">U-Market</h1>
+              <p style="color: #818cf8; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin: 6px 0 0 0;">Universidad Técnica de Ambato</p>
+            </td>
+          </tr>
+
+          <!-- Mensaje -->
+          <tr>
+            <td style="padding: 10px 40px 40px 40px;">
+              <h2 style="color: #ffffff; font-size: 20px; font-weight: 800; margin: 0 0 16px 0; text-align: center; letter-spacing: -0.3px;">¡Verifica tu cuenta!</h2>
+              <p style="color: #9ca3af; font-size: 14.5px; line-height: 1.6; margin: 0 0 28px 0; text-align: center;">
+                ¡Hola! Gracias por unirte a la comunidad de **U-Market**, el marketplace exclusivo para estudiantes de la UTA. Para activar tu cuenta y empezar a comprar o vender, confirma tu correo haciendo clic en el siguiente botón:
+              </p>
+
+              <!-- Botón -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center" style="padding: 0 0 28px 0;">
+                    <a href="{{ .ConfirmationURL }}" target="_blank" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #ffffff; font-size: 15px; font-weight: 700; text-decoration: none; padding: 14px 36px; border-radius: 99px; display: inline-block; box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3); transition: all 0.2s ease;">
+                      Confirmar correo electrónico
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Nota de vencimiento -->
+              <div style="border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 20px; text-align: center;">
+                <p style="color: #6b7280; font-size: 12px; line-height: 1.5; margin: 0;">
+                  Si tú no solicitaste este correo, puedes ignorarlo con seguridad. Este enlace de verificación expirará automáticamente en 24 horas.
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px; background-color: #0d121f; border-top: 1px solid rgba(255, 255, 255, 0.06); text-align: center;">
+              <p style="color: #4b5563; font-size: 11px; margin: 0 0 8px 0; font-weight: 600;">
+                © 2026 U-Market • UTA Marketplace Estudiantil
+              </p>
+              <p style="color: #4b5563; font-size: 11px; margin: 0;">
+                Enviado para <span style="color: #9ca3af;">{{ .Email }}</span>.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
