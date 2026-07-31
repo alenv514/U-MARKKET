@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { compressImage } from '@/lib/utils'
 
 export interface UseImageUploadOptions {
   bucket: 'listings' | 'avatars'
@@ -11,7 +12,7 @@ export interface UseImageUploadOptions {
 export function useImageUpload({
   bucket,
   maxFiles = 6,
-  maxSizeMB = 5,
+  maxSizeMB = 10,
   initialUrls = [],
 }: UseImageUploadOptions) {
   const [existingUrls, setExistingUrls] = useState<string[]>(initialUrls)
@@ -31,7 +32,7 @@ export function useImageUpload({
     }
   }, [newPreviews])
 
-  const addFiles = useCallback((files: File[]) => {
+  const addFiles = useCallback(async (files: File[]) => {
     setError('')
     const currentTotal = existingUrls.length + newFiles.length
     const remaining = maxFiles - currentTotal
@@ -40,17 +41,30 @@ export function useImageUpload({
 
     const toAdd = files.slice(0, remaining)
     
-    // Validación de tamaño
-    const maxBytes = maxSizeMB * 1024 * 1024
-    const oversized = toAdd.filter(f => f.size > maxBytes)
-    if (oversized.length > 0) {
-      setError(`Las imágenes no deben superar los ${maxSizeMB}MB`)
+    // Validación de tipo de archivo (Solo imágenes permitidas)
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    const invalidFormat = toAdd.filter(f => !validTypes.includes(f.type.toLowerCase()))
+    if (invalidFormat.length > 0) {
+      setError('Solo se permiten archivos de imagen válidos (JPG, PNG, WEBP, GIF)')
       return
     }
 
-    const previews = toAdd.map(f => URL.createObjectURL(f))
+    // Compresión automática de imágenes anti-trolls
+    const compressedFiles: File[] = await Promise.all(
+      toAdd.map(file => compressImage(file, 1600, 1600, 0.82))
+    )
+
+    // Validación de tamaño máximo permitido (después de compresión)
+    const maxBytes = maxSizeMB * 1024 * 1024
+    const oversized = compressedFiles.filter(f => f.size > maxBytes)
+    if (oversized.length > 0) {
+      setError(`📸 La foto es demasiado pesada (supera los ${maxSizeMB}MB). Por favor, utiliza una app para bajar la resolución de la foto o comprimirla antes de subirla.`)
+      return
+    }
+
+    const previews = compressedFiles.map(f => URL.createObjectURL(f))
     
-    setNewFiles(prev => [...prev, ...toAdd])
+    setNewFiles(prev => [...prev, ...compressedFiles])
     setNewPreviews(prev => [...prev, ...previews])
   }, [existingUrls.length, newFiles.length, maxFiles, maxSizeMB])
 
@@ -99,7 +113,12 @@ export function useImageUpload({
       setUploading(false)
       return [...existingUrls, ...uploadedUrls]
     } catch (err: any) {
-      setError(err.message || 'Error al subir las imágenes')
+      const msg = err.message || ''
+      if (msg.includes('exceeded') || msg.includes('large') || msg.includes('limit')) {
+        setError('📸 La foto es demasiado pesada para el servidor. Por favor, utiliza una app para bajar la resolución de la foto o comprimirla.')
+      } else {
+        setError(msg || 'Error al subir las imágenes')
+      }
       setUploading(false)
       return null
     }

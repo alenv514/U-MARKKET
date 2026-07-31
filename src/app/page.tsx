@@ -42,7 +42,8 @@ export default function HomePage() {
       query = query.eq('category', selectedCategory)
     }
     if (search.trim()) {
-      query = query.ilike('title', `%${search.trim()}%`)
+      const term = search.trim()
+      query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%,category.ilike.%${term}%`)
     }
 
     const { data } = await query
