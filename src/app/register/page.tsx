@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -14,6 +15,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [showAlreadyRegisteredModal, setShowAlreadyRegisteredModal] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -47,7 +49,12 @@ export default function RegisterPage() {
     const result = await res.json()
 
     if (!res.ok) {
-      setError(result.error || 'Error al registrarse')
+      const errMsg = (result.error || '').toLowerCase()
+      if (res.status === 409 || errMsg.includes('registrado') || errMsg.includes('already')) {
+        setShowAlreadyRegisteredModal(true)
+      } else {
+        setError(result.error || 'Error al registrarse')
+      }
       setLoading(false)
       return
     }
@@ -221,6 +228,80 @@ export default function RegisterPage() {
           </p>
         </div>
       </div>
+
+      {/* Modal: Cuenta Ya Registrada */}
+      {showAlreadyRegisteredModal && typeof window !== 'undefined' && createPortal(
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            width: '100vw', height: '100vh',
+            background: 'rgba(0, 0, 0, 0.78)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+          }}
+          onClick={() => setShowAlreadyRegisteredModal(false)}
+        >
+          <div 
+            className="glass-card animate-fade-in-up" 
+            style={{
+              maxWidth: 440,
+              width: '90%',
+              padding: '2.5rem 2rem',
+              borderRadius: 24,
+              background: '#0d121f',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.9)',
+              position: 'relative',
+              textAlign: 'center',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setShowAlreadyRegisteredModal(false)}
+              style={{
+                position: 'absolute', top: 16, right: 16,
+                background: 'rgba(255,255,255,0.08)',
+                border: 'none', color: 'var(--text-secondary)',
+                borderRadius: '50%', width: 32, height: 32,
+                cursor: 'pointer', fontSize: '1rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
+            >
+              ✕
+            </button>
+
+            <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>⚠️</div>
+
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.75rem', color: '#ffffff' }}>
+              Esta cuenta ya existe
+            </h2>
+
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.75rem' }}>
+              El correo <strong style={{ color: '#ffffff' }}>{email}</strong> ya se encuentra registrado en U-Market. Si es tu cuenta, inicia sesión o recupera tu clave.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <Link href="/login" style={{ width: '100%', textDecoration: 'none' }}>
+                <button className="btn-primary" style={{ width: '100%', padding: '0.85rem' }}>
+                  Ir al Inicio de Sesión
+                </button>
+              </Link>
+              <Link href="/forgot-password" style={{ width: '100%', textDecoration: 'none' }}>
+                <button className="btn-secondary" style={{ width: '100%', padding: '0.85rem' }}>
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
