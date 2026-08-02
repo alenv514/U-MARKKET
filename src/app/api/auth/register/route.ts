@@ -90,6 +90,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message || JSON.stringify(error) }, { status: 400 })
     }
 
+    // Supabase devuelve usuario con identities vacío cuando el correo ya existe
+    // en lugar de lanzar un error (comportamiento de "email enumeration protection")
+    if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+      return NextResponse.json({ error: 'Este correo ya está registrado' }, { status: 409 })
+    }
+
     if (safePhone && data.user) {
       await supabase
         .from('profiles')

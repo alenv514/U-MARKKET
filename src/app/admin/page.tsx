@@ -49,6 +49,7 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [storageUsedMB, setStorageUsedMB] = useState<number | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -142,6 +143,30 @@ export default function AdminPage() {
     setReports((reportsRes.data as ReportWithListing[]) ?? [])
     setUsers((usersRes.data as UserWithSub[]) ?? [])
     setPendingListings((pendingListingsRes.data as any[]) ?? [])
+
+    // Calcular espacio usado contando imágenes en storage
+    try {
+      const buckets = ['listings', 'avatars']
+      let totalBytes = 0
+      for (const bucket of buckets) {
+        const { data: files } = await supabase.storage.from(bucket).list('', { limit: 1000, offset: 0 })
+        if (files) {
+          // Listar recursivamente en subcarpetas (por user id)
+          for (const folder of files) {
+            if (!folder.id) {
+              const { data: subFiles } = await supabase.storage.from(bucket).list(folder.name, { limit: 1000 })
+              if (subFiles) totalBytes += subFiles.reduce((acc, f) => acc + (f.metadata?.size || 0), 0)
+            } else {
+              totalBytes += folder.metadata?.size || 0
+            }
+          }
+        }
+      }
+      setStorageUsedMB(Math.round(totalBytes / 1024 / 1024 * 10) / 10)
+    } catch {
+      setStorageUsedMB(0)
+    }
+
     setLoading(false)
   }, [])
 
@@ -413,6 +438,28 @@ export default function AdminPage() {
             <div className="glass-card" style={{ padding: '1rem 1.5rem', cursor: 'default' }}>
               <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#f59e0b' }}>{stats.listings.pending}</div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Publicaciones por Aprobar</div>
+            </div>
+
+            {/* Storage indicator */}
+            <div className="glass-card" style={{ padding: '1rem 1.5rem', cursor: 'default', borderColor: storageUsedMB !== null && storageUsedMB > 800 ? 'rgba(239,68,68,0.4)' : storageUsedMB !== null && storageUsedMB > 600 ? 'rgba(245,158,11,0.4)' : undefined }}>
+              <div style={{ fontSize: '1.75rem', fontWeight: 900, color: storageUsedMB !== null && storageUsedMB > 800 ? '#ef4444' : storageUsedMB !== null && storageUsedMB > 600 ? '#f59e0b' : '#06b6d4' }}>
+                {storageUsedMB !== null ? `${storageUsedMB} MB` : '...'}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Almacenamiento Usado</div>
+              <div style={{ marginTop: 6 }}>
+                <div style={{ height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%',
+                    borderRadius: 4,
+                    width: storageUsedMB !== null ? `${Math.min((storageUsedMB / 1024) * 100, 100)}%` : '0%',
+                    background: storageUsedMB !== null && storageUsedMB > 800 ? '#ef4444' : storageUsedMB !== null && storageUsedMB > 600 ? '#f59e0b' : '#06b6d4',
+                    transition: 'width 0.5s ease'
+                  }} />
+                </div>
+                <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 3 }}>
+                  {storageUsedMB !== null ? `${((storageUsedMB / 1024) * 100).toFixed(1)}% de 1 GB (plan free)` : 'Calculando...'}
+                </div>
+              </div>
             </div>
           </div>
 

@@ -8,7 +8,7 @@ import { CATEGORIES } from '@/types'
 import { sanitize, isValidPrice, isValidEcuadorPhone, checkBannedWords } from '@/lib/utils'
 import { useImageUpload } from '@/hooks/useImageUpload'
 
-const MAX_PHOTOS = 6
+const MAX_PHOTOS = 1
 
 export default function NewListingPage() {
   const [title, setTitle] = useState('')
