@@ -28,8 +28,8 @@ export default function ResetPasswordPage() {
     e.preventDefault()
     setError('')
 
-    if (password.length < 8) {
-      setError('La contraseña debe tener al menos 8 caracteres')
+    if (password.length < 8 || password.length > 20) {
+      setError('La contraseña debe tener entre 8 y 20 caracteres')
       return
     }
     if (password !== confirmPassword) {
@@ -96,12 +96,13 @@ export default function ResetPasswordPage() {
             <form onSubmit={handleUpdatePassword} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
-                  Nueva contraseña (mínimo 8 caracteres)
+                  Nueva contraseña (entre 8 y 20 caracteres)
                 </label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
+                    maxLength={20}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     className="input-field"
@@ -141,6 +142,7 @@ export default function ResetPasswordPage() {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
+                    maxLength={20}
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
                     className="input-field"

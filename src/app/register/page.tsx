@@ -69,8 +69,8 @@ export default function RegisterPage() {
       setError('Solo se permiten correos @uta.edu.ec')
       return
     }
-    if (password.length < 8) {
-      setError('La contraseña debe tener al menos 8 caracteres')
+    if (password.length < 8 || password.length > 20) {
+      setError('La contraseña debe tener entre 8 y 20 caracteres')
       return
     }
     if (password !== confirmPassword) {
@@ -237,7 +237,8 @@ export default function RegisterPage() {
                 <input
                   id="register-password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Mínimo 8 caracteres"
+                  placeholder="Entre 8 y 20 caracteres"
+                  maxLength={20}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   className="input-field"
@@ -278,6 +279,7 @@ export default function RegisterPage() {
                   id="register-confirm-password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Repite tu contraseña"
+                  maxLength={20}
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
                   className="input-field"

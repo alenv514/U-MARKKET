@@ -119,6 +119,7 @@ export default function LoginPage() {
                   id="login-password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Tu contraseña"
+                  maxLength={20}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   className="input-field"
