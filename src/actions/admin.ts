@@ -178,3 +178,33 @@ export async function unbanUserAction(userId: string) {
 
   return { success: true }
 }
+
+export async function deleteUserAction(userId: string) {
+  const { supabase, user } = await getAdminSupabase()
+
+  // Registrar auditoría antes de borrar
+  await supabase.from('admin_actions').insert({
+    admin_id: user.id,
+    action: 'delete_user',
+    target_id: userId
+  })
+
+  // Eliminar publicaciones y datos relacionados
+  await supabase.from('listings').delete().eq('seller_id', userId)
+  await supabase.from('subscriptions').delete().eq('user_id', userId)
+  await supabase.from('reports').delete().eq('reporter_id', userId)
+
+  // Eliminar perfil
+  await supabase.from('profiles').delete().eq('id', userId)
+
+  // Eliminar usuario de Supabase Auth usando service role key
+  const { createClient } = await import('@supabase/supabase-js')
+  const adminClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const { error } = await adminClient.auth.admin.deleteUser(userId)
+  if (error) throw new Error(error.message)
+
+  return { success: true }
+}

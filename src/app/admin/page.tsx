@@ -16,7 +16,8 @@ import {
   approveListingAction, 
   rejectListingAction,
   banUserAction,
-  unbanUserAction
+  unbanUserAction,
+  deleteUserAction
 } from '@/actions/admin'
 
 interface ReportWithListing extends Omit<Report, 'listings'> {
@@ -336,6 +337,18 @@ export default function AdminPage() {
       }
     } catch (error: any) {
       alert('Error al reactivar: ' + error.message)
+    }
+  }
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    const confirmed = confirm(`⚠️ ELIMINAR USUARIO PERMANENTEMENTE\n\n¿Estás seguro de que deseas eliminar a "${userName}"?\n\nEsto eliminará:\n• Su cuenta de acceso\n• Su perfil\n• Todas sus publicaciones\n• Sus suscripciones\n\nEsta acción NO SE PUEDE DESHACER.`)
+    if (!confirmed) return
+    try {
+      await deleteUserAction(userId)
+      setUsers(prev => prev.filter(u => u.id !== userId))
+      alert('Usuario eliminado permanentemente.')
+    } catch (error: any) {
+      alert('Error al eliminar: ' + error.message)
     }
   }
 
@@ -671,6 +684,25 @@ export default function AdminPage() {
                               </>
                             )}
                           </>
+                        )}
+                        {user.role !== 'admin' && (
+                          <button
+                            onClick={() => handleDeleteUser(user.id, user.full_name || user.email || 'Usuario')}
+                            style={{
+                              padding: '6px 10px',
+                              fontSize: '0.75rem',
+                              background: 'rgba(127,29,29,0.4)',
+                              border: '1px solid rgba(239,68,68,0.35)',
+                              borderRadius: 8,
+                              color: '#fca5a5',
+                              cursor: 'pointer',
+                              fontWeight: 700,
+                              transition: 'background 0.2s',
+                            }}
+                            title="Eliminar usuario permanentemente"
+                          >
+                            🗑️
+                          </button>
                         )}
                       </div>
                     </div>
