@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
@@ -10,6 +10,44 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const supabase = createClient()
+
+  const [resendTimer, setResendTimer] = useState(180)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendMessage, setResendMessage] = useState('')
+
+  // Timer countdown effect
+  useEffect(() => {
+    if (!success || resendTimer <= 0) return
+    const interval = setInterval(() => {
+      setResendTimer(prev => prev - 1)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [success, resendTimer])
+
+  const handleResend = async () => {
+    if (resendTimer > 0 || resendLoading) return
+    setResendLoading(true)
+    setResendMessage('')
+    try {
+      const redirectTo = `${window.location.origin}/reset-password`
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+        redirectTo,
+      })
+      if (resetError) throw new Error(resetError.message)
+      setResendMessage('¡Correo reenviado con éxito! Revisa tu bandeja.')
+      setResendTimer(180)
+    } catch (err: any) {
+      setResendMessage('Error al reenviar: ' + (err.message || 'Inténtalo más tarde.'))
+    } finally {
+      setResendLoading(false)
+    }
+  }
+
+  const formatTimer = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`
+  }
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,6 +65,7 @@ export default function ForgotPasswordPage() {
       }
 
       setSuccess(true)
+      setResendTimer(180)
     } catch (err: any) {
       setError(err.message || 'Error al enviar el correo de recuperación')
     } finally {
@@ -62,14 +101,45 @@ export default function ForgotPasswordPage() {
               <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.75rem', color: '#ffffff' }}>
                 ¡Correo enviado!
               </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.25rem' }}>
                 Hemos enviado las instrucciones a <strong style={{ color: '#ffffff' }}>{email}</strong>. Revisa tu bandeja de entrada o correo no deseado (SPAM).
               </p>
-              <Link href="/login">
-                <button className="btn-secondary" style={{ width: '100%', padding: '0.75rem' }}>
-                  Volver al inicio de sesión
+
+              {resendMessage && (
+                <div style={{
+                  padding: '0.6rem 0.8rem', borderRadius: 8, marginBottom: '1rem', fontSize: '0.82rem',
+                  background: resendMessage.includes('Error') ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
+                  color: resendMessage.includes('Error') ? '#fca5a5' : '#6ee7b7',
+                  border: resendMessage.includes('Error') ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(16,185,129,0.3)'
+                }}>
+                  {resendMessage}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <button
+                  onClick={handleResend}
+                  disabled={resendTimer > 0 || resendLoading}
+                  className="btn-primary"
+                  style={{
+                    width: '100%', padding: '0.75rem', fontSize: '0.88rem',
+                    opacity: (resendTimer > 0 || resendLoading) ? 0.6 : 1,
+                    cursor: (resendTimer > 0 || resendLoading) ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {resendLoading
+                    ? 'Reenviando...'
+                    : resendTimer > 0
+                    ? `🔄 Reenviar correo en (${formatTimer(resendTimer)})`
+                    : '🔄 Reenviar correo de recuperación'}
                 </button>
-              </Link>
+
+                <Link href="/login" style={{ width: '100%', textDecoration: 'none' }}>
+                  <button className="btn-secondary" style={{ width: '100%', padding: '0.75rem', fontSize: '0.88rem' }}>
+                    Volver al inicio de sesión
+                  </button>
+                </Link>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleReset} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>

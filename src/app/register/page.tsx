@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -17,8 +17,47 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false)
   const [showAlreadyRegisteredModal, setShowAlreadyRegisteredModal] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  
+  const [resendTimer, setResendTimer] = useState(180)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendMessage, setResendMessage] = useState('')
+
   const router = useRouter()
   const supabase = createClient()
+
+  // Countdown timer for resend
+  useEffect(() => {
+    if (!success || resendTimer <= 0) return
+    const interval = setInterval(() => {
+      setResendTimer(prev => prev - 1)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [success, resendTimer])
+
+  const handleResendEmail = async () => {
+    if (resendTimer > 0 || resendLoading) return
+    setResendLoading(true)
+    setResendMessage('')
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email.trim().toLowerCase(),
+      })
+      if (error) throw error
+      setResendMessage('¡Correo de confirmación reenviado con éxito!')
+      setResendTimer(180)
+    } catch (err: any) {
+      setResendMessage('Error al reenviar: ' + (err.message || 'Inténtalo más tarde.'))
+    } finally {
+      setResendLoading(false)
+    }
+  }
+
+  const formatTimer = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`
+  }
 
   const validateEmail = (email: string) => /^[^\s@]+@uta\.edu\.ec$/i.test(email)
 
@@ -61,6 +100,7 @@ export default function RegisterPage() {
     }
 
     setSuccess(true)
+    setResendTimer(180)
     setLoading(false)
   }
 
@@ -70,13 +110,46 @@ export default function RegisterPage() {
         <div className="glass-card animate-fade-in" style={{ maxWidth: 440, width: '100%', padding: '2.5rem', textAlign: 'center' }}>
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📧</div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.75rem' }}>¡Verifica tu correo!</h2>
-          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
             Te enviamos un enlace de confirmación a <strong style={{ color: 'var(--text-primary)' }}>{email}</strong>.
-            Revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.
+            Revisa tu bandeja de entrada o correo no deseado (SPAM) y haz clic en el enlace para activar tu cuenta.
           </p>
-          <Link href="/login">
-            <button className="btn-primary" style={{ width: '100%' }}>Ir al inicio de sesión</button>
-          </Link>
+
+          {resendMessage && (
+            <div style={{
+              padding: '0.6rem 0.8rem', borderRadius: 8, marginBottom: '1rem', fontSize: '0.82rem',
+              background: resendMessage.includes('Error') ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
+              color: resendMessage.includes('Error') ? '#fca5a5' : '#6ee7b7',
+              border: resendMessage.includes('Error') ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(16,185,129,0.3)'
+            }}>
+              {resendMessage}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button
+              onClick={handleResendEmail}
+              disabled={resendTimer > 0 || resendLoading}
+              className="btn-primary"
+              style={{
+                width: '100%', padding: '0.75rem', fontSize: '0.88rem',
+                opacity: (resendTimer > 0 || resendLoading) ? 0.6 : 1,
+                cursor: (resendTimer > 0 || resendLoading) ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {resendLoading
+                ? 'Reenviando...'
+                : resendTimer > 0
+                ? `🔄 Reenviar correo en (${formatTimer(resendTimer)})`
+                : '🔄 Reenviar correo de confirmación'}
+            </button>
+
+            <Link href="/login" style={{ width: '100%', textDecoration: 'none' }}>
+              <button className="btn-secondary" style={{ width: '100%', padding: '0.75rem', fontSize: '0.88rem' }}>
+                Ir al inicio de sesión
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
     )
