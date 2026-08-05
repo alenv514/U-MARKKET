@@ -286,8 +286,8 @@ export default function HomePage() {
         {/* Simple Footer */}
         <footer style={{ borderTop: '1px solid var(--border)', padding: '2rem 0', textAlign: 'center' }}>
           <div className="page-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem', flexWrap: 'wrap', fontSize: '0.85rem' }}>
-            <a href="/terminos" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Términos y Condiciones</a>
-            <a href="/privacidad" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Políticas de Privacidad</a>
+            <a href="/terminos" style={{ color: 'rgba(255, 255, 255, 0.25)', textDecoration: 'none', fontSize: '0.75rem', transition: 'color 0.2s' }}>Términos y Condiciones</a>
+            <a href="/privacidad" style={{ color: 'rgba(255, 255, 255, 0.25)', textDecoration: 'none', fontSize: '0.75rem', transition: 'color 0.2s' }}>Políticas de Privacidad</a>
             <a 
               href="https://wa.me/593999752932?text=Hola!%20Tengo%20una%20consulta%20sobre%20U-Market." 
               target="_blank" 

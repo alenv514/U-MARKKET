@@ -177,11 +177,11 @@ export default function LoginPage() {
               ) : 'Ingresar'}
             </button>
 
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.5 }}>
+            <p style={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.25)', textAlign: 'center', lineHeight: 1.5, margin: 0 }}>
               Al continuar aceptas nuestros{' '}
-              <Link href="/terminos" style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>Términos y Condiciones</Link>
+              <Link href="/terminos" style={{ color: 'rgba(255, 255, 255, 0.38)', textDecoration: 'none', transition: 'color 0.2s' }}>Términos y Condiciones</Link>
               {' '}y la{' '}
-              <Link href="/privacidad" style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>Política de Privacidad</Link>.
+              <Link href="/privacidad" style={{ color: 'rgba(255, 255, 255, 0.38)', textDecoration: 'none', transition: 'color 0.2s' }}>Política de Privacidad</Link>.
             </p>
           </form>
 
