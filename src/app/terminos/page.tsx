@@ -120,7 +120,7 @@ export default function TerminosPage() {
                 paddingTop: '1.25rem', 
                 display: 'flex', 
                 alignItems: 'center', 
-                justify: 'space-between', 
+                justifyContent: 'space-between', 
                 flexWrap: 'wrap', 
                 gap: '1rem' 
               }}>
