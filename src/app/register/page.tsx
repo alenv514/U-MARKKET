@@ -150,6 +150,37 @@ export default function RegisterPage() {
               </button>
             </Link>
           </div>
+
+          {/* Mensaje de ayuda con enlace a WhatsApp */}
+          <div style={{
+            marginTop: '1.5rem',
+            padding: '0.85rem 1rem',
+            borderRadius: 12,
+            background: 'rgba(37,211,102,0.07)',
+            border: '1px solid rgba(37,211,102,0.2)',
+            fontSize: '0.8rem',
+            color: 'var(--text-secondary)',
+            lineHeight: 1.6,
+            textAlign: 'center',
+          }}>
+            ¿No te llegó el correo ni en SPAM?{' '}
+            <a
+              href="https://wa.me/593999752932?text=Hola,%20me%20registré%20en%20U-Market%20pero%20no%20me%20llegó%20el%20correo%20de%20verificación."
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: '#25d366',
+                fontWeight: 700,
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+              }}
+            >
+              💬 Contáctanos por WhatsApp
+            </a>
+            {' '}y te ayudamos al instante.
+          </div>
         </div>
       </div>
     )
