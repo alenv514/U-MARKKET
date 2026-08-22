@@ -263,11 +263,11 @@ export default function ProfilePage() {
                   value={faculty}
                   onChange={e => { setFaculty(e.target.value); setCareer('') }}
                   className="input-field"
-                  style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                  style={{ background: '#0d1117', color: '#f0f4ff' }}
                 >
-                  <option value="">Selecciona tu facultad...</option>
+                  <option value="" style={{ background: '#0d1117', color: '#f0f4ff' }}>Selecciona tu facultad...</option>
                   {Object.keys(UTA_FACULTY_CAREERS).map(f => (
-                    <option key={f} value={f}>{f}</option>
+                    <option key={f} value={f} style={{ background: '#0d1117', color: '#f0f4ff' }}>{f}</option>
                   ))}
                 </select>
               </div>
@@ -281,11 +281,11 @@ export default function ProfilePage() {
                     value={career}
                     onChange={e => setCareer(e.target.value)}
                     className="input-field"
-                    style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                    style={{ background: '#0d1117', color: '#f0f4ff' }}
                   >
-                    <option value="">Selecciona tu carrera...</option>
+                    <option value="" style={{ background: '#0d1117', color: '#f0f4ff' }}>Selecciona tu carrera...</option>
                     {UTA_FACULTY_CAREERS[faculty].map(c => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c} value={c} style={{ background: '#0d1117', color: '#f0f4ff' }}>{c}</option>
                     ))}
                   </select>
                 </div>
@@ -299,11 +299,11 @@ export default function ProfilePage() {
                   value={semester}
                   onChange={e => setSemester(e.target.value)}
                   className="input-field"
-                  style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                  style={{ background: '#0d1117', color: '#f0f4ff' }}
                 >
-                  <option value="">Selecciona tu semestre...</option>
+                  <option value="" style={{ background: '#0d1117', color: '#f0f4ff' }}>Selecciona tu semestre...</option>
                   {SEMESTERS.map(s => (
-                    <option key={s} value={s}>{s}</option>
+                    <option key={s} value={s} style={{ background: '#0d1117', color: '#f0f4ff' }}>{s}</option>
                   ))}
                 </select>
               </div>

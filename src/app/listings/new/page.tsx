@@ -96,6 +96,12 @@ export default function NewListingPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setError('Debes iniciar sesión'); setLoading(false); return }
 
+    if (!profileComplete) {
+      setError('Debes completar tu facultad y semestre en tu perfil antes de publicar.')
+      setLoading(false)
+      return
+    }
+
     if (!freePublishingMode) {
       // Verificar suscripción activa (solo para doble seguridad, aunque ya pasaron el filtro visual de rol)
       const { data: sub } = await supabase
@@ -510,14 +516,27 @@ export default function NewListingPage() {
                   id="listing-submit"
                   type="submit"
                   className="btn-primary"
-                  disabled={loading || uploading}
-                  style={{ flex: 2, padding: '0.9rem' }}
+                  disabled={loading || uploading || !profileComplete}
+                  style={{
+                    flex: 2,
+                    padding: '0.9rem',
+                    cursor: !profileComplete ? 'not-allowed' : 'pointer',
+                    opacity: !profileComplete ? 0.65 : 1,
+                    background: !profileComplete ? 'rgba(245, 158, 11, 0.2)' : undefined,
+                    color: !profileComplete ? '#fcd34d' : undefined,
+                    borderWidth: !profileComplete ? 1 : 0,
+                    borderStyle: 'solid',
+                    borderColor: !profileComplete ? 'rgba(245, 158, 11, 0.4)' : 'transparent',
+                  }}
+                  title={!profileComplete ? 'Debes completar tu facultad y semestre en tu perfil primero' : ''}
                 >
                   {(loading || uploading) ? (
                     <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                       <span className="animate-spin" style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', display: 'inline-block' }} />
                       {uploading ? `Subiendo fotos... ${progress}%` : 'Publicando...'}
                     </span>
+                  ) : !profileComplete ? (
+                    '🔒 Completa tu perfil para publicar'
                   ) : `🚀 Publicar${newFiles.length > 0 ? ` con ${newFiles.length} foto${newFiles.length > 1 ? 's' : ''}` : ''}`}
                 </button>
               </div>

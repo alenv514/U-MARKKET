@@ -167,6 +167,13 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(99, 102, 241, 0.04);
 }
 
+select.input-field,
+select.input-field option,
+select option {
+  background-color: #0d1117 !important;
+  color: #f0f4ff !important;
+}
+
 /* ── Badge ── */
 .badge {
   display: inline-flex;

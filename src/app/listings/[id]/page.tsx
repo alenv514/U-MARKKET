@@ -93,6 +93,12 @@ export default function ListingDetailPage() {
       return
     }
 
+    if (!profileComplete) {
+      alert('⚠️ Debes completar tu facultad y semestre en tu perfil antes de contactar a un vendedor.')
+      router.push('/profile')
+      return
+    }
+
     setContacting(true)
 
     // Check or Create chat
@@ -243,11 +249,30 @@ export default function ListingDetailPage() {
                 {!isSeller && (
                   <button 
                     onClick={handleContact}
-                    disabled={contacting}
+                    disabled={contacting || !profileComplete}
                     className="btn-primary" 
-                    style={{ flex: 1, justifyContent: 'center', cursor: 'pointer', border: 'none', fontFamily: 'inherit', fontSize: '0.9rem' }}
+                    style={{
+                      flex: 1,
+                      justifyContent: 'center',
+                      cursor: !profileComplete ? 'not-allowed' : 'pointer',
+                      border: 'none',
+                      fontFamily: 'inherit',
+                      fontSize: '0.9rem',
+                      opacity: !profileComplete ? 0.65 : 1,
+                      background: !profileComplete ? 'rgba(245, 158, 11, 0.2)' : undefined,
+                      color: !profileComplete ? '#fcd34d' : undefined,
+                      borderWidth: !profileComplete ? 1 : 0,
+                      borderStyle: 'solid',
+                      borderColor: !profileComplete ? 'rgba(245, 158, 11, 0.4)' : 'transparent',
+                    }}
+                    title={!profileComplete ? 'Debes completar tu facultad y semestre en tu perfil primero' : ''}
                   >
-                    {contacting ? 'Conectando...' : (
+                    {contacting ? 'Conectando...' : !profileComplete ? (
+                      <>
+                        <span style={{ marginRight: 6 }}>🔒</span>
+                        Completa tu perfil para contactar
+                      </>
+                    ) : (
                       <>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: 8 }}>
                           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
