@@ -17,11 +17,19 @@ export default function ListingDetailPage() {
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
   const [contacting, setContacting] = useState(false)
+  const [profileComplete, setProfileComplete] = useState(true)
   const supabase = createClient()
   const router = useRouter()
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null))
+    supabase.auth.getUser().then(async ({ data }) => {
+      const uid = data.user?.id ?? null
+      setUserId(uid)
+      if (uid) {
+        const { data: prof } = await supabase.from('profiles').select('faculty, semester').eq('id', uid).single()
+        setProfileComplete(!!(prof?.faculty && prof?.semester))
+      }
+    })
 
     const fetch = async () => {
       const { data } = await supabase
@@ -139,6 +147,27 @@ export default function ListingDetailPage() {
                 <strong style={{ display: 'block', color: 'white', fontSize: '0.9rem' }}>Publicación en revisión</strong>
                 <span style={{ fontSize: '0.8rem', opacity: 0.85 }}>Esta publicación solo es visible para ti. Estará disponible públicamente una vez que el administrador la apruebe.</span>
               </div>
+            </div>
+          )}
+
+          {/* Banner perfil incompleto */}
+          {userId && !profileComplete && (
+            <div style={{
+              background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.4)',
+              borderRadius: 12, padding: '0.875rem 1.25rem', marginBottom: '1.5rem',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: '1.25rem' }}>⚠️</span>
+                <div>
+                  <strong style={{ display: 'block', color: '#fcd34d', fontSize: '0.88rem' }}>Completa tu perfil para continuar</strong>
+                  <span style={{ fontSize: '0.78rem', color: '#fde68a', opacity: 0.9 }}>Falta tu facultad y semestre. La universidad lo requiere para estadísticas.</span>
+                </div>
+              </div>
+              <a href="/profile" style={{
+                background: '#f59e0b', color: 'white', padding: '0.45rem 1rem',
+                borderRadius: 8, fontWeight: 700, fontSize: '0.8rem', textDecoration: 'none', whiteSpace: 'nowrap'
+              }}>Completar ahora →</a>
             </div>
           )}
 

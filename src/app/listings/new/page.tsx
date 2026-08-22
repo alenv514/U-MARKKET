@@ -23,6 +23,7 @@ export default function NewListingPage() {
   const [requireApproval, setRequireApproval] = useState(false)
   const [userIsActive, setUserIsActive] = useState(true)
   const [userEmail, setUserEmail] = useState('')
+  const [profileComplete, setProfileComplete] = useState(true)
   const [error, setError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
@@ -46,13 +47,14 @@ export default function NewListingPage() {
       setUserEmail(user.email ?? '')
 
       const [profileRes, settingsRes, approvalSettingsRes] = await Promise.all([
-        supabase.from('profiles').select('role, is_active').eq('id', user.id).single(),
+        supabase.from('profiles').select('role, is_active, faculty, semester').eq('id', user.id).single(),
         supabase.from('platform_settings').select('value').eq('key', 'free_publishing_mode').single(),
         supabase.from('platform_settings').select('value').eq('key', 'listings_require_approval').single()
       ])
 
       setUserRole(profileRes.data?.role ?? 'buyer')
       setUserIsActive(profileRes.data?.is_active !== false)
+      setProfileComplete(!!(profileRes.data?.faculty && profileRes.data?.semester))
       setFreePublishingMode(settingsRes.data?.value === true || settingsRes.data?.value === 'true')
       setRequireApproval(approvalSettingsRes.data?.value === true || approvalSettingsRes.data?.value === 'true')
       setInitialCheckLoading(false)
@@ -244,6 +246,27 @@ export default function NewListingPage() {
               Completa los datos de tu producto o servicio
             </p>
           </div>
+
+          {/* Banner perfil incompleto */}
+          {!profileComplete && (
+            <div style={{
+              background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.4)',
+              borderRadius: 12, padding: '0.875rem 1.25rem', marginBottom: '1.5rem',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: '1.25rem' }}>⚠️</span>
+                <div>
+                  <strong style={{ display: 'block', color: '#fcd34d', fontSize: '0.88rem' }}>Completa tu perfil antes de publicar</strong>
+                  <span style={{ fontSize: '0.78rem', color: '#fde68a', opacity: 0.9 }}>Falta tu facultad y semestre. La universidad lo requiere para estadísticas.</span>
+                </div>
+              </div>
+              <a href="/profile" style={{
+                background: '#f59e0b', color: 'white', padding: '0.45rem 1rem',
+                borderRadius: 8, fontWeight: 700, fontSize: '0.8rem', textDecoration: 'none', whiteSpace: 'nowrap'
+              }}>Completar ahora →</a>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
             {/* Multi-image upload */}
