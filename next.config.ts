@@ -23,6 +23,14 @@ const withPWA = withPWAInit({
         },
       },
       {
+        urlPattern: /^https:\/\/.*\.r2\.dev\/.*/i,
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "r2-images",
+          expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
+        },
+      },
+      {
         urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/(chats|messages|listings)/i,
         handler: "NetworkFirst",
         options: {
@@ -51,6 +59,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/storage/v1/object/public/**',
       },
+      {
+        protocol: 'https',
+        hostname: '*.r2.dev',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   async headers() {
@@ -65,8 +79,8 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https://*.supabase.co",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+              "img-src 'self' data: blob: https://*.supabase.co https://*.r2.dev",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.r2.dev",
               "frame-ancestors 'none'",
             ].join('; '),
           },

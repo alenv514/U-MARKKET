@@ -93,20 +93,22 @@ export function useImageUpload({
 
       for (let i = 0; i < newFiles.length; i++) {
         const file = newFiles[i]
-        const ext = file.name.split('.').pop()
-        const filePath = `${user.id}/${Date.now()}-${i}.${ext}`
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('folder', bucket)
 
-        const { error: uploadError } = await supabase.storage
-          .from(bucket)
-          .upload(filePath, file, { upsert: bucket === 'avatars' })
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        })
 
-        if (uploadError) throw new Error(uploadError.message)
+        const data = await res.json()
 
-        const { data: urlData } = supabase.storage
-          .from(bucket)
-          .getPublicUrl(filePath)
-        
-        uploadedUrls.push(urlData.publicUrl)
+        if (!res.ok || data.error) {
+          throw new Error(data.error || 'Error al subir la imagen')
+        }
+
+        uploadedUrls.push(data.url)
         setProgress(Math.round(((i + 1) / newFiles.length) * 100))
       }
 
