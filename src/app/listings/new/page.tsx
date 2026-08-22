@@ -258,7 +258,7 @@ export default function NewListingPage() {
                 <span style={{ fontSize: '1.25rem' }}>⚠️</span>
                 <div>
                   <strong style={{ display: 'block', color: '#fcd34d', fontSize: '0.88rem' }}>Completa tu perfil antes de publicar</strong>
-                  <span style={{ fontSize: '0.78rem', color: '#fde68a', opacity: 0.9 }}>Falta tu facultad y semestre. La universidad lo requiere para estadísticas.</span>
+                  <span style={{ fontSize: '0.78rem', color: '#fde68a', opacity: 0.9 }}>Falta tu facultad y semestre en tu cuenta.</span>
                 </div>
               </div>
               <a href="/profile" style={{

@@ -263,6 +263,7 @@ export default function ProfilePage() {
                   value={faculty}
                   onChange={e => { setFaculty(e.target.value); setCareer('') }}
                   className="input-field"
+                  style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}
                 >
                   <option value="">Selecciona tu facultad...</option>
                   {Object.keys(UTA_FACULTY_CAREERS).map(f => (
@@ -280,6 +281,7 @@ export default function ProfilePage() {
                     value={career}
                     onChange={e => setCareer(e.target.value)}
                     className="input-field"
+                    style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}
                   >
                     <option value="">Selecciona tu carrera...</option>
                     {UTA_FACULTY_CAREERS[faculty].map(c => (
@@ -297,6 +299,7 @@ export default function ProfilePage() {
                   value={semester}
                   onChange={e => setSemester(e.target.value)}
                   className="input-field"
+                  style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}
                 >
                   <option value="">Selecciona tu semestre...</option>
                   {SEMESTERS.map(s => (
