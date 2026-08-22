@@ -31,6 +31,36 @@ async function getAdminSupabase() {
   return { supabase, user }
 }
 
+// Helper que acepta admin O moderador (para acciones de moderación compartidas)
+async function getModSupabase() {
+  const cookieStore = await cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return cookieStore.getAll() },
+        setAll() {}
+      }
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('No autenticado')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role !== 'admin' && profile?.role !== 'moderator') {
+    throw new Error('No autorizado. Se requiere rol admin o moderador.')
+  }
+
+  return { supabase, user, role: profile.role as string }
+}
+
 export async function approveSellerAction(userId: string) {
   const { supabase, user } = await getAdminSupabase()
 
@@ -205,6 +235,52 @@ export async function deleteUserAction(userId: string) {
   )
   const { error } = await adminClient.auth.admin.deleteUser(userId)
   if (error) throw new Error(error.message)
+
+  return { success: true }
+}
+
+// ── Moderadores ──
+
+export async function assignModeratorAction(userId: string) {
+  const { supabase, user } = await getAdminSupabase()
+
+  await supabase.from('profiles').update({ role: 'moderator' }).eq('id', userId)
+
+  await supabase.from('admin_actions').insert({
+    admin_id: user.id,
+    action: 'assign_moderator',
+    target_id: userId
+  })
+
+  return { success: true }
+}
+
+export async function revokeModeratorAction(userId: string) {
+  const { supabase, user } = await getAdminSupabase()
+
+  await supabase.from('profiles').update({ role: 'buyer' }).eq('id', userId)
+
+  await supabase.from('admin_actions').insert({
+    admin_id: user.id,
+    action: 'revoke_moderator',
+    target_id: userId
+  })
+
+  return { success: true }
+}
+
+// Usable por admin y moderador
+export async function deleteListingAction(listingId: string, reason: string) {
+  const { supabase, user, role } = await getModSupabase()
+
+  await supabase.from('listings').update({ status: 'removed' }).eq('id', listingId)
+
+  await supabase.from('admin_actions').insert({
+    admin_id: user.id,
+    action: 'delete_listing_moderation',
+    target_id: listingId,
+    details: { reason, by_role: role }
+  })
 
   return { success: true }
 }

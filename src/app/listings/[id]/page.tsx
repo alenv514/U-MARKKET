@@ -10,6 +10,7 @@ import type { Listing } from '@/types'
 import Link from 'next/link'
 import { sanitize } from '@/lib/utils'
 import { getOrCreateChat } from '@/lib/chat'
+import { deleteListingAction } from '@/actions/admin'
 
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -18,6 +19,7 @@ export default function ListingDetailPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [contacting, setContacting] = useState(false)
   const [profileComplete, setProfileComplete] = useState(true)
+  const [userRole, setUserRole] = useState<string | null>(null)
   const supabase = createClient()
   const router = useRouter()
 
@@ -26,8 +28,9 @@ export default function ListingDetailPage() {
       const uid = data.user?.id ?? null
       setUserId(uid)
       if (uid) {
-        const { data: prof } = await supabase.from('profiles').select('faculty, semester').eq('id', uid).single()
+        const { data: prof } = await supabase.from('profiles').select('faculty, semester, role').eq('id', uid).single()
         setProfileComplete(!!(prof?.faculty && prof?.semester))
+        setUserRole(prof?.role ?? null)
       }
     })
 
@@ -114,6 +117,7 @@ export default function ListingDetailPage() {
   }
 
   const isSeller = userId === listing.seller_id
+  const isModOrAdmin = userRole === 'admin' || userRole === 'moderator'
   const sellerPhone = listing?.whatsapp_number || (listing?.profiles as any)?.phone || ''
 
   const formatPrice = (p: number) => new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' }).format(p)
@@ -128,6 +132,19 @@ export default function ListingDetailPage() {
     }
     const text = `¡Hola! Vi tu publicación "${listing.title}" por ${formatPrice(listing.price)} en U-Market y me gustaría más información.`
     return `https://wa.me/${clean}?text=${encodeURIComponent(text)}`
+  }
+
+  const handleDeleteListing = async () => {
+    const reason = prompt('🛡️ Motivo de eliminación (será registrado en auditoría):')
+    if (!reason) return
+    if (!confirm(`¿Eliminar la publicación "${listing!.title}"? Esta acción no se puede deshacer.`)) return
+    try {
+      await deleteListingAction(listing!.id, reason)
+      alert('Publicación eliminada correctamente.')
+      router.push('/')
+    } catch (err: any) {
+      alert('Error al eliminar: ' + err.message)
+    }
   }
 
   return (
@@ -349,6 +366,29 @@ export default function ListingDetailPage() {
                 {!isSeller && userId && (
                   <button onClick={handleReport} className="btn-secondary" style={{ padding: '0.75rem', fontSize: '0.8rem', color: 'var(--accent-red)', borderColor: 'rgba(239,68,68,0.3)' }}>
                     Reportar
+                  </button>
+                )}
+
+                {/* Boton de moderacion: visible para admin y moderadores */}
+                {isModOrAdmin && listing.status !== 'removed' && (
+                  <button
+                    onClick={handleDeleteListing}
+                    className="btn-danger"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '0.625rem 1rem',
+                      fontSize: '0.85rem',
+                      width: '100%',
+                      marginTop: 8,
+                      justifyContent: 'center',
+                      background: 'rgba(127,29,29,0.35)',
+                      borderColor: 'rgba(239,68,68,0.4)',
+                      color: '#fca5a5',
+                    }}
+                  >
+                    🗑️ Eliminar publicación (Moderación)
                   </button>
                 )}
               </div>

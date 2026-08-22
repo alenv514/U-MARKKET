@@ -16,6 +16,7 @@ export default function Navbar() {
   const [suggestion, setSuggestion] = useState('')
   const [scrolled, setScrolled] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isModerator, setIsModerator] = useState(false)
   const [showBusinessModal, setShowBusinessModal] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
@@ -25,8 +26,9 @@ export default function Navbar() {
     const fetchProfileData = async (userId: string) => {
       const { data } = await supabase.from('profiles').select('avatar_url, role').eq('id', userId).single()
       if (data?.avatar_url) setAvatarUrl(data.avatar_url)
-      if (data?.role === 'admin') setIsAdmin(true)
-      else setIsAdmin(false)
+      if (data?.role === 'admin') { setIsAdmin(true); setIsModerator(false) }
+      else if (data?.role === 'moderator') { setIsModerator(true); setIsAdmin(false) }
+      else { setIsAdmin(false); setIsModerator(false) }
     }
 
     supabase.auth.getUser().then(({ data }) => {
@@ -40,6 +42,7 @@ export default function Navbar() {
       else {
         setAvatarUrl(null)
         setIsAdmin(false)
+        setIsModerator(false)
       }
     })
     return () => subscription.unsubscribe()
@@ -175,6 +178,11 @@ export default function Navbar() {
             {isAdmin && (
               <NavLink href="/admin" active={isActive('/admin')}>
                 <span style={{ color: '#ef4444', fontWeight: isActive('/admin') ? 800 : 600 }}>🛡️ Admin</span>
+              </NavLink>
+            )}
+            {isModerator && (
+              <NavLink href="/admin" active={isActive('/admin')}>
+                <span style={{ color: '#f59e0b', fontWeight: isActive('/admin') ? 800 : 600 }}>🛡️ Moderador</span>
               </NavLink>
             )}
             {user && <NavLink href="/listings/new" active={isActive('/listings/new')}>Publicar</NavLink>}

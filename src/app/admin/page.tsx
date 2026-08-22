@@ -18,7 +18,10 @@ import {
   rejectListingAction,
   banUserAction,
   unbanUserAction,
-  deleteUserAction
+  deleteUserAction,
+  assignModeratorAction,
+  revokeModeratorAction,
+  deleteListingAction
 } from '@/actions/admin'
 
 interface ReportWithListing extends Omit<Report, 'listings'> {
@@ -62,8 +65,8 @@ export default function AdminPage() {
     const { data: profile } = await supabase
       .from('profiles').select('role').eq('id', user.id).single()
 
-    if (profile?.role !== 'admin') { router.push('/dashboard'); return }
-    setIsAdmin(true)
+    if (profile?.role !== 'admin' && profile?.role !== 'moderator') { router.push('/dashboard'); return }
+    setIsAdmin(profile?.role === 'admin')
 
     const [reportsRes, usersRes, settingsRes, approvalSettingsRes, pendingListingsRes, weeklyStatsRes] = await Promise.all([
       supabase.from('reports')
@@ -350,6 +353,32 @@ export default function AdminPage() {
       alert('Usuario eliminado permanentemente.')
     } catch (error: any) {
       alert('Error al eliminar: ' + error.message)
+    }
+  }
+
+  const handleAssignModerator = async (userId: string) => {
+    if (!confirm('¿Designar a este usuario como Moderador? Podrá eliminar publicaciones inapropiadas y gestionar reportes.')) return
+    try {
+      const res = await assignModeratorAction(userId)
+      if (res.success) {
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: 'moderator' } : u))
+        alert('🛡️ Usuario designado como Moderador exitosamente.')
+      }
+    } catch (error: any) {
+      alert('Error: ' + error.message)
+    }
+  }
+
+  const handleRevokeModerator = async (userId: string) => {
+    if (!confirm('¿Quitar el rol de Moderador a este usuario? Volverá a ser comprador.')) return
+    try {
+      const res = await revokeModeratorAction(userId)
+      if (res.success) {
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: 'buyer' } : u))
+        alert('Rol de Moderador retirado.')
+      }
+    } catch (error: any) {
+      alert('Error: ' + error.message)
     }
   }
 
@@ -720,8 +749,12 @@ export default function AdminPage() {
                               🚫 Suspendido
                             </span>
                           )}
-                          <span className={`badge ${user.role === 'admin' ? 'badge-red' : user.role === 'seller' ? 'badge-indigo' : 'badge-amber'}`}>
-                            {user.role}
+                          <span className={`badge ${
+                            user.role === 'admin' ? 'badge-red' :
+                            user.role === 'moderator' ? 'badge-amber' :
+                            user.role === 'seller' ? 'badge-indigo' : 'badge-amber'
+                          }`}>
+                            {user.role === 'moderator' ? '🛡️ moderador' : user.role}
                           </span>
                           <span className={`badge ${subActive ? 'badge-green' : 'badge-amber'}`}>
                             {subActive ? `✅ ${sub?.plan ?? 'free'}` : '⏱ sin sub'}
@@ -729,7 +762,7 @@ export default function AdminPage() {
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                        {user.role !== 'admin' && (
+                        {isAdmin && user.role !== 'admin' && (
                           <>
                             {user.is_active === false ? (
                               <button
@@ -741,35 +774,55 @@ export default function AdminPage() {
                               </button>
                             ) : (
                               <>
-                                {user.role === 'buyer' || !subActive ? (
+                                {user.role === 'moderator' ? (
                                   <button
-                                    onClick={() => handleApproveSeller(user.id)}
-                                    className="btn-primary"
-                                    style={{ padding: '6px 12px', fontSize: '0.75rem', background: '#10b981' }}
+                                    onClick={() => handleRevokeModerator(user.id)}
+                                    className="btn-secondary"
+                                    style={{ padding: '6px 12px', fontSize: '0.75rem', color: '#fcd34d', borderColor: 'rgba(245,158,11,0.4)' }}
                                   >
-                                    ✅ Aprobar Vendedor (30 días)
+                                    ↩️ Quitar Moderador
                                   </button>
                                 ) : (
-                                  <button
-                                    onClick={() => handleRevokeSeller(user.id)}
-                                    className="btn-danger"
-                                    style={{ padding: '6px 12px', fontSize: '0.75rem' }}
-                                  >
-                                    ❌ Revocar Vendedor
-                                  </button>
+                                  <>
+                                    {(user.role === 'buyer' || !subActive) ? (
+                                      <button
+                                        onClick={() => handleApproveSeller(user.id)}
+                                        className="btn-primary"
+                                        style={{ padding: '6px 12px', fontSize: '0.75rem', background: '#10b981' }}
+                                      >
+                                        ✅ Aprobar Vendedor (30 días)
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() => handleRevokeSeller(user.id)}
+                                        className="btn-danger"
+                                        style={{ padding: '6px 12px', fontSize: '0.75rem' }}
+                                      >
+                                        ❌ Revocar Vendedor
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={() => handleAssignModerator(user.id)}
+                                      className="btn-secondary"
+                                      style={{ padding: '6px 12px', fontSize: '0.75rem', color: '#f59e0b', borderColor: 'rgba(245,158,11,0.4)' }}
+                                      title="Designar como Moderador"
+                                    >
+                                      🛡️ Moderador
+                                    </button>
+                                    <button
+                                      onClick={() => handleBanUser(user.id)}
+                                      className="btn-danger"
+                                      style={{ padding: '6px 12px', fontSize: '0.75rem', background: '#ef4444' }}
+                                    >
+                                      🚫 Banear
+                                    </button>
+                                  </>
                                 )}
-                                <button
-                                  onClick={() => handleBanUser(user.id)}
-                                  className="btn-danger"
-                                  style={{ padding: '6px 12px', fontSize: '0.75rem', background: '#ef4444' }}
-                                >
-                                  🚫 Banear
-                                </button>
                               </>
                             )}
                           </>
                         )}
-                        {user.role !== 'admin' && (
+                        {isAdmin && user.role !== 'admin' && (
                           <button
                             onClick={() => handleDeleteUser(user.id, user.full_name || user.email || 'Usuario')}
                             style={{

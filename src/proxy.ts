@@ -83,7 +83,7 @@ export async function proxy(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    if (profile?.role !== 'admin') {
+    if (profile?.role !== 'admin' && profile?.role !== 'moderator') {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
   }
