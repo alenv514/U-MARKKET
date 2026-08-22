@@ -5,12 +5,16 @@ import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types'
+import { UTA_FACULTY_CAREERS, SEMESTERS } from '@/types'
 import { useImageUpload } from '@/hooks/useImageUpload'
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
+  const [faculty, setFaculty] = useState('')
+  const [career, setCareer] = useState('')
+  const [semester, setSemester] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -51,6 +55,9 @@ export default function ProfilePage() {
         setProfile(data as Profile)
         setFullName(data.full_name || '')
         setPhone(data.phone || '')
+        setFaculty(data.faculty || '')
+        setCareer(data.semester?.includes(' - ') ? data.semester.split(' - ')[1] : '')
+        setSemester(data.semester?.includes(' - ') ? data.semester.split(' - ')[0] : data.semester || '')
         setAvatarUrl(data.avatar_url || '')
       }
       setLoading(false)
@@ -93,7 +100,10 @@ export default function ProfilePage() {
       .update({
         full_name: fullName.trim(),
         phone: phone.trim(),
-        avatar_url: finalAvatarUrl
+        avatar_url: finalAvatarUrl,
+        faculty: faculty || null,
+        // Guardamos semestre y carrera juntos: "5to semestre - Ingeniería de Software"
+        semester: faculty && career && semester ? `${semester} - ${career}` : semester || null,
       })
       .eq('id', user.id)
 
@@ -230,6 +240,69 @@ export default function ProfilePage() {
                 <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                   Los compradores se contactarán contigo a este número.
                 </p>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                  Correo institucional
+                </label>
+                <input
+                  type="text"
+                  value={profile?.email || ''}
+                  readOnly
+                  className="input-field"
+                  style={{ opacity: 0.6, cursor: 'not-allowed' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                  Facultad
+                </label>
+                <select
+                  value={faculty}
+                  onChange={e => { setFaculty(e.target.value); setCareer('') }}
+                  className="input-field"
+                >
+                  <option value="">Selecciona tu facultad...</option>
+                  {Object.keys(UTA_FACULTY_CAREERS).map(f => (
+                    <option key={f} value={f}>{f}</option>
+                  ))}
+                </select>
+              </div>
+
+              {faculty && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                    Carrera
+                  </label>
+                  <select
+                    value={career}
+                    onChange={e => setCareer(e.target.value)}
+                    className="input-field"
+                  >
+                    <option value="">Selecciona tu carrera...</option>
+                    {UTA_FACULTY_CAREERS[faculty].map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                  Semestre
+                </label>
+                <select
+                  value={semester}
+                  onChange={e => setSemester(e.target.value)}
+                  className="input-field"
+                >
+                  <option value="">Selecciona tu semestre...</option>
+                  {SEMESTERS.map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
               </div>
 
               {(error || uploadError) && (

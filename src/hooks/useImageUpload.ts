@@ -49,9 +49,10 @@ export function useImageUpload({
       return
     }
 
-    // Compresión automática de imágenes anti-trolls
+    // Avatares se comprimen más agresivamente (se muestran pequeños, va a Supabase)
+    const [maxW, maxH, quality] = bucket === 'avatars' ? [400, 400, 0.70] : [1600, 1600, 0.82]
     const compressedFiles: File[] = await Promise.all(
-      toAdd.map(file => compressImage(file, 1600, 1600, 0.82))
+      toAdd.map(file => compressImage(file, maxW, maxH, quality))
     )
 
     // Validación de tamaño máximo permitido (después de compresión)
@@ -93,22 +94,30 @@ export function useImageUpload({
 
       for (let i = 0; i < newFiles.length; i++) {
         const file = newFiles[i]
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('folder', bucket)
+        let url: string
 
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        })
-
-        const data = await res.json()
-
-        if (!res.ok || data.error) {
-          throw new Error(data.error || 'Error al subir la imagen')
+        if (bucket === 'avatars') {
+          // Avatares → Supabase Storage (1 GB gratis, fotos pequeñas)
+          const ext = file.name.split('.').pop()
+          const filePath = `${user.id}/${Date.now()}.${ext}`
+          const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(filePath, file, { upsert: true })
+          if (uploadError) throw new Error(uploadError.message)
+          const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath)
+          url = urlData.publicUrl
+        } else {
+          // Fotos de productos → Cloudflare R2 (10 GB gratis)
+          const formData = new FormData()
+          formData.append('file', file)
+          formData.append('folder', bucket)
+          const res = await fetch('/api/upload', { method: 'POST', body: formData })
+          const data = await res.json()
+          if (!res.ok || data.error) throw new Error(data.error || 'Error al subir la imagen')
+          url = data.url
         }
 
-        uploadedUrls.push(data.url)
+        uploadedUrls.push(url)
         setProgress(Math.round(((i + 1) / newFiles.length) * 100))
       }
 

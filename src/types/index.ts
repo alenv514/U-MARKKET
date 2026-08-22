@@ -10,9 +10,84 @@ export interface Profile {
   email?: string | null
   rating_avg?: number | null
   review_count?: number | null
+  faculty: string | null
+  semester: string | null
   created_at: string
   updated_at: string
 }
+
+// Facultades y carreras de la UTA para registro de perfil
+export const UTA_FACULTY_CAREERS: Record<string, string[]> = {
+  'FISEI - Ing. en Sistemas, Electrónica e Industrial': [
+    'Ingeniería de Software',
+    'Tecnologías de la Información',
+    'Telecomunicaciones',
+    'Electrónica y Automatización',
+    'Ingeniería Industrial',
+    'Robótica e Inteligencia Artificial',
+  ],
+  'FICM - Ing. Civil y Mecánica': [
+    'Ingeniería Civil',
+    'Ingeniería Mecánica',
+  ],
+  'FCIAL - Ciencias e Ing. en Alimentos y Biotecnología': [
+    'Alimentos',
+    'Biotecnología',
+    'Bioquímica y Farmacia',
+  ],
+  'Facultad de Ciencias Agropecuarias': [
+    'Agronomía',
+    'Medicina Veterinaria',
+    'Agroindustria',
+  ],
+  'Facultad de Ciencias de la Salud': [
+    'Medicina',
+    'Enfermería',
+    'Fisioterapia',
+    'Laboratorio Clínico',
+    'Nutrición y Dietética',
+    'Terapia Ocupacional',
+  ],
+  'Facultad de Ciencias Administrativas': [
+    'Administración de Empresas',
+    'Marketing y Gestión de Negocios',
+    'Gestión de Talento Humano',
+    'Negocios Internacionales',
+  ],
+  'Facultad de Contabilidad y Auditoría': [
+    'Contabilidad y Auditoría',
+    'Finanzas',
+    'Economía',
+  ],
+  'Facultad de Jurisprudencia y Ciencias Sociales': [
+    'Derecho',
+    'Trabajo Social',
+    'Comunicación',
+  ],
+  'FCHE - Ciencias Humanas y de la Educación': [
+    'Psicología Clínica',
+    'Psicopedagogía',
+    'Pedagogía de la Actividad Física y Deporte',
+    'Educación Inicial',
+    'Educación Básica',
+    'Pedagogía de los Idiomas Nacionales y Extranjeros (Inglés)',
+    'Pedagogía de las Ciencias Experimentales (Química y Biología)',
+    'Pedagogía de las Ciencias Experimentales (Matemáticas y Física)',
+    'Turismo',
+  ],
+  'FDA - Diseño y Arquitectura': [
+    'Arquitectura',
+    'Diseño Gráfico',
+    'Diseño de Espacios y Ambientes',
+    'Diseño de Productos',
+  ],
+}
+
+export const SEMESTERS = [
+  '1er semestre', '2do semestre', '3er semestre', '4to semestre',
+  '5to semestre', '6to semestre', '7mo semestre', '8vo semestre',
+  '9no semestre', '10mo semestre',
+] as const
 
 export interface Subscription {
   id: string
