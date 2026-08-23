@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types'
 import { UTA_FACULTY_CAREERS, SEMESTERS } from '@/types'
 import { useImageUpload } from '@/hooks/useImageUpload'
+import { detectFace } from '@/lib/utils'
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -20,6 +21,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [faceChecking, setFaceChecking] = useState(false)
 
   const {
     newFiles,
@@ -66,12 +68,33 @@ export default function ProfilePage() {
     fetchProfile()
   }, [router])
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? [])
-    if (files.length) {
+    if (!files.length) return
+    const file = files[0]
+
+    setError('')
+    setFaceChecking(true)
+
+    try {
+      const { hasFace, supported } = await detectFace(file)
+
+      if (supported && !hasFace) {
+        setError('⚠️ No se detectó un rostro humano en la imagen. Por favor, sube una foto tuya con el rostro visible y buena iluminación.')
+        setFaceChecking(false)
+        if (fileInputRef.current) fileInputRef.current.value = ''
+        return
+      }
+
       if (newFiles.length > 0) removeNew(0)
-      addFiles([files[0]])
+      addFiles([file])
+    } catch {
+      // Si falla la detección, permitir la subida
+      if (newFiles.length > 0) removeNew(0)
+      addFiles([file])
     }
+
+    setFaceChecking(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -206,9 +229,16 @@ export default function ProfilePage() {
                   style={{ display: 'none' }}
                 />
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                Formatos soportados: JPG, PNG, WEBP. Máx: 2MB.
-              </div>
+              {faceChecking ? (
+                <div style={{ fontSize: '0.8rem', color: '#a5b4fc', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="animate-spin" style={{ width: 14, height: 14, border: '2px solid rgba(165,180,252,0.3)', borderTopColor: '#a5b4fc', borderRadius: '50%', display: 'inline-block' }} />
+                  Verificando rostro...
+                </div>
+              ) : (
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  Formatos soportados: JPG, PNG, WEBP. Máx: 2MB.
+                </div>
+              )}
             </div>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>

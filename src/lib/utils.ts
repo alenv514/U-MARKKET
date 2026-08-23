@@ -89,3 +89,40 @@ export async function compressImage(file: File, maxWidth = 1600, maxHeight = 160
     reader.onerror = () => resolve(file)
   })
 }
+
+/**
+ * Detecta si una imagen contiene al menos un rostro humano.
+ * Usa la API nativa FaceDetector (Chrome/Edge) sin dependencias externas.
+ * Si el navegador no soporta FaceDetector, permite la subida (fallback permisivo).
+ * Retorna { hasFace: boolean, supported: boolean }
+ */
+export async function detectFace(file: File): Promise<{ hasFace: boolean; supported: boolean }> {
+  // Verificar soporte del navegador
+  if (typeof window === 'undefined' || !('FaceDetector' in window)) {
+    return { hasFace: true, supported: false } // Fallback permisivo
+  }
+
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = async (event) => {
+      try {
+        const img = new Image()
+        img.src = event.target?.result as string
+        await new Promise<void>((res, rej) => { img.onload = () => res(); img.onerror = rej })
+
+        // Crear bitmap desde la imagen
+        const bitmap = await createImageBitmap(img)
+        const detector = new (window as any).FaceDetector({ fastMode: true, maxDetectedFaces: 1 })
+        const faces = await detector.detect(bitmap)
+        bitmap.close()
+
+        resolve({ hasFace: faces.length > 0, supported: true })
+      } catch {
+        // Si falla por cualquier razón, permitir la subida
+        resolve({ hasFace: true, supported: false })
+      }
+    }
+    reader.onerror = () => resolve({ hasFace: true, supported: false })
+  })
+}
