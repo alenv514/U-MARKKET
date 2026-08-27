@@ -771,13 +771,33 @@ export default function AdminPage() {
           </div>
 
           {/* Tabs */}
-          <div style={{ display: 'flex', gap: 4, marginBottom: '1.5rem', background: 'var(--bg-card)', borderRadius: 12, padding: 4, width: 'fit-content', flexWrap: 'wrap' }}>
+          <div style={{
+            display: 'flex',
+            gap: 6,
+            marginBottom: '1.5rem',
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: 14,
+            padding: 6,
+            width: '100%',
+            overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none',
+          }}>
             {(['reports', 'users', 'approvals', 'verifications'] as const).map(t => (
               <button key={t} onClick={() => setTab(t)} style={{
-                padding: '8px 18px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                fontWeight: 600, fontSize: '0.85rem', transition: 'all 0.2s ease',
+                padding: '8px 16px',
+                borderRadius: 10,
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 700,
+                fontSize: '0.82rem',
+                transition: 'all 0.2s ease',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
                 background: tab === t ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'transparent',
                 color: tab === t ? 'white' : 'var(--text-secondary)',
+                boxShadow: tab === t ? '0 4px 12px rgba(99, 102, 241, 0.3)' : 'none',
               }}>
                 {t === 'reports' ? `Reportes (${reports.length})` : t === 'users' ? `Usuarios (${filteredUsers.length})` : t === 'approvals' ? `Aprobaciones (${pendingListings.length})` : `🎓 Verificaciones (${verifications.length})`}
               </button>
@@ -800,10 +820,10 @@ export default function AdminPage() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {reports.map(report => (
-                    <div key={report.id} className="glass-card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, marginBottom: 4, fontSize: '0.95rem' }}>
-                          📦 {report.listings?.title ?? 'Publicación eliminada'}
+                    <div key={report.id} className="glass-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: 2 }}>
+                          {report.listings?.title || 'Publicación eliminada'}
                         </div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 4 }}>
                           Razón: <strong style={{ color: 'var(--text-primary)' }}>{report.reason}</strong>
@@ -812,16 +832,16 @@ export default function AdminPage() {
                           {new Date(report.created_at).toLocaleDateString('es-EC')}
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                        <button onClick={() => handleDismissReport(report.id)} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.65rem' }}>
+                        <button onClick={() => handleDismissReport(report.id)} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem', flex: '1 1 auto' }}>
                           Ignorar
                         </button>
                         {report.listings?.seller_id && (
-                          <button onClick={() => handleWarnSeller(report.id, report.listings.seller_id)} className="btn-primary" style={{ padding: '6px 12px', fontSize: '0.78rem', background: '#f59e0b' }}>
+                          <button onClick={() => handleWarnSeller(report.id, report.listings.seller_id)} className="btn-primary" style={{ padding: '6px 12px', fontSize: '0.78rem', background: '#f59e0b', flex: '1 1 auto' }}>
                             Advertir Vendedor
                           </button>
                         )}
-                        <button onClick={() => handleRemoveListing(report.listings?.id, report.id)} className="btn-danger" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
+                        <button onClick={() => handleRemoveListing(report.listings?.id, report.id)} className="btn-danger" style={{ padding: '6px 12px', fontSize: '0.78rem', flex: '1 1 auto' }}>
                           Eliminar listing
                         </button>
                       </div>
@@ -834,7 +854,7 @@ export default function AdminPage() {
 
           {/* Users tab */}
           {tab === 'users' && (
-            <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               
               {/* Buscador por Correo / Nombre */}
               <div style={{ position: 'relative', marginBottom: '0.5rem' }}>
@@ -848,15 +868,11 @@ export default function AdminPage() {
                 </span>
                 <input
                   type="text"
-                  placeholder="Buscar por correo o nombre..."
+                  placeholder="Buscar por correo (@uta.edu.ec) o nombre..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="input-field"
-                  style={{
-                    paddingLeft: '2.75rem', paddingRight: '1rem',
-                    fontSize: '0.9rem', borderRadius: 12,
-                    background: 'rgba(255,255,255,0.05)',
-                  }}
+                  style={{ paddingLeft: '2.75rem', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
                 />
               </div>
 
@@ -869,125 +885,147 @@ export default function AdminPage() {
                   const sub = user.subscriptions?.find(s => s.is_active) || user.subscriptions?.[0]
                   const subActive = sub?.is_active && (!sub.ends_at || new Date(sub.ends_at) > new Date())
                   return (
-                    <div key={user.id} className="glass-card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                      <div style={{
-                        width: 40, height: 40, borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '0.9rem', fontWeight: 700, color: 'white', flexShrink: 0,
-                      }}>
-                        {user.full_name?.[0]?.toUpperCase() ?? '?'}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                          <span>{user.full_name || 'Sin nombre'}</span>
-                          {user.is_verified && <VerifiedBadge size="sm" showText />}
+                    <div key={user.id} className="glass-card" style={{
+                      padding: '1.1rem 1.25rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.85rem',
+                      borderRadius: 16,
+                    }}>
+                      {/* Cabecera del usuario (Avatar + Info + Badges) */}
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
+                        <div style={{
+                          width: 42, height: 42, borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '1rem', fontWeight: 800, color: 'white', flexShrink: 0,
+                          marginTop: 2,
+                        }}>
+                          {user.full_name?.[0]?.toUpperCase() ?? '?'}
                         </div>
-                        {user.email && (
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 4 }}>
-                            📧 {user.email}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 800, fontSize: '0.95rem', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <span>{user.full_name || 'Sin nombre'}</span>
+                            {user.is_verified && <VerifiedBadge size="sm" showText />}
                           </div>
-                        )}
-                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                          {user.is_active === false && (
-                            <span className="badge badge-red">
-                              🚫 Suspendido
-                            </span>
+                          {user.email && (
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 6, wordBreak: 'break-all' }}>
+                              📧 {user.email}
+                            </div>
                           )}
-                          <span className={`badge ${
-                            user.role === 'admin' ? 'badge-red' :
-                            user.role === 'moderator' ? 'badge-amber' :
-                            user.role === 'seller' ? 'badge-indigo' : 'badge-amber'
-                          }`}>
-                            {user.role === 'moderator' ? '🛡️ moderador' : user.role}
-                          </span>
-                          <span className={`badge ${subActive ? 'badge-green' : 'badge-amber'}`}>
-                            {subActive ? `✅ ${sub?.plan ?? 'free'}` : '⏱ sin sub'}
-                          </span>
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            {user.is_active === false && (
+                              <span className="badge badge-red" style={{ fontSize: '0.72rem' }}>
+                                🚫 Suspendido
+                              </span>
+                            )}
+                            <span className={`badge ${
+                              user.role === 'admin' ? 'badge-red' :
+                              user.role === 'moderator' ? 'badge-amber' :
+                              user.role === 'seller' ? 'badge-indigo' : 'badge-amber'
+                            }`} style={{ fontSize: '0.72rem' }}>
+                              {user.role === 'moderator' ? '🛡️ moderador' : user.role}
+                            </span>
+                            <span className={`badge ${subActive ? 'badge-green' : 'badge-amber'}`} style={{ fontSize: '0.72rem' }}>
+                              {subActive ? `✅ ${sub?.plan ?? 'free'}` : '⏱ sin sub'}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                        {isAdmin && user.role !== 'admin' && (
-                          <>
-                            {user.is_active === false ? (
-                              <button
-                                onClick={() => handleUnbanUser(user.id)}
-                                className="btn-primary"
-                                style={{ padding: '6px 12px', fontSize: '0.75rem', background: '#10b981' }}
-                              >
-                                🟢 Activar Cuenta
-                              </button>
-                            ) : (
-                              <>
-                                {user.role === 'moderator' ? (
-                                  <button
-                                    onClick={() => handleRevokeModerator(user.id)}
-                                    className="btn-secondary"
-                                    style={{ padding: '6px 12px', fontSize: '0.75rem' }}
-                                    title="Quitar rol de moderador"
-                                  >
-                                    ↩️ Quitar Moderador
-                                  </button>
-                                ) : (
-                                  <>
-                                    {user.role !== 'seller' ? (
-                                      <button
-                                        onClick={() => handleApproveSeller(user.id)}
-                                        className="btn-primary"
-                                        style={{ padding: '6px 12px', fontSize: '0.75rem', background: '#10b981' }}
-                                      >
-                                        ✅ Aprobar Vendedor (30 días)
-                                      </button>
-                                    ) : (
-                                      <button
-                                        onClick={() => handleRevokeSeller(user.id)}
-                                        className="btn-danger"
-                                        style={{ padding: '6px 12px', fontSize: '0.75rem' }}
-                                      >
-                                        ❌ Revocar Vendedor
-                                      </button>
-                                    )}
+
+                      {/* Barra de Acciones del Usuario (Fluida y responsive) */}
+                      {isAdmin && (
+                        <div style={{
+                          display: 'flex',
+                          gap: 6,
+                          flexWrap: 'wrap',
+                          paddingTop: '0.75rem',
+                          borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                          alignItems: 'center',
+                        }}>
+                          {user.role !== 'admin' && (
+                            <>
+                              {user.is_active === false ? (
+                                <button
+                                  onClick={() => handleUnbanUser(user.id)}
+                                  className="btn-primary"
+                                  style={{ padding: '6px 12px', fontSize: '0.75rem', background: '#10b981', flex: '1 1 auto', minHeight: 32 }}
+                                >
+                                  🟢 Activar Cuenta
+                                </button>
+                              ) : (
+                                <>
+                                  {user.role === 'moderator' ? (
                                     <button
-                                      onClick={() => handleAssignModerator(user.id)}
+                                      onClick={() => handleRevokeModerator(user.id)}
                                       className="btn-secondary"
-                                      style={{ padding: '6px 12px', fontSize: '0.75rem', color: '#f59e0b', borderColor: 'rgba(245,158,11,0.4)' }}
-                                      title="Designar como Moderador"
+                                      style={{ padding: '6px 12px', fontSize: '0.75rem', flex: '1 1 auto', minHeight: 32 }}
+                                      title="Quitar rol de moderador"
                                     >
-                                      🛡️ Moderador
+                                      ↩️ Quitar Moderador
                                     </button>
-                                    <button
-                                      onClick={() => handleBanUser(user.id)}
-                                      className="btn-danger"
-                                      style={{ padding: '6px 12px', fontSize: '0.75rem', background: '#ef4444' }}
-                                    >
-                                      🚫 Banear
-                                    </button>
-                                  </>
-                                )}
-                              </>
-                            )}
-                          </>
-                        )}
-                        {isAdmin && user.role !== 'admin' && (
-                          <button
-                            onClick={() => handleDeleteUser(user.id, user.full_name || user.email || 'Usuario')}
-                            style={{
-                              padding: '6px 10px',
-                              fontSize: '0.75rem',
-                              background: 'rgba(127,29,29,0.4)',
-                              border: '1px solid rgba(239,68,68,0.35)',
-                              borderRadius: 8,
-                              color: '#fca5a5',
-                              cursor: 'pointer',
-                              fontWeight: 700,
-                              transition: 'background 0.2s',
-                            }}
-                            title="Eliminar usuario permanentemente"
-                          >
-                            🗑️
-                          </button>
-                        )}
-                      </div>
+                                  ) : (
+                                    <>
+                                      {user.role !== 'seller' ? (
+                                        <button
+                                          onClick={() => handleApproveSeller(user.id)}
+                                          className="btn-primary"
+                                          style={{ padding: '6px 12px', fontSize: '0.75rem', background: '#10b981', flex: '1 1 auto', minHeight: 32 }}
+                                        >
+                                          ✅ Vendedor (30d)
+                                        </button>
+                                      ) : (
+                                        <button
+                                          onClick={() => handleRevokeSeller(user.id)}
+                                          className="btn-danger"
+                                          style={{ padding: '6px 12px', fontSize: '0.75rem', flex: '1 1 auto', minHeight: 32 }}
+                                        >
+                                          ❌ Revocar Vendedor
+                                        </button>
+                                      )}
+                                      <button
+                                        onClick={() => handleAssignModerator(user.id)}
+                                        className="btn-secondary"
+                                        style={{ padding: '6px 12px', fontSize: '0.75rem', color: '#f59e0b', borderColor: 'rgba(245,158,11,0.4)', flex: '1 1 auto', minHeight: 32 }}
+                                        title="Designar como Moderador"
+                                      >
+                                        🛡️ Moderador
+                                      </button>
+                                      <button
+                                        onClick={() => handleBanUser(user.id)}
+                                        className="btn-danger"
+                                        style={{ padding: '6px 12px', fontSize: '0.75rem', background: '#ef4444', flex: '1 1 auto', minHeight: 32 }}
+                                      >
+                                        🚫 Banear
+                                      </button>
+                                    </>
+                                  )}
+                                </>
+                              )}
+                              <button
+                                onClick={() => handleDeleteUser(user.id, user.full_name || user.email || 'Usuario')}
+                                style={{
+                                  padding: '6px 10px',
+                                  fontSize: '0.8rem',
+                                  background: 'rgba(127,29,29,0.4)',
+                                  border: '1px solid rgba(239,68,68,0.35)',
+                                  borderRadius: 8,
+                                  color: '#fca5a5',
+                                  cursor: 'pointer',
+                                  fontWeight: 700,
+                                  minHeight: 32,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                                title="Eliminar usuario permanentemente"
+                              >
+                                🗑️
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )
                 })

@@ -26,16 +26,29 @@ function matchesImageSignature(buffer: Buffer, mime: string): boolean {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    
+    // 1. Intentar obtener usuario desde header Authorization (útil en móviles) o cookies
+    let user = null
+    const authHeader = request.headers.get('authorization')
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.replace('Bearer ', '').trim()
+      const { data: authData } = await supabase.auth.getUser(token)
+      user = authData?.user ?? null
+    }
 
     if (!user) {
-      return NextResponse.json({ error: 'No autorizado. Debes iniciar sesión.' }, { status: 401 })
+      const { data: cookieAuthData } = await supabase.auth.getUser()
+      user = cookieAuthData?.user ?? null
+    }
+
+    if (!user) {
+      return NextResponse.json({ error: 'No autorizado. Debes iniciar sesión para subir fotos.' }, { status: 401 })
     }
 
     const formData = await request.formData()
     const file = formData.get('file') as File | null
     const folder = (formData.get('folder') as string) || 'listings'
-    if (folder !== 'listings' && folder !== 'avatars') {
+    if (folder !== 'listings' && folder !== 'avatars' && folder !== 'credentials') {
       return NextResponse.json({ error: 'Carpeta no válida' }, { status: 400 })
     }
 

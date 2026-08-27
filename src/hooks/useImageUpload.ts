@@ -93,8 +93,9 @@ export function useImageUpload({
     setProgress(0)
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Sesión no encontrada')
+      const { data: { session } } = await supabase.auth.getSession()
+      const user = session?.user
+      if (!user) throw new Error('Sesión no encontrada. Por favor inicia sesión nuevamente.')
 
       const uploadedUrls: string[] = []
 
@@ -113,13 +114,24 @@ export function useImageUpload({
           const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath)
           url = urlData.publicUrl
         } else {
-          // Fotos de productos → Cloudflare R2 (10 GB gratis)
+          // Fotos de productos / Credenciales → Cloudflare R2 (10 GB gratis)
           const formData = new FormData()
           formData.append('file', file)
           formData.append('folder', bucket)
-          const res = await fetch('/api/upload', { method: 'POST', body: formData })
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: session?.access_token ? {
+              'Authorization': `Bearer ${session.access_token}`
+            } : {},
+            body: formData,
+          })
           const data = await res.json()
-          if (!res.ok || data.error) throw new Error(data.error || 'Error al subir la imagen')
+          if (!res.ok || data.error) {
+            if (data.error === 'Unauthorized' || res.status === 401) {
+              throw new Error('No autorizado. Tu sesión ha expirado o debes iniciar sesión nuevamente.')
+            }
+            throw new Error(data.error || 'Error al subir la imagen')
+          }
           url = data.url
         }
 
@@ -134,6 +146,8 @@ export function useImageUpload({
       const msg = error?.message || ''
       if (msg.includes('exceeded') || msg.includes('large') || msg.includes('limit')) {
         setError('📸 La foto es demasiado pesada para el servidor. Por favor, utiliza una app para bajar la resolución de la foto o comprimirla.')
+      } else if (msg === 'Unauthorized') {
+        setError('No autorizado. Por favor vuelve a iniciar sesión.')
       } else {
         setError(msg || 'Error al subir las imágenes')
       }
