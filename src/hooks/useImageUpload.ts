@@ -96,15 +96,6 @@ export function useImageUpload({
       const { data: { user } } = await supabase.auth.getUser()
       const { data: { session } } = await supabase.auth.getSession()
 
-      console.log('[DEBUG UPLOAD CLIENT] Iniciando subida:', {
-        userId: user?.id,
-        userEmail: user?.email,
-        hasSession: !!session,
-        hasAccessToken: !!session?.access_token,
-        tokenLength: session?.access_token?.length || 0,
-        filesCount: newFiles.length,
-      })
-
       if (!user && !session?.user) {
         throw new Error('No autorizado. Tu sesión no fue encontrada. Inicia sesión nuevamente.')
       }
@@ -137,8 +128,6 @@ export function useImageUpload({
             headers['Authorization'] = `Bearer ${token}`
           }
 
-          console.log(`[DEBUG UPLOAD CLIENT] Enviando foto #${i + 1} a /api/upload... (Header Authorization: ${!!token})`)
-
           const res = await fetch('/api/upload', {
             method: 'POST',
             credentials: 'include',
@@ -146,8 +135,6 @@ export function useImageUpload({
             body: formData,
           })
           const data = await res.json()
-
-          console.log('[DEBUG UPLOAD CLIENT] Respuesta de /api/upload:', { status: res.status, data })
 
           if (!res.ok || data.error) {
             throw new Error(data.error || `Error ${res.status} al subir imagen`)
@@ -164,7 +151,7 @@ export function useImageUpload({
     } catch (err: unknown) {
       const error = err as Error
       const msg = error?.message || ''
-      console.error('[DEBUG UPLOAD CLIENT] ❌ Error capturado en subida:', error)
+
       if (msg.includes('exceeded') || msg.includes('large') || msg.includes('limit')) {
         setError('📸 La foto es demasiado pesada para el servidor. Por favor, utiliza una app para bajar la resolución de la foto o comprimirla.')
       } else {
