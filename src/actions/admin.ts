@@ -1,22 +1,14 @@
 'use server'
 
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import type { Profile } from '@/types'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { purgeUserFiles } from '@/lib/storage-cleanup'
 
-// Función auxiliar para inicializar Supabase Server
-async function getAdminSupabase() {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll() {} // Server Actions no deben setear cookies aquí normalmente
-      }
-    }
-  )
+type AllowedRole = 'admin' | 'moderator'
 
+// Helper único que autentica y valida el rol (evita duplicar la creación del cliente).
+async function requireRole(roles: AllowedRole | AllowedRole[]) {
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('No autenticado')
 
@@ -26,39 +18,22 @@ async function getAdminSupabase() {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'admin') throw new Error('No autorizado. Se requiere rol admin.')
-
-  return { supabase, user }
-}
-
-// Helper que acepta admin O moderador (para acciones de moderación compartidas)
-async function getModSupabase() {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll() {}
-      }
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin' && profile?.role !== 'moderator') {
+  const allowed = Array.isArray(roles) ? roles : [roles]
+  if (!profile || !allowed.includes(profile.role as AllowedRole)) {
     throw new Error('No autorizado. Se requiere rol admin o moderador.')
   }
 
   return { supabase, user, role: profile.role as string }
+}
+
+async function getAdminSupabase() {
+  const { supabase, user } = await requireRole('admin')
+  return { supabase, user }
+}
+
+async function getModSupabase() {
+  const { supabase, user, role } = await requireRole(['admin', 'moderator'])
+  return { supabase, user, role }
 }
 
 export async function approveSellerAction(userId: string) {
@@ -228,11 +203,8 @@ export async function deleteUserAction(userId: string) {
   await supabase.from('profiles').delete().eq('id', userId)
 
   // Eliminar usuario de Supabase Auth usando service role key
-  const { createClient } = await import('@supabase/supabase-js')
-  const adminClient = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  const adminClient = createServiceClient()
+  await purgeUserFiles(userId, adminClient)
   const { error } = await adminClient.auth.admin.deleteUser(userId)
   if (error) throw new Error(error.message)
 
@@ -283,4 +255,22 @@ export async function deleteListingAction(listingId: string, reason: string) {
   })
 
   return { success: true }
+}
+
+export type AdminUserRow = Profile & {
+  subscriptions: Array<{ plan: string; ends_at: string | null; is_active: boolean }>
+}
+
+// Lista de usuarios con sus suscripciones para el panel admin/moderador.
+// Usa service role para poder leer email/phone sin exponerlos al cliente vía RLS.
+export async function getUsersForAdminAction(): Promise<{ users: AdminUserRow[] }> {
+  await requireRole(['admin', 'moderator'])
+  const supabaseAdmin = createServiceClient()
+
+  const { data: profiles } = await supabaseAdmin
+    .from('profiles')
+    .select('*, subscriptions(plan, ends_at, is_active)')
+    .order('created_at', { ascending: false })
+
+  return { users: (profiles ?? []) as AdminUserRow[] }
 }

@@ -2,9 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { createClient } from '@/lib/supabase/client'
-import { CATEGORIES } from '@/types'
+import { CATEGORIES, UserRole } from '@/types'
 import { sanitize, isValidPrice, isValidEcuadorPhone, checkBannedWords } from '@/lib/utils'
 import { useImageUpload } from '@/hooks/useImageUpload'
 
@@ -18,7 +19,7 @@ export default function NewListingPage() {
   const [whatsapp, setWhatsapp] = useState('')
   const [loading, setLoading] = useState(false)
   const [initialCheckLoading, setInitialCheckLoading] = useState(true)
-  const [userRole, setUserRole] = useState<'buyer' | 'seller' | 'admin' | null>(null)
+  const [userRole, setUserRole] = useState<UserRole | null>(null)
   const [freePublishingMode, setFreePublishingMode] = useState(false)
   const [requireApproval, setRequireApproval] = useState(false)
   const [userIsActive, setUserIsActive] = useState(true)
@@ -267,10 +268,10 @@ export default function NewListingPage() {
                   <span style={{ fontSize: '0.78rem', color: '#fde68a', opacity: 0.9 }}>Falta tu facultad y semestre en tu cuenta.</span>
                 </div>
               </div>
-              <a href="/profile" style={{
+              <Link href="/profile" style={{
                 background: '#f59e0b', color: 'white', padding: '0.45rem 1rem',
                 borderRadius: 8, fontWeight: 700, fontSize: '0.8rem', textDecoration: 'none', whiteSpace: 'nowrap'
-              }}>Completar ahora →</a>
+              }}>Completar ahora →</Link>
             </div>
           )}
 

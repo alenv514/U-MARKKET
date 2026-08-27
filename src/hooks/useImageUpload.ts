@@ -1,9 +1,9 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { compressImage } from '@/lib/utils'
 
 export interface UseImageUploadOptions {
-  bucket: 'listings' | 'avatars'
+  bucket: 'listings' | 'avatars' | 'credentials'
   maxFiles?: number
   maxSizeMB?: number
   initialUrls?: string[]
@@ -25,12 +25,18 @@ export function useImageUpload({
 
   const supabase = createClient()
 
-  // Limpieza de URLs temporales al desmontar
+  // Referencia a las URLs actuales para revocarlas solo al desmontar
+  const newPreviewsRef = useRef<string[]>([])
+  useEffect(() => {
+    newPreviewsRef.current = newPreviews
+  }, [newPreviews])
+
+  // Limpieza de URLs temporales al desmontar (evita revocar previews aún en uso)
   useEffect(() => {
     return () => {
-      newPreviews.forEach(url => URL.revokeObjectURL(url))
+      newPreviewsRef.current.forEach(url => URL.revokeObjectURL(url))
     }
-  }, [newPreviews])
+  }, [])
 
   const addFiles = useCallback(async (files: File[]) => {
     setError('')
@@ -67,7 +73,7 @@ export function useImageUpload({
     
     setNewFiles(prev => [...prev, ...compressedFiles])
     setNewPreviews(prev => [...prev, ...previews])
-  }, [existingUrls.length, newFiles.length, maxFiles, maxSizeMB])
+  }, [existingUrls.length, newFiles.length, maxFiles, maxSizeMB, bucket])
 
   const removeExisting = useCallback((index: number) => {
     setExistingUrls(prev => prev.filter((_, i) => i !== index))
@@ -123,8 +129,9 @@ export function useImageUpload({
 
       setUploading(false)
       return [...existingUrls, ...uploadedUrls]
-    } catch (err: any) {
-      const msg = err.message || ''
+    } catch (err: unknown) {
+      const error = err as Error
+      const msg = error?.message || ''
       if (msg.includes('exceeded') || msg.includes('large') || msg.includes('limit')) {
         setError('📸 La foto es demasiado pesada para el servidor. Por favor, utiliza una app para bajar la resolución de la foto o comprimirla.')
       } else {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { createClient } from '@/lib/supabase/client'
@@ -9,6 +9,8 @@ import type { Listing, Profile, Subscription } from '@/types'
 export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [subscription, setSubscription] = useState<Subscription | null>(null)
+  const [isSubActive, setIsSubActive] = useState(false)
+  const [daysLeft, setDaysLeft] = useState<number | null>(null)
   const [listings, setListings] = useState<Listing[]>([])
   const [freePublishingMode, setFreePublishingMode] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -17,20 +19,34 @@ export default function DashboardPage() {
   const [hasMore, setHasMore] = useState(true)
   const ITEMS_PER_PAGE = 10
   
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const fetchInitialData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!user) {
+      setLoading(false)
+      return
+    }
 
     const [profileRes, subRes, settingsRes] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', user.id).single(),
+      supabase.from('profiles').select('id, full_name, avatar_url, role, is_active, faculty, semester, created_at, updated_at').eq('id', user.id).single(),
       supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('platform_settings').select('value').eq('key', 'free_publishing_mode').single()
     ])
 
     setProfile(profileRes.data)
     setSubscription(subRes.data)
+
+    if (subRes.data) {
+      const ends = subRes.data.ends_at ? new Date(subRes.data.ends_at).getTime() : null
+      const now = Date.now()
+      setIsSubActive(!ends || ends > now)
+      setDaysLeft(ends ? Math.max(0, Math.floor((ends - now) / 86400000)) : null)
+    } else {
+      setIsSubActive(false)
+      setDaysLeft(null)
+    }
+
     setFreePublishingMode(settingsRes.data?.value === true || settingsRes.data?.value === 'true')
     
     // Fetch initial listings
@@ -47,7 +63,13 @@ export default function DashboardPage() {
     setLoading(false)
   }, [supabase])
 
-  useEffect(() => { fetchInitialData() }, [fetchInitialData])
+  useEffect(() => {
+    let mounted = true
+    if (mounted) {
+      fetchInitialData()
+    }
+    return () => { mounted = false }
+  }, [fetchInitialData])
 
   const loadMoreListings = async () => {
     setLoadingMore(true)
@@ -71,23 +93,23 @@ export default function DashboardPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('¿Eliminar esta publicación?')) return
-    await supabase.from('listings').delete().eq('id', id)
+    const { error } = await supabase.from('listings').delete().eq('id', id)
+    if (error) {
+      alert('Error al eliminar la publicación: ' + error.message)
+      return
+    }
     setListings(prev => prev.filter(l => l.id !== id))
   }
 
   const handleToggleStatus = async (listing: Listing) => {
     const newStatus = listing.status === 'active' ? 'paused' : 'active'
-    await supabase.from('listings').update({ status: newStatus }).eq('id', listing.id)
+    const { error } = await supabase.from('listings').update({ status: newStatus }).eq('id', listing.id)
+    if (error) {
+      alert('Error al cambiar el estado: ' + error.message)
+      return
+    }
     setListings(prev => prev.map(l => l.id === listing.id ? { ...l, status: newStatus } : l))
   }
-
-  const isSubActive = subscription && (
-    !subscription.ends_at || new Date(subscription.ends_at) > new Date()
-  )
-
-  const daysLeft = subscription?.ends_at
-    ? Math.max(0, Math.floor((new Date(subscription.ends_at).getTime() - Date.now()) / 86400000))
-    : null
 
   const activeListings = listings.filter(l => l.status === 'active').length
 

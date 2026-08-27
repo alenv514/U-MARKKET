@@ -36,8 +36,9 @@ export default function ForgotPasswordPage() {
       if (resetError) throw new Error(resetError.message)
       setResendMessage('¡Correo reenviado con éxito! Revisa tu bandeja.')
       setResendTimer(180)
-    } catch (err: any) {
-      setResendMessage('Error al reenviar: ' + (err.message || 'Inténtalo más tarde.'))
+    } catch (err: unknown) {
+      const e = err as Error
+      setResendMessage('Error al reenviar: ' + (e?.message || 'Inténtalo más tarde.'))
     } finally {
       setResendLoading(false)
     }
@@ -66,8 +67,9 @@ export default function ForgotPasswordPage() {
 
       setSuccess(true)
       setResendTimer(180)
-    } catch (err: any) {
-      setError(err.message || 'Error al enviar el correo de recuperación')
+    } catch (err: unknown) {
+      const e = err as Error
+      setError(e?.message || 'Error al enviar el correo de recuperación')
     } finally {
       setLoading(false)
     }

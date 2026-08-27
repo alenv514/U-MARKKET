@@ -1,9 +1,9 @@
 'use server'
 
 import nodemailer from 'nodemailer'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import webpush from 'web-push'
+import { escapeHtml } from '@/lib/utils'
 
 webpush.setVapidDetails(
   'mailto:support@u-market.com',
@@ -20,17 +20,34 @@ export async function sendNotificationAction(
   chatUrl: string
 ) {
   try {
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!serviceRoleKey) {
-      console.error('Falta SUPABASE_SERVICE_ROLE_KEY en .env.local para leer el correo')
+    const supabaseClient = await createClient()
+
+    // 1. Verificar que el usuario que llama la Server Action está autenticado
+    const { data: { user } } = await supabaseClient.auth.getUser()
+    if (!user) {
+      console.warn('sendNotificationAction rechazada: usuario no autenticado')
       return { success: false }
     }
 
-    const supabaseAdmin = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      serviceRoleKey,
-      { cookies: { getAll: () => [], setAll: () => {} } }
-    )
+    // No permitir enviarse notificaciones a uno mismo
+    if (user.id === recipientId) {
+      return { success: false }
+    }
+
+    const supabaseAdmin = createServiceClient()
+
+    // 2. Verificar que existe un chat activo entre el llamador y el destinatario
+    const { data: validChat, error: chatError } = await supabaseAdmin
+      .from('chats')
+      .select('id')
+      .or(`and(buyer_id.eq.${user.id},seller_id.eq.${recipientId}),and(seller_id.eq.${user.id},buyer_id.eq.${recipientId})`)
+      .limit(1)
+      .maybeSingle()
+
+    if (chatError || !validChat) {
+      console.warn('sendNotificationAction rechazada: no existe chat entre los usuarios')
+      return { success: false }
+    }
 
     let pushSent = false
 
@@ -43,7 +60,7 @@ export async function sendNotificationAction(
     if (subscriptions && subscriptions.length > 0) {
       const payload = JSON.stringify({
         title: `Nuevo mensaje de ${senderName}`,
-        body: messageContent,
+        body: messageContent.slice(0, 150),
         url: chatUrl,
       })
 
@@ -54,8 +71,9 @@ export async function sendNotificationAction(
             keys: { p256dh: sub.p256dh, auth: sub.auth }
           }, payload)
           return true
-        } catch (e: any) {
-          if (e.statusCode === 410 || e.statusCode === 404) {
+        } catch (err: unknown) {
+          const e = err as { statusCode?: number }
+          if (e?.statusCode === 410 || e?.statusCode === 404) {
             await supabaseAdmin.from('push_subscriptions').delete().eq('id', sub.id)
           }
           return false
@@ -87,21 +105,30 @@ export async function sendNotificationAction(
       },
     })
 
+    // Escapar todos los campos antes de interpolar en HTML
+    const safeRecipientName = escapeHtml(recipientName)
+    const safeSenderName = escapeHtml(senderName)
+    const safeListingTitle = escapeHtml(listingTitle)
+    const safeMessageContent = escapeHtml(messageContent.slice(0, 500))
+    const safeChatUrl = chatUrl.startsWith('http://') || chatUrl.startsWith('https://') || chatUrl.startsWith('/')
+      ? chatUrl
+      : '/'
+
     const htmlContent = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
         <div style="background-color: #6366f1; padding: 20px; text-align: center;">
           <h1 style="color: white; margin: 0; font-size: 24px;">U-Market</h1>
         </div>
         <div style="padding: 20px; background-color: #ffffff;">
-          <h2 style="color: #111827; font-size: 20px; margin-top: 0;">Hola, ${recipientName} 👋</h2>
+          <h2 style="color: #111827; font-size: 20px; margin-top: 0;">Hola, ${safeRecipientName} 👋</h2>
           <p style="color: #4b5563; font-size: 16px;">
-            <strong>${senderName}</strong> te ha enviado un nuevo mensaje sobre tu publicación <strong>${listingTitle}</strong>.
+            <strong>${safeSenderName}</strong> te ha enviado un nuevo mensaje sobre tu publicación <strong>${safeListingTitle}</strong>.
           </p>
           <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0; font-style: italic; color: #374151;">
-            "${messageContent}"
+            "${safeMessageContent}"
           </div>
           <div style="text-align: center; margin-top: 30px;">
-            <a href="${chatUrl}" style="background-color: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 99px; font-weight: bold; display: inline-block;">
+            <a href="${safeChatUrl}" style="background-color: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 99px; font-weight: bold; display: inline-block;">
               Responder Mensaje
             </a>
           </div>
@@ -115,7 +142,7 @@ export async function sendNotificationAction(
     await transporter.sendMail({
       from: `"U-Market" <${process.env.EMAIL_USER}>`,
       to: recipientEmail,
-      subject: `Nuevo mensaje de ${senderName} en U-Market`,
+      subject: `Nuevo mensaje de ${safeSenderName} en U-Market`,
       html: htmlContent,
     })
 
@@ -125,3 +152,4 @@ export async function sendNotificationAction(
     return { success: false }
   }
 }
+

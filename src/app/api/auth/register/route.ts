@@ -1,23 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sanitize, isValidEcuadorPhone } from '@/lib/utils'
+import { createRateLimiter } from '@/lib/rate-limit'
 
-// ── Rate limiter simple en memoria ──
-const registerAttempts = new Map<string, { count: number; resetAt: number }>()
-const RATE_LIMIT = 3
-const RATE_WINDOW_MS = 60_000 // 1 minuto
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now()
-  const entry = registerAttempts.get(ip)
-  if (!entry || now > entry.resetAt) {
-    registerAttempts.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS })
-    return false
-  }
-  if (entry.count >= RATE_LIMIT) return true
-  entry.count++
-  return false
-}
+// ── Rate limiter simple en memoria (3 intentos/minuto por IP) ──
+const isRateLimited = createRateLimiter(3, 60_000)
 
 
 
@@ -35,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { email, password, fullName, phone } = body
+    const { email, password, fullName, phone, faculty, career, semester } = body
 
     // ── Validación de dominio en el backend ──
     if (!email || typeof email !== 'string') {
@@ -60,6 +47,12 @@ export async function POST(request: NextRequest) {
     // Sanitizar inputs de texto
     const safeFullName = fullName ? sanitize(fullName) : ''
     const safePhone = phone ? sanitize(phone) : ''
+    const safeFaculty = faculty ? sanitize(faculty) : ''
+    const safeCareer = career ? sanitize(career) : ''
+    const safeSemesterOnly = semester ? sanitize(semester) : ''
+    const safeSemester = safeFaculty && safeCareer && safeSemesterOnly
+      ? `${safeSemesterOnly} - ${safeCareer}`
+      : safeSemesterOnly || null
 
     if (safePhone && !isValidEcuadorPhone(safePhone)) {
       return NextResponse.json(
@@ -78,16 +71,18 @@ export async function POST(request: NextRequest) {
         data: {
           full_name: safeFullName,
           phone: safePhone,
+          faculty: safeFaculty || null,
+          semester: safeSemester || null,
         },
       },
     })
 
     if (error) {
-      console.error('Registration error detail:', error)
-      if (error.message.includes('already registered')) {
+      console.error('Registration failed:', error.message)
+      if (error.message.includes('already registered') || error.message.includes('User already registered')) {
         return NextResponse.json({ error: 'Este correo ya está registrado' }, { status: 409 })
       }
-      return NextResponse.json({ error: error.message || JSON.stringify(error) }, { status: 400 })
+      return NextResponse.json({ error: error.message || 'Error al procesar el registro' }, { status: 400 })
     }
 
     // Supabase devuelve usuario con identities vacío cuando el correo ya existe
@@ -96,11 +91,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Este correo ya está registrado' }, { status: 409 })
     }
 
-    if (safePhone && data.user) {
-      await supabase
-        .from('profiles')
-        .update({ phone: safePhone })
-        .eq('id', data.user.id)
+    if (data.user) {
+      const updatePayload: Record<string, string | null> = {}
+      if (safePhone) updatePayload.phone = safePhone
+      if (safeFaculty) updatePayload.faculty = safeFaculty
+      if (safeSemester) updatePayload.semester = safeSemester
+
+      if (Object.keys(updatePayload).length > 0) {
+        await supabase
+          .from('profiles')
+          .update(updatePayload)
+          .eq('id', data.user.id)
+      }
     }
 
     return NextResponse.json({ success: true, userId: data.user?.id })

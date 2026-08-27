@@ -64,53 +64,87 @@ export default function TerminosPage() {
                   1. Titularidad Exclusiva y Derechos de Autor
                 </h2>
                 <p style={{ marginBottom: '0.6rem', color: 'rgba(255, 255, 255, 0.6)' }}>
-                  La plataforma <strong style={{ color: 'rgba(255, 255, 255, 0.85)' }}>U-Market</strong>, su código fuente, arquitectura, diseños, logotipos y bases de datos son de propiedad <strong style={{ color: 'rgba(255, 255, 255, 0.85)' }}>única y exclusiva de Alen Lenin Villamarín Velasco</strong> ("El Titular").
+                  La plataforma <strong style={{ color: 'rgba(255, 255, 255, 0.85)' }}>U-Market</strong>, su código fuente, arquitectura, diseños, logotipos y bases de datos son de propiedad <strong style={{ color: 'rgba(255, 255, 255, 0.85)' }}>única y exclusiva de Alen Lenin Villamarín Velasco</strong> (&quot;El Titular&quot;).
                 </p>
                 <p style={{ marginBottom: '0.6rem', fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.45)' }}>
-                  <em>Alcance institucional:</em> La denominación "Universidad Técnica de Ambato" (UTA) y el dominio <code>@uta.edu.ec</code> identifican únicamente a la comunidad académica usuaria. La institución no posee propiedad, titularidad ni derechos patrimoniales o morales sobre este software.
+                  <em>Alcance institucional:</em> La denominación &quot;Universidad Técnica de Ambato&quot; (UTA) y el dominio <code>@uta.edu.ec</code> identifican únicamente a la comunidad académica usuaria. La institución no posee propiedad, titularidad ni derechos patrimoniales o morales sobre este software.
                 </p>
                 <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.45)' }}>
                   Queda prohibida la reproducción, copia, distribución o ingeniería inversa sin autorización previa y por escrito del titular.
                 </p>
               </div>
 
-              {/* 2. Elegibilidad */}
-              <div>
-                <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.75)', marginBottom: '0.4rem' }}>
-                  2. Cuentas y Uso del Servicio
+              {/* 2. Autorización Expresa y Tratamiento de Datos (LOPDP) */}
+              <div style={{
+                background: 'rgba(99, 102, 241, 0.04)',
+                border: '1px solid rgba(99, 102, 241, 0.15)',
+                padding: '1.25rem 1.5rem',
+                borderRadius: 16
+              }}>
+                <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'rgba(165, 180, 252, 0.9)', marginBottom: '0.6rem' }}>
+                  2. Consentimiento Expreso para el Manejo y Uso de Datos Personales
                 </h2>
-                <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                  El servicio está destinado a la comunidad de la UTA. Requiere registro mediante un correo institucional activo (<code style={{ color: 'rgba(165, 180, 252, 0.8)' }}>@uta.edu.ec</code>). El usuario es responsable de mantener la confidencialidad de sus credenciales.
+                <p style={{ marginBottom: '0.6rem', color: 'rgba(255, 255, 255, 0.65)' }}>
+                  Al registrarte en U-Market, otorgas tu <strong>consentimiento libre, específico, inequívoco e informado</strong>, en conformidad con la <strong>Ley Orgánica de Protección de Datos Personales (LOPDP)</strong> del Ecuador, para que la plataforma recopile, almacene y procese los siguientes datos:
+                </p>
+                <ul style={{ paddingLeft: '1.25rem', marginBottom: '0.6rem', color: 'rgba(255, 255, 255, 0.55)', fontSize: '0.85rem' }}>
+                  <li>Nombre completo y correo institucional (<code>@uta.edu.ec</code>).</li>
+                  <li>Facultad, carrera universitaria y semestre en curso.</li>
+                  <li>Número de contacto telefónico/WhatsApp y fotografía de perfil (si son proporcionados).</li>
+                  <li>Contenido e imágenes de las publicaciones y mensajes dentro del chat interno.</li>
+                </ul>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+                  <strong>Finalidad exclusiva:</strong> Estos datos se utilizarán únicamente para autenticar la pertenencia a la comunidad universitaria, asegurar la confianza en las interacciones comerciales, moderar contenidos y generar métricas estadísticas agregadas y anónimas. <strong>U-Market no vende, no comercializa ni transfiere tus datos a empresas externas.</strong>
                 </p>
               </div>
 
-              {/* 3. Intermediación */}
+              {/* 3. Elegibilidad */}
               <div>
                 <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.75)', marginBottom: '0.4rem' }}>
-                  3. Carácter Intermediario
+                  3. Cuentas y Verificación Estudiantil
                 </h2>
                 <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                  U-Market opera como un catálogo informático independiente. La plataforma no procesa transacciones monetarias ni realiza entregas físicas. Los acuerdos comerciales se realizan de forma directa e independiente entre compradores y vendedores.
+                  El servicio está destinado a la comunidad de la Universidad Técnica de Ambato (UTA). Requiere registro mediante un correo institucional activo (<code style={{ color: 'rgba(165, 180, 252, 0.8)' }}>@uta.edu.ec</code>). El usuario es responsable de mantener la confidencialidad de sus credenciales y de la veracidad de los datos académicos ingresados.
                 </p>
               </div>
 
-              {/* 4. Moderación */}
+              {/* 4. Intermediación */}
               <div>
                 <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.75)', marginBottom: '0.4rem' }}>
-                  4. Moderación de Contenido
+                  4. Carácter Intermediario y Responsabilidad Comercial
                 </h2>
                 <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                  Nos reservamos el derecho de retirar anuncios o suspender cuentas que vulneren las normas comunitarias, leyes vigentes o comercialicen artículos no permitidos.
+                  U-Market opera como una plataforma informática de intermediación y catálogo estudiantil. La plataforma no procesa pagos en línea ni participa en la entrega física de los productos. Toda negociación, acuerdo de pago y entrega es de exclusiva responsabilidad entre el comprador y el vendedor.
                 </p>
               </div>
 
-              {/* 5. Modificaciones */}
+              {/* 5. Artículos Prohibidos */}
               <div>
                 <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.75)', marginBottom: '0.4rem' }}>
-                  5. Actualizaciones
+                  5. Artículos Prohibidos y Normas de Convivencia
+                </h2>
+                <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                  Queda estrictamente prohibida la publicación y comercialización de: sustancias ilícitas, alcohol, armas, réplicas o artículos falsificados, servicios de realización de exámenes/fraude académico, o cualquier producto que infrinja los reglamentos de la UTA o las leyes de la República del Ecuador.
+                </p>
+              </div>
+
+              {/* 6. Moderación y Sanciones */}
+              <div>
+                <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.75)', marginBottom: '0.4rem' }}>
+                  6. Moderación, Suspensión y Baja de Cuentas
+                </h2>
+                <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                  El equipo de administración y moderación se reserva el derecho de retirar de forma inmediata cualquier anuncio reportado, así como suspender o cancelar permanentemente las cuentas que incumplan estos términos o atenten contra la seguridad de los estudiantes.
+                </p>
+              </div>
+
+              {/* 7. Modificaciones */}
+              <div>
+                <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.75)', marginBottom: '0.4rem' }}>
+                  7. Actualizaciones de los Términos
                 </h2>
                 <p style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
-                  Los presentes términos pueden ser actualizados periódicamente para responder a mejoras del sistema o requerimientos legales.
+                  Los presentes términos pueden ser actualizados periódicamente para reflejar mejoras en la plataforma o nuevas disposiciones regulatorias. El uso continuo de la plataforma implica la aceptación de las versiones vigentes.
                 </p>
               </div>
 

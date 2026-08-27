@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   full_name   text,
   phone       text,
   avatar_url  text,
-  role        text NOT NULL DEFAULT 'buyer' CHECK (role IN ('buyer', 'seller', 'admin')),
+  role        text NOT NULL DEFAULT 'buyer' CHECK (role IN ('buyer', 'seller', 'moderator', 'admin')),
   is_active   boolean NOT NULL DEFAULT true,
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now()
@@ -74,9 +74,16 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
 AS $$
 BEGIN
-  -- Insertar usuario como 'buyer' por defecto, sin suscripción automática
-  INSERT INTO public.profiles (id, full_name, role)
-  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'full_name', ''), 'buyer');
+  -- Insertar usuario como 'buyer' por defecto con sus datos académicos
+  INSERT INTO public.profiles (id, full_name, role, faculty, semester, phone)
+  VALUES (
+    NEW.id, 
+    COALESCE(NEW.raw_user_meta_data->>'full_name', ''), 
+    'buyer',
+    NEW.raw_user_meta_data->>'faculty',
+    NEW.raw_user_meta_data->>'semester',
+    NEW.raw_user_meta_data->>'phone'
+  );
 
   RETURN NEW;
 END;
@@ -154,16 +161,16 @@ CREATE POLICY "Vendedor edita sus publicaciones"
   ON public.listings FOR UPDATE USING (auth.uid() = seller_id);
 CREATE POLICY "Vendedor elimina sus publicaciones"
   ON public.listings FOR DELETE USING (auth.uid() = seller_id);
-CREATE POLICY "Admin gestiona todos los listings"
+CREATE POLICY "Admin y Moderadores gestionan todos los listings"
   ON public.listings FOR ALL
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'moderator')));
 
 -- REPORTS
 CREATE POLICY "Usuario autenticado puede reportar"
   ON public.reports FOR INSERT WITH CHECK (auth.uid() = reporter_id);
-CREATE POLICY "Admin ve todos los reportes"
+CREATE POLICY "Admin y Moderadores ven todos los reportes"
   ON public.reports FOR ALL
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'moderator')));
 
 -- ─────────────────────────────────────────────
 -- 8. STORAGE — Bucket para imagenes de productos
@@ -230,9 +237,9 @@ CREATE TABLE IF NOT EXISTS public.admin_actions (
 
 ALTER TABLE public.admin_actions ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Admins gestionan admin_actions"
+CREATE POLICY "Admins y Moderadores gestionan admin_actions"
   ON public.admin_actions FOR ALL
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'moderator')));
 
 -- ─────────────────────────────────────────────
 -- 12. CONFIGURACIÓN GLOBAL (platform_settings)
@@ -288,3 +295,42 @@ BEGIN
   ORDER BY dates.d ASC;
 END;
 $$;
+
+-- ─────────────────────────────────────────────
+-- 14. VERIFICACIÓN DE ESTUDIANTES UTA Y APP SETTINGS
+-- ─────────────────────────────────────────────
+ALTER TABLE public.profiles 
+  ADD COLUMN IF NOT EXISTS is_verified boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS verification_status text DEFAULT 'none',
+  ADD COLUMN IF NOT EXISTS credential_url text,
+  ADD COLUMN IF NOT EXISTS verification_rejected_reason text,
+  ADD COLUMN IF NOT EXISTS verified_at timestamp with time zone,
+  ADD COLUMN IF NOT EXISTS verification_submitted_at timestamp with time zone;
+
+CREATE TABLE IF NOT EXISTS public.app_settings (
+  key text PRIMARY KEY,
+  value jsonb NOT NULL,
+  updated_at timestamp with time zone DEFAULT now()
+);
+
+ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public read app_settings" ON public.app_settings;
+CREATE POLICY "Public read app_settings"
+  ON public.app_settings FOR SELECT
+  USING (true);
+
+DROP POLICY IF EXISTS "Admin modify app_settings" ON public.app_settings;
+CREATE POLICY "Admin modify app_settings"
+  ON public.app_settings FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = auth.uid() AND profiles.role = 'admin'
+    )
+  );
+
+INSERT INTO public.app_settings (key, value)
+VALUES ('student_verification_enabled', 'false'::jsonb)
+ON CONFLICT (key) DO NOTHING;
+

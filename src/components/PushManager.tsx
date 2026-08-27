@@ -1,19 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { savePushSubscriptionAction } from '@/actions/push'
+import type { User } from '@supabase/supabase-js'
 
-export default function PushManager({ user }: { user: any }) {
-  const [isSupported, setIsSupported] = useState(false)
-  
+export default function PushManager({ user }: { user: User | { id: string } | null }) {
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
-      setIsSupported(true)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!user || !isSupported) return
+    if (!user) return
+    const isSupported = typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window
+    if (!isSupported) return
 
     const registerAndSubscribe = async () => {
       try {
@@ -49,22 +44,27 @@ export default function PushManager({ user }: { user: any }) {
           // Send to server
           await savePushSubscriptionAction(JSON.parse(JSON.stringify(subscription)))
         }
-      } catch (error) {
-        console.error('Error setting up Push Notifications', error)
+      } catch (error: unknown) {
+        // En navegadores como Brave o en local sin servicio de push activo, se silencia o advierte
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.warn('Servicio de Push Notifications no disponible en este navegador o bloqueado por el cliente.')
+        } else {
+          console.warn('No se pudo registrar Push Notifications:', error)
+        }
       }
     }
 
     registerAndSubscribe()
-  }, [user, isSupported])
+  }, [user])
 
   return null
 }
 
 // Utility to convert Base64 string to Uint8Array
 function urlBase64ToUint8Array(base64String: string) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4)
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
   const base64 = (base64String + padding)
-    .replace(/\-/g, '+')
+    .replace(/-/g, '+')
     .replace(/_/g, '/')
 
   const rawData = window.atob(base64)
@@ -75,3 +75,4 @@ function urlBase64ToUint8Array(base64String: string) {
   }
   return outputArray
 }
+

@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import { createClient } from '@/lib/supabase/client'
 import type { Chat, Message } from '@/types'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { sendNotificationAction } from '@/actions/notifications'
 
@@ -30,7 +31,7 @@ export default function ChatDetailPage() {
   }, [messages])
 
   useEffect(() => {
-    let channel: any
+    let channel: RealtimeChannel | null = null
 
     const setupChat = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -216,7 +217,7 @@ export default function ChatDetailPage() {
                 Envía un mensaje para comenzar la conversación sobre <strong>{chat.listings?.title}</strong>
               </div>
             ) : (
-              messages.map((msg, i) => {
+              messages.map((msg) => {
                 const isMe = msg.sender_id === userId
                 return (
                   <div key={msg.id} style={{

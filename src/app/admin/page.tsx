@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import { createClient } from '@/lib/supabase/client'
@@ -21,8 +21,10 @@ import {
   deleteUserAction,
   assignModeratorAction,
   revokeModeratorAction,
-  deleteListingAction
+  getUsersForAdminAction
 } from '@/actions/admin'
+import { reviewVerificationAction, getFeatureFlagAction, setFeatureFlagAction } from '@/actions/verification'
+import VerifiedBadge from '@/components/VerifiedBadge'
 
 interface ReportWithListing extends Omit<Report, 'listings'> {
   listings: {
@@ -37,26 +39,53 @@ interface UserWithSub extends Profile {
   subscriptions: Array<{ plan: string; ends_at: string | null; is_active: boolean }>
 }
 
+interface PendingListing {
+  id: string
+  title: string
+  price: number
+  category: string
+  description: string | null
+  image_url: string | null
+  status: string
+  created_at: string
+  seller_id: string
+  profiles?: {
+    full_name: string | null
+    avatar_url: string | null
+  } | null
+}
+
+interface WeeklyStatItem {
+  day: string
+  formattedDay: string
+  views?: number
+  [key: string]: unknown
+}
+
 export default function AdminPage() {
   const [reports, setReports] = useState<ReportWithListing[]>([])
   const [users, setUsers] = useState<UserWithSub[]>([])
-  const [pendingListings, setPendingListings] = useState<any[]>([])
+  const [pendingListings, setPendingListings] = useState<PendingListing[]>([])
+  const [verifications, setVerifications] = useState<Profile[]>([])
+  const [verificationFeatureEnabled, setVerificationFeatureEnabled] = useState(false)
+  const [zoomImage, setZoomImage] = useState<string | null>(null)
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
   const [stats, setStats] = useState({
     listings: { total: 0, active: 0, paused: 0, pending: 0 },
     users: { total: 0, sellers: 0, buyers: 0, admins: 0 },
     activeSubs: 0
   })
-  const [weeklyStats, setWeeklyStats] = useState<any[]>([])
+  const [weeklyStats, setWeeklyStats] = useState<WeeklyStatItem[]>([])
   const [weeklyStatsError, setWeeklyStatsError] = useState<string | null>(null)
   const [freePublishingMode, setFreePublishingMode] = useState(false)
   const [requireApprovalMode, setRequireApprovalMode] = useState(false)
-  const [tab, setTab] = useState<'reports' | 'users' | 'approvals'>('reports')
+  const [tab, setTab] = useState<'reports' | 'users' | 'approvals' | 'verifications'>('reports')
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [storageUsedMB, setStorageUsedMB] = useState<number | null>(null)
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const fetchData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -68,14 +97,12 @@ export default function AdminPage() {
     if (profile?.role !== 'admin' && profile?.role !== 'moderator') { router.push('/dashboard'); return }
     setIsAdmin(profile?.role === 'admin')
 
-    const [reportsRes, usersRes, settingsRes, approvalSettingsRes, pendingListingsRes, weeklyStatsRes] = await Promise.all([
+    const [reportsRes, usersRes, settingsRes, approvalSettingsRes, pendingListingsRes, weeklyStatsRes, verificationsRes, verificationFlagRes] = await Promise.all([
       supabase.from('reports')
         .select('*, listings(id, title, seller_id, status)')
         .eq('status', 'pending')
         .order('created_at', { ascending: false }),
-      supabase.from('profiles')
-        .select('*, subscriptions(plan, ends_at, is_active)')
-        .order('created_at', { ascending: false }),
+      getUsersForAdminAction(),
       supabase.from('platform_settings')
         .select('value')
         .eq('key', 'free_publishing_mode')
@@ -88,7 +115,12 @@ export default function AdminPage() {
         .select('*, profiles(full_name, avatar_url)')
         .eq('status', 'pending_approval')
         .order('created_at', { ascending: false }),
-      supabase.rpc('get_weekly_stats')
+      supabase.rpc('get_weekly_stats'),
+      supabase.from('profiles')
+        .select('*')
+        .eq('verification_status', 'pending')
+        .order('verification_submitted_at', { ascending: false }),
+      getFeatureFlagAction('student_verification_enabled')
     ])
 
     const [
@@ -106,10 +138,10 @@ export default function AdminPage() {
       supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'active'),
       supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'paused'),
       supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'pending_approval'),
-      supabase.from('profiles').select('*', { count: 'exact', head: true }),
-      supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'seller'),
-      supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'buyer'),
-      supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'admin'),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'seller'),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'buyer'),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'admin'),
       supabase.from('subscriptions').select('*', { count: 'exact', head: true })
         .eq('is_active', true)
         .or(`ends_at.is.null,ends_at.gte.${new Date().toISOString()}`)
@@ -120,6 +152,11 @@ export default function AdminPage() {
       users: { total: totalUsers || 0, sellers: sellerUsers || 0, buyers: buyerUsers || 0, admins: adminUsers || 0 },
       activeSubs: activeSubs || 0
     })
+
+    if (verificationsRes.data) {
+      setVerifications(verificationsRes.data as Profile[])
+    }
+    setVerificationFeatureEnabled(verificationFlagRes.enabled ?? false)
 
     if (settingsRes.data) {
       setFreePublishingMode(settingsRes.data.value === 'true' || settingsRes.data.value === true)
@@ -133,8 +170,7 @@ export default function AdminPage() {
       console.error('Error fetching weekly stats:', weeklyStatsRes.error)
       setWeeklyStatsError(weeklyStatsRes.error.message)
     } else if (weeklyStatsRes.data) {
-      console.log('Weekly Stats Data:', weeklyStatsRes.data)
-      const formattedStats = weeklyStatsRes.data.map((d: any) => {
+      const formattedStats = (weeklyStatsRes.data as Array<{ day: string; [key: string]: unknown }>).map((d) => {
         // Asegurar que la fecha se procese correctamente usando UTC para evitar desfases
         const date = new Date(d.day + 'T00:00:00Z')
         return {
@@ -146,8 +182,8 @@ export default function AdminPage() {
     }
 
     setReports((reportsRes.data as ReportWithListing[]) ?? [])
-    setUsers((usersRes.data as UserWithSub[]) ?? [])
-    setPendingListings((pendingListingsRes.data as any[]) ?? [])
+    setUsers((usersRes.users as UserWithSub[]) ?? [])
+    setPendingListings((pendingListingsRes.data as PendingListing[]) ?? [])
 
     // Calcular espacio usado contando imágenes en storage
     try {
@@ -156,13 +192,18 @@ export default function AdminPage() {
       for (const bucket of buckets) {
         const { data: files } = await supabase.storage.from(bucket).list('', { limit: 1000, offset: 0 })
         if (files) {
-          // Listar recursivamente en subcarpetas (por user id)
-          for (const folder of files) {
-            if (!folder.id) {
-              const { data: subFiles } = await supabase.storage.from(bucket).list(folder.name, { limit: 1000 })
-              if (subFiles) totalBytes += subFiles.reduce((acc, f) => acc + (f.metadata?.size || 0), 0)
+          for (const item of files) {
+            if (!item.id) {
+              const { data: subFiles } = await supabase.storage.from(bucket).list(item.name, { limit: 1000 })
+              if (subFiles) {
+                for (const sub of subFiles) {
+                  const size = sub.metadata?.size
+                  if (typeof size === 'number') totalBytes += size
+                }
+              }
             } else {
-              totalBytes += folder.metadata?.size || 0
+              const size = item.metadata?.size
+              if (typeof size === 'number') totalBytes += size
             }
           }
         }
@@ -173,13 +214,29 @@ export default function AdminPage() {
     }
 
     setLoading(false)
-  }, [])
+  }, [router, supabase])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => {
+    let mounted = true
+    if (mounted) {
+      fetchData()
+    }
+    return () => { mounted = false }
+  }, [fetchData])
 
   const handleRemoveListing = async (listingId: string, reportId: string) => {
     if (!confirm('¿Eliminar esta publicación?')) return
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
     await supabase.from('listings').update({ status: 'removed' }).eq('id', listingId)
+    await supabase.from('admin_actions').insert({
+      admin_id: user.id,
+      action: 'remove_listing_report',
+      target_id: listingId,
+      details: { reportId }
+    })
     await supabase.from('reports').update({ status: 'reviewed' }).eq('id', reportId)
     setReports(prev => prev.filter(r => r.id !== reportId))
   }
@@ -227,8 +284,9 @@ export default function AdminPage() {
         }))
         alert('Suscripción activada y registrada en auditoría.')
       }
-    } catch (error: any) {
-      alert('Error: ' + error.message)
+    } catch (error: unknown) {
+      const e = error as Error
+      alert('Error: ' + (e?.message || 'Error desconocido'))
     }
   }
 
@@ -244,8 +302,9 @@ export default function AdminPage() {
         }))
         alert('Permisos revocados y registrados en auditoría.')
       }
-    } catch (error: any) {
-      alert('Error: ' + error.message)
+    } catch (error: unknown) {
+      const e = error as Error
+      alert('Error: ' + (e?.message || 'Error desconocido'))
     }
   }
 
@@ -257,9 +316,10 @@ export default function AdminPage() {
     try {
       const res = await toggleFreePublishingAction(newState)
       if (!res.success) throw new Error('Falló la acción')
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const e = error as Error
       setFreePublishingMode(!newState) // Revert on error
-      alert('Error al cambiar configuración: ' + error.message)
+      alert('Error al cambiar configuración: ' + (e?.message || 'Error desconocido'))
     }
   }
 
@@ -271,9 +331,10 @@ export default function AdminPage() {
     try {
       const res = await toggleListingApprovalAction(newState)
       if (!res.success) throw new Error('Falló la acción')
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const e = error as Error
       setRequireApprovalMode(!newState) // Revert on error
-      alert('Error al cambiar configuración: ' + error.message)
+      alert('Error al cambiar configuración: ' + (e?.message || 'Error desconocido'))
     }
   }
 
@@ -293,8 +354,9 @@ export default function AdminPage() {
         }))
         alert('Publicación aprobada con éxito.')
       }
-    } catch (error: any) {
-      alert('Error al aprobar: ' + error.message)
+    } catch (error: unknown) {
+      const e = error as Error
+      alert('Error al aprobar: ' + (e?.message || 'Error desconocido'))
     }
   }
 
@@ -313,8 +375,9 @@ export default function AdminPage() {
         }))
         alert('Publicación rechazada y eliminada.')
       }
-    } catch (error: any) {
-      alert('Error al rechazar: ' + error.message)
+    } catch (error: unknown) {
+      const e = error as Error
+      alert('Error al rechazar: ' + (e?.message || 'Error desconocido'))
     }
   }
 
@@ -326,8 +389,9 @@ export default function AdminPage() {
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_active: false } : u))
         alert('Usuario suspendido y publicaciones retiradas con éxito.')
       }
-    } catch (error: any) {
-      alert('Error al suspender: ' + error.message)
+    } catch (error: unknown) {
+      const e = error as Error
+      alert('Error al suspender: ' + (e?.message || 'Error desconocido'))
     }
   }
 
@@ -339,8 +403,9 @@ export default function AdminPage() {
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_active: true } : u))
         alert('Cuenta de usuario reactivada con éxito.')
       }
-    } catch (error: any) {
-      alert('Error al reactivar: ' + error.message)
+    } catch (error: unknown) {
+      const e = error as Error
+      alert('Error al reactivar: ' + (e?.message || 'Error desconocido'))
     }
   }
 
@@ -351,8 +416,9 @@ export default function AdminPage() {
       await deleteUserAction(userId)
       setUsers(prev => prev.filter(u => u.id !== userId))
       alert('Usuario eliminado permanentemente.')
-    } catch (error: any) {
-      alert('Error al eliminar: ' + error.message)
+    } catch (error: unknown) {
+      const e = error as Error
+      alert('Error al eliminar: ' + (e?.message || 'Error desconocido'))
     }
   }
 
@@ -364,8 +430,9 @@ export default function AdminPage() {
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: 'moderator' } : u))
         alert('🛡️ Usuario designado como Moderador exitosamente.')
       }
-    } catch (error: any) {
-      alert('Error: ' + error.message)
+    } catch (error: unknown) {
+      const e = error as Error
+      alert('Error: ' + (e?.message || 'Error desconocido'))
     }
   }
 
@@ -377,8 +444,66 @@ export default function AdminPage() {
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: 'buyer' } : u))
         alert('Rol de Moderador retirado.')
       }
-    } catch (error: any) {
-      alert('Error: ' + error.message)
+    } catch (error: unknown) {
+      const e = error as Error
+      alert('Error: ' + (e?.message || 'Error desconocido'))
+    }
+  }
+
+  const handleApproveVerification = async (userId: string) => {
+    if (!confirm('¿Aprobar la credencial y otorgar la insignia de Estudiante Verificado UTA?')) return
+    setActionLoadingId(userId)
+    try {
+      const res = await reviewVerificationAction(userId, true)
+      if (res.success) {
+        setVerifications(prev => prev.filter(v => v.id !== userId))
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_verified: true, verification_status: 'approved' } : u))
+        alert('🎓 Estudiante verificado exitosamente.')
+      } else {
+        alert(res.error || 'Error al aprobar')
+      }
+    } catch (err: unknown) {
+      const e = err as Error
+      alert('Error: ' + (e?.message || 'Desconocido'))
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  const handleRejectVerification = async (userId: string) => {
+    const reason = prompt('Motivo del rechazo:', 'La credencial digital no es legible o los datos no coinciden.')
+    if (reason === null) return
+    setActionLoadingId(userId)
+    try {
+      const res = await reviewVerificationAction(userId, false, reason)
+      if (res.success) {
+        setVerifications(prev => prev.filter(v => v.id !== userId))
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_verified: false, verification_status: 'rejected', verification_rejected_reason: reason } : u))
+        alert('Solicitud rechazada y notificada al estudiante.')
+      } else {
+        alert(res.error || 'Error al rechazar')
+      }
+    } catch (err: unknown) {
+      const e = err as Error
+      alert('Error: ' + (e?.message || 'Desconocido'))
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  const handleToggleVerificationFeature = async () => {
+    const nextState = !verificationFeatureEnabled
+    try {
+      const res = await setFeatureFlagAction('student_verification_enabled', nextState)
+      if (res.success) {
+        setVerificationFeatureEnabled(nextState)
+        alert(`Función de Verificación Estudiantil ${nextState ? 'ACTIVADA' : 'DESACTIVADA'}.`)
+      } else {
+        alert(res.error || 'Error al actualizar configuración')
+      }
+    } catch (err: unknown) {
+      const e = err as Error
+      alert('Error: ' + (e?.message || 'Desconocido'))
     }
   }
 
@@ -419,7 +544,21 @@ export default function AdminPage() {
       if (!facultyMap[f]) facultyMap[f] = { estudiantes: 0, publicaciones: 0 }
       facultyMap[f].estudiantes++
     })
-    listings?.forEach((l: any) => {
+    interface ListingReportRow {
+      id: string
+      title: string
+      status: string
+      seller_id: string
+      profiles?: {
+        full_name?: string | null
+        faculty?: string | null
+        semester?: string | null
+      } | null
+    }
+
+    const reportListings = (listings as unknown as ListingReportRow[]) ?? []
+
+    reportListings.forEach((l) => {
       const f = l.profiles?.faculty || 'Sin facultad'
       if (!facultyMap[f]) facultyMap[f] = { estudiantes: 0, publicaciones: 0 }
       if (l.status === 'active') facultyMap[f].publicaciones++
@@ -435,7 +574,7 @@ export default function AdminPage() {
       if (!semMap[s]) semMap[s] = { estudiantes: 0, publicaciones: 0 }
       semMap[s].estudiantes++
     })
-    listings?.forEach((l: any) => {
+    reportListings.forEach((l) => {
       const s = l.profiles?.semester ? l.profiles.semester.split(' - ')[0] : 'Sin semestre'
       if (!semMap[s]) semMap[s] = { estudiantes: 0, publicaciones: 0 }
       if (l.status === 'active') semMap[s].publicaciones++
@@ -446,7 +585,7 @@ export default function AdminPage() {
 
     // Hoja 4: Top vendedores (usuarios con más publicaciones activas)
     const sellerCount: Record<string, { nombre: string; facultad: string; semestre: string; publicaciones: number }> = {}
-    listings?.forEach((l: any) => {
+    reportListings.forEach((l) => {
       if (l.status !== 'active') return
       const id = l.seller_id
       if (!sellerCount[id]) sellerCount[id] = {
@@ -527,8 +666,8 @@ export default function AdminPage() {
             }}>
               <span style={{ fontSize: '1.5rem' }}>⚠️</span>
               <div>
-                <h3 style={{ fontWeight: 800, margin: 0, fontSize: '0.95rem' }}>Modo "Publicación Libre" Activado</h3>
-                <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.9 }}>Todos los usuarios pueden publicar sin suscripción. (Se configurará en Checkpoint 6)</p>
+                <h3 style={{ fontWeight: 800, margin: 0, fontSize: '0.95rem' }}>Modo &quot;Publicación Libre&quot; Activado</h3>
+                <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.9 }}>Todos los usuarios pueden publicar sin suscripción.</p>
               </div>
             </div>
           )}
@@ -564,6 +703,11 @@ export default function AdminPage() {
             <div className="glass-card" style={{ padding: '1rem 1.5rem', cursor: 'default' }}>
               <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#f59e0b' }}>{stats.listings.pending}</div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Publicaciones por Aprobar</div>
+            </div>
+
+            <div className="glass-card" style={{ padding: '1rem 1.5rem', cursor: 'default' }}>
+              <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#6366f1' }}>{verifications.length}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Carnets por Verificar</div>
             </div>
 
             {/* Storage indicator */}
@@ -627,15 +771,15 @@ export default function AdminPage() {
           </div>
 
           {/* Tabs */}
-          <div style={{ display: 'flex', gap: 4, marginBottom: '1.5rem', background: 'var(--bg-card)', borderRadius: 12, padding: 4, width: 'fit-content' }}>
-            {(['reports', 'users', 'approvals'] as const).map(t => (
+          <div style={{ display: 'flex', gap: 4, marginBottom: '1.5rem', background: 'var(--bg-card)', borderRadius: 12, padding: 4, width: 'fit-content', flexWrap: 'wrap' }}>
+            {(['reports', 'users', 'approvals', 'verifications'] as const).map(t => (
               <button key={t} onClick={() => setTab(t)} style={{
-                padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                fontWeight: 600, fontSize: '0.875rem', transition: 'all 0.2s ease',
+                padding: '8px 18px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                fontWeight: 600, fontSize: '0.85rem', transition: 'all 0.2s ease',
                 background: tab === t ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'transparent',
                 color: tab === t ? 'white' : 'var(--text-secondary)',
               }}>
-                {t === 'reports' ? `Reportes (${reports.length})` : t === 'users' ? `Usuarios (${filteredUsers.length})` : `Aprobaciones (${pendingListings.length})`}
+                {t === 'reports' ? `Reportes (${reports.length})` : t === 'users' ? `Usuarios (${filteredUsers.length})` : t === 'approvals' ? `Aprobaciones (${pendingListings.length})` : `🎓 Verificaciones (${verifications.length})`}
               </button>
             ))}
           </div>
@@ -718,7 +862,7 @@ export default function AdminPage() {
 
               {filteredUsers.length === 0 ? (
                 <div className="glass-card" style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                  No se encontraron usuarios que coincidan con "{searchQuery}"
+                  No se encontraron usuarios que coincidan con &quot;{searchQuery}&quot;
                 </div>
               ) : (
                 filteredUsers.map(user => {
@@ -735,8 +879,9 @@ export default function AdminPage() {
                         {user.full_name?.[0]?.toUpperCase() ?? '?'}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 2 }}>
-                          {user.full_name || 'Sin nombre'}
+                        <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <span>{user.full_name || 'Sin nombre'}</span>
+                          {user.is_verified && <VerifiedBadge size="sm" showText />}
                         </div>
                         {user.email && (
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 4 }}>
@@ -778,13 +923,14 @@ export default function AdminPage() {
                                   <button
                                     onClick={() => handleRevokeModerator(user.id)}
                                     className="btn-secondary"
-                                    style={{ padding: '6px 12px', fontSize: '0.75rem', color: '#fcd34d', borderColor: 'rgba(245,158,11,0.4)' }}
+                                    style={{ padding: '6px 12px', fontSize: '0.75rem' }}
+                                    title="Quitar rol de moderador"
                                   >
                                     ↩️ Quitar Moderador
                                   </button>
                                 ) : (
                                   <>
-                                    {(user.role === 'buyer' || !subActive) ? (
+                                    {user.role !== 'seller' ? (
                                       <button
                                         onClick={() => handleApproveSeller(user.id)}
                                         className="btn-primary"
@@ -917,7 +1063,211 @@ export default function AdminPage() {
               )}
             </div>
           )}
+
+          {/* Verifications tab */}
+          {tab === 'verifications' && (
+            <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              
+              {/* Banner de Control del Feature Flag (Interruptor para el lanzamiento a las 2 semanas) */}
+              <div className="glass-card" style={{
+                padding: '1.25rem 1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '1rem',
+                border: verificationFeatureEnabled ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(245,158,11,0.3)',
+                background: verificationFeatureEnabled ? 'rgba(16,185,129,0.06)' : 'rgba(245,158,11,0.06)',
+              }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: '1.2rem' }}>{verificationFeatureEnabled ? '🟢' : '⏸️'}</span>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                      Módulo de Verificación para Estudiantes: {verificationFeatureEnabled ? 'ACTIVADO' : 'DESACTIVADO (Oculto)'}
+                    </h3>
+                  </div>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
+                    {verificationFeatureEnabled
+                      ? 'Los estudiantes pueden ver la opción en su perfil y subir su credencial UTA.'
+                      : 'La función está oculta para los estudiantes hasta que decidas habilitarla para el lanzamiento oficial.'}
+                  </p>
+                </div>
+
+                {isAdmin && (
+                  <button
+                    onClick={handleToggleVerificationFeature}
+                    className={verificationFeatureEnabled ? 'btn-danger' : 'btn-primary'}
+                    style={{ padding: '0.5rem 1.25rem', fontSize: '0.82rem', fontWeight: 700 }}
+                  >
+                    {verificationFeatureEnabled ? 'Desactivar Función' : '🚀 Activar Función (Lanzamiento)'}
+                  </button>
+                )}
+              </div>
+
+              {loading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {[...Array(3)].map((_, i) => <div key={i} className="skeleton" style={{ height: 100, borderRadius: 12 }} />)}
+                </div>
+              ) : verifications.length === 0 ? (
+                <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
+                  <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🎓</div>
+                  <h3 style={{ fontWeight: 700, marginBottom: 8 }}>Sin solicitudes de verificación pendientes</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Todas las credenciales han sido revisadas.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                  {verifications.map(user => (
+                    <div key={user.id} className="glass-card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+                      {/* Credential Image Thumbnail */}
+                      {user.credential_url ? (
+                        <div
+                          onClick={() => setZoomImage(user.credential_url || null)}
+                          style={{
+                            width: 70,
+                            height: 90,
+                            borderRadius: 10,
+                            overflow: 'hidden',
+                            cursor: 'zoom-in',
+                            flexShrink: 0,
+                            border: '2px solid rgba(99,102,241,0.4)',
+                            background: '#0d1117',
+                            position: 'relative',
+                          }}
+                          title="Click para ampliar imagen del carnet"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={user.credential_url}
+                            alt="Carnet UTA"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                          <div style={{
+                            position: 'absolute', bottom: 0, left: 0, right: 0,
+                            background: 'rgba(0,0,0,0.75)', color: '#93c5fd',
+                            fontSize: '0.65rem', textAlign: 'center', padding: '2px 0'
+                          }}>
+                            🔍 Ver
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{
+                          width: 70, height: 90, borderRadius: 10,
+                          background: 'rgba(255,255,255,0.05)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '1.5rem', flexShrink: 0,
+                        }}>
+                          🪪
+                        </div>
+                      )}
+
+                      {/* Info del Alumno */}
+                      <div style={{ flex: 1, minWidth: 240 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                          <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)' }}>
+                            {user.full_name || 'Estudiante UTA'}
+                          </span>
+                          <span className="badge badge-amber" style={{ fontSize: '0.72rem' }}>Pendiente de Revisión</span>
+                        </div>
+                        <div style={{ fontSize: '0.82rem', color: '#a5b4fc', marginBottom: 2 }}>
+                          {user.faculty || 'Sin facultad'} {user.semester ? `· ${user.semester}` : ''}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          Enviado:{' '}
+                          {user.verification_submitted_at
+                            ? new Date(user.verification_submitted_at).toLocaleString('es-EC')
+                            : 'Recientemente'}
+                        </div>
+                      </div>
+
+                      {/* Acciones */}
+                      <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
+                        {user.credential_url && (
+                          <button
+                            onClick={() => setZoomImage(user.credential_url || null)}
+                            className="btn-secondary"
+                            style={{ padding: '7px 14px', fontSize: '0.8rem' }}
+                          >
+                            🔍 Ver Carnet
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleApproveVerification(user.id)}
+                          disabled={actionLoadingId === user.id}
+                          className="btn-primary"
+                          style={{ padding: '7px 14px', fontSize: '0.8rem', background: '#10b981' }}
+                        >
+                          {actionLoadingId === user.id ? 'Aprobando...' : '✅ Aprobar Verificación'}
+                        </button>
+                        <button
+                          onClick={() => handleRejectVerification(user.id)}
+                          disabled={actionLoadingId === user.id}
+                          className="btn-danger"
+                          style={{ padding: '7px 14px', fontSize: '0.8rem' }}
+                        >
+                          ❌ Rechazar
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
+
+        {/* Modal de Zoom de Credencial */}
+        {zoomImage && (
+          <div
+            onClick={() => setZoomImage(null)}
+            style={{
+              position: 'fixed',
+              top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(0,0,0,0.85)',
+              backdropFilter: 'blur(8px)',
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1.5rem',
+              cursor: 'zoom-out',
+            }}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{
+                position: 'relative',
+                maxWidth: '90vw',
+                maxHeight: '90vh',
+                background: '#0d1117',
+                borderRadius: 16,
+                padding: '1rem',
+                border: '1px solid rgba(255,255,255,0.1)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={zoomImage}
+                alt="Carnet ampliado"
+                style={{
+                  maxWidth: '85vw',
+                  maxHeight: '75vh',
+                  objectFit: 'contain',
+                  borderRadius: 8,
+                }}
+              />
+              <button
+                onClick={() => setZoomImage(null)}
+                className="btn-secondary"
+                style={{ marginTop: '0.75rem', padding: '0.4rem 1.25rem', fontSize: '0.85rem' }}
+              >
+                Cerrar vista previa ✕
+              </button>
+            </div>
+          </div>
+        )}
       </main>
     </>
   )

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -47,8 +46,9 @@ export default function ResetPasswordPage() {
       }
 
       setSuccess(true)
-    } catch (err: any) {
-      setError(err.message || 'Error al restablecer la contraseña')
+    } catch (err: unknown) {
+      const e = err as Error
+      setError(e?.message || 'Error al restablecer la contraseña')
     } finally {
       setLoading(false)
     }

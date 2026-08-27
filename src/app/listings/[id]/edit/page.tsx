@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import { createClient } from '@/lib/supabase/client'
@@ -14,7 +14,7 @@ const MAX_PHOTOS = 1
 export default function EditListingPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Form state
@@ -47,14 +47,14 @@ export default function EditListingPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
 
-    const { data, error } = await supabase
+    const { data, error: fetchErr } = await supabase
       .from('listings')
       .select('*')
       .eq('id', id)
       .eq('seller_id', user.id) // Solo el dueño puede editar
       .single()
 
-    if (error || !data) { setNotFound(true); setLoading(false); return }
+    if (fetchErr || !data) { setNotFound(true); setLoading(false); return }
 
     const listing = data as Listing
     setTitle(listing.title)
@@ -67,9 +67,18 @@ export default function EditListingPage() {
       listing.image_url ? [listing.image_url] : []
     )
     setLoading(false)
-  }, [id])
+  }, [id, router, setExistingUrls, supabase])
 
-  useEffect(() => { fetchListing() }, [fetchListing])
+  useEffect(() => {
+    let active = true
+    const load = async () => {
+      await fetchListing()
+    }
+    if (active) {
+      load()
+    }
+    return () => { active = false }
+  }, [fetchListing])
 
   const handleNewImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? [])

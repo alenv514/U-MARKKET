@@ -1,32 +1,11 @@
 'use server'
 
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { createClient } from '@/lib/supabase/server'
 
 export async function submitReviewAction(revieweeId: string, rating: number, comment: string) {
   try {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              )
-            } catch {
-              // Ignore in server actions
-            }
-          },
-        },
-      }
-    )
+    const supabase = await createClient()
 
     const { data: authData, error: authError } = await supabase.auth.getUser()
 
@@ -40,6 +19,19 @@ export async function submitReviewAction(revieweeId: string, rating: number, com
 
     if (rating < 1 || rating > 5) {
       return { success: false, error: 'La calificación debe estar entre 1 y 5 estrellas.' }
+    }
+
+    // Verificar que existe una interacción previa (chat) entre ambos usuarios.
+    // La policy RLS de reviews también lo exige; esto solo da un mensaje amigable.
+    const { data: existingChat } = await supabase
+      .from('chats')
+      .select('id')
+      .or(`and(buyer_id.eq.${authData.user.id},seller_id.eq.${revieweeId}),and(seller_id.eq.${authData.user.id},buyer_id.eq.${revieweeId})`)
+      .limit(1)
+      .maybeSingle()
+
+    if (!existingChat) {
+      return { success: false, error: 'Solo puedes calificar a usuarios con los que hayas tenido una conversación.' }
     }
 
     // Insertar o actualizar la reseña. El trigger de la DB se encarga del recalcular el promedio.

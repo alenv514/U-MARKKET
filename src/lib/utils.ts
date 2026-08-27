@@ -1,6 +1,22 @@
-/** Elimina tags HTML para prevenir XSS almacenado. */
+/** Elimina tags HTML y atributos maliciosos para prevenir XSS almacenado. */
 export function sanitize(val: string): string {
-  return val.replace(/<[^>]*>/g, '').trim()
+  if (!val) return ''
+  return val
+    .replace(/<[^>]*>/g, '')
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+\s*=/gi, '')
+    .trim()
+}
+
+/** Escapa caracteres especiales para interpolación segura en templates HTML. */
+export function escapeHtml(str: string): string {
+  if (!str) return ''
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
 }
 
 /** Valida precio: número finito, >= 0, <= 100_000. */
@@ -92,8 +108,9 @@ export async function compressImage(file: File, maxWidth = 1600, maxHeight = 160
 
 /**
  * Detecta si una imagen contiene al menos un rostro humano.
- * Usa la API nativa FaceDetector (Chrome/Edge) sin dependencias externas.
- * Si el navegador no soporta FaceDetector, permite la subida (fallback permisivo).
+ * Usa la API nativa FaceDetector (Chrome/Edge/Android) sin dependencias externas.
+ * NOTA: Si el navegador no soporta FaceDetector (ej. Safari/Firefox), se aplica fallback
+ * permisivo para no bloquear el registro de usuarios en dichos navegadores.
  * Retorna { hasFace: boolean, supported: boolean }
  */
 export async function detectFace(file: File): Promise<{ hasFace: boolean; supported: boolean }> {
@@ -113,7 +130,8 @@ export async function detectFace(file: File): Promise<{ hasFace: boolean; suppor
 
         // Crear bitmap desde la imagen
         const bitmap = await createImageBitmap(img)
-        const detector = new (window as any).FaceDetector({ fastMode: true, maxDetectedFaces: 1 })
+        const FaceDetectorClass = (window as unknown as { FaceDetector: new (opts: { fastMode: boolean; maxDetectedFaces: number }) => { detect: (bm: ImageBitmap) => Promise<unknown[]> } }).FaceDetector
+        const detector = new FaceDetectorClass({ fastMode: true, maxDetectedFaces: 1 })
         const faces = await detector.detect(bitmap)
         bitmap.close()
 
@@ -126,3 +144,4 @@ export async function detectFace(file: File): Promise<{ hasFace: boolean; suppor
     reader.onerror = () => resolve({ hasFace: true, supported: false })
   })
 }
+

@@ -15,10 +15,24 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getOrCreateChat } from '@/lib/chat'
 
+import VerifiedBadge from './VerifiedBadge'
+
+function computeTimeAgo(dateStr?: string | null) {
+  if (!dateStr) return ''
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  const hours = Math.floor(mins / 60)
+  const days = Math.floor(hours / 24)
+  if (days > 0) return `hace ${days}d`
+  if (hours > 0) return `hace ${hours}h`
+  return `hace ${Math.max(1, mins)}m`
+}
+
 export default function ListingCard({ listing, currentUserId, onReport }: ListingCardProps) {
   const router = useRouter()
 
   const [contacting, setContacting] = useState(false)
+  const [timeAgoText] = useState(() => computeTimeAgo(listing.created_at))
   const supabase = createClient()
 
   const handleContact = async (e: React.MouseEvent) => {
@@ -44,16 +58,6 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' }).format(price)
-
-  const timeAgo = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime()
-    const mins = Math.floor(diff / 60000)
-    const hours = Math.floor(mins / 60)
-    const days = Math.floor(hours / 24)
-    if (days > 0) return `hace ${days}d`
-    if (hours > 0) return `hace ${hours}h`
-    return `hace ${mins}m`
-  }
 
   return (
     <div className="glass-card animate-fade-in-up" style={{
@@ -100,7 +104,7 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: 4 }}>
           <span className="price-tag">{formatPrice(listing.price)}</span>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            {timeAgo(listing.created_at)}
+            {timeAgoText}
           </span>
         </div>
 
@@ -115,9 +119,12 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
             }}>
               {listing.profiles.full_name?.[0]?.toUpperCase() ?? '?'}
             </div>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
-              {listing.profiles.full_name || 'Vendedor UTA'}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, overflow: 'hidden' }}>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {listing.profiles.full_name || 'Vendedor UTA'}
+              </span>
+              {listing.profiles.is_verified && <VerifiedBadge size="sm" />}
+            </div>
           </div>
         )}
 

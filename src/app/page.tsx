@@ -25,11 +25,15 @@ export default function HomePage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null))
-  }, [])
+  }, [supabase])
 
   const fetchListings = useCallback(async (pageNum: number, isNewSearch = false) => {
-    if (isNewSearch) setLoading(true)
-    else setLoadingMore(true)
+    if (isNewSearch) {
+      setLoading(true)
+      setPage(0)
+    } else {
+      setLoadingMore(true)
+    }
 
     let query = supabase
       .from('listings')
@@ -42,8 +46,11 @@ export default function HomePage() {
       query = query.eq('category', selectedCategory)
     }
     if (search.trim()) {
-      const term = search.trim()
-      query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%,category.ilike.%${term}%`)
+      // Limpiar caracteres especiales que puedan alterar la sintaxis de PostgREST
+      const safeTerm = search.trim().replace(/[(),%*"\\]/g, '').slice(0, 80)
+      if (safeTerm) {
+        query = query.or(`title.ilike.%${safeTerm}%,description.ilike.%${safeTerm}%,category.ilike.%${safeTerm}%`)
+      }
     }
 
     const { data } = await query
@@ -61,12 +68,18 @@ export default function HomePage() {
     setLoadingMore(false)
   }, [selectedCategory, search, supabase])
 
+  // Carga inicial y cambio de categoría inmediato
   useEffect(() => {
-    setPage(0)
-    setHasMore(true)
-    const timer = setTimeout(() => fetchListings(0, true), 300)
+    if (!search.trim()) {
+      fetchListings(0, true)
+      return
+    }
+    // Debounce de 300ms solo mientras el usuario está escribiendo en el buscador
+    const timer = setTimeout(() => {
+      fetchListings(0, true)
+    }, 300)
     return () => clearTimeout(timer)
-  }, [fetchListings])
+  }, [selectedCategory, search, fetchListings])
 
   const handleLoadMore = () => {
     const nextPage = page + 1

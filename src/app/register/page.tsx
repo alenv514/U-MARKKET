@@ -3,15 +3,19 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { UTA_FACULTY_CAREERS, SEMESTERS } from '@/types'
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
+  const [faculty, setFaculty] = useState('')
+  const [career, setCareer] = useState('')
+  const [semester, setSemester] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [phone, setPhone] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -22,7 +26,6 @@ export default function RegisterPage() {
   const [resendLoading, setResendLoading] = useState(false)
   const [resendMessage, setResendMessage] = useState('')
 
-  const router = useRouter()
   const supabase = createClient()
 
   // Countdown timer for resend
@@ -46,8 +49,9 @@ export default function RegisterPage() {
       if (error) throw error
       setResendMessage('¡Correo de confirmación reenviado con éxito!')
       setResendTimer(180)
-    } catch (err: any) {
-      setResendMessage('Error al reenviar: ' + (err.message || 'Inténtalo más tarde.'))
+    } catch (err: unknown) {
+      const e = err as Error
+      setResendMessage('Error al reenviar: ' + (e?.message || 'Inténtalo más tarde.'))
     } finally {
       setResendLoading(false)
     }
@@ -69,12 +73,28 @@ export default function RegisterPage() {
       setError('Solo se permiten correos @uta.edu.ec')
       return
     }
+    if (!faculty) {
+      setError('Por favor selecciona tu facultad')
+      return
+    }
+    if (!career) {
+      setError('Por favor selecciona tu carrera')
+      return
+    }
+    if (!semester) {
+      setError('Por favor selecciona tu semestre')
+      return
+    }
     if (password.length < 8 || password.length > 20) {
       setError('La contraseña debe tener entre 8 y 20 caracteres')
       return
     }
     if (password !== confirmPassword) {
       setError('Las contraseñas no coinciden')
+      return
+    }
+    if (!acceptedTerms) {
+      setError('Debes aceptar los Términos y Condiciones y la Política de Privacidad')
       return
     }
 
@@ -84,7 +104,7 @@ export default function RegisterPage() {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, fullName, phone }),
+      body: JSON.stringify({ email, password, fullName, phone, faculty, career, semester }),
     })
     const result = await res.json()
 
@@ -262,6 +282,65 @@ export default function RegisterPage() {
 
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                Facultad
+              </label>
+              <select
+                id="register-faculty"
+                value={faculty}
+                onChange={e => { setFaculty(e.target.value); setCareer('') }}
+                className="input-field"
+                style={{ background: '#0d1117', color: '#f0f4ff' }}
+                required
+              >
+                <option value="" style={{ background: '#0d1117', color: '#f0f4ff' }}>Selecciona tu facultad...</option>
+                {Object.keys(UTA_FACULTY_CAREERS).map(f => (
+                  <option key={f} value={f} style={{ background: '#0d1117', color: '#f0f4ff' }}>{f}</option>
+                ))}
+              </select>
+            </div>
+
+            {faculty && (
+              <div className="animate-fade-in">
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                  Carrera
+                </label>
+                <select
+                  id="register-career"
+                  value={career}
+                  onChange={e => setCareer(e.target.value)}
+                  className="input-field"
+                  style={{ background: '#0d1117', color: '#f0f4ff' }}
+                  required
+                >
+                  <option value="" style={{ background: '#0d1117', color: '#f0f4ff' }}>Selecciona tu carrera...</option>
+                  {UTA_FACULTY_CAREERS[faculty].map(c => (
+                    <option key={c} value={c} style={{ background: '#0d1117', color: '#f0f4ff' }}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                Semestre
+              </label>
+              <select
+                id="register-semester"
+                value={semester}
+                onChange={e => setSemester(e.target.value)}
+                className="input-field"
+                style={{ background: '#0d1117', color: '#f0f4ff' }}
+                required
+              >
+                <option value="" style={{ background: '#0d1117', color: '#f0f4ff' }}>Selecciona tu semestre...</option>
+                {SEMESTERS.map(s => (
+                  <option key={s} value={s} style={{ background: '#0d1117', color: '#f0f4ff' }}>{s}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
                 Contraseña
               </label>
               <div style={{ position: 'relative' }}>
@@ -342,6 +421,45 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {/* Checkbox de Aceptación de Términos y Manejo de Datos (LOPDP) */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.75rem',
+              background: 'rgba(99, 102, 241, 0.06)',
+              border: acceptedTerms ? '1px solid rgba(99, 102, 241, 0.35)' : '1px solid rgba(255, 255, 255, 0.1)',
+              padding: '0.9rem 1rem',
+              borderRadius: 14,
+              transition: 'all 0.2s ease',
+              marginTop: '0.25rem',
+            }}>
+              <input
+                id="register-terms"
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={e => setAcceptedTerms(e.target.checked)}
+                style={{
+                  width: 19,
+                  height: 19,
+                  accentColor: '#6366f1',
+                  cursor: 'pointer',
+                  marginTop: 2,
+                  flexShrink: 0,
+                }}
+                required
+              />
+              <label htmlFor="register-terms" style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5, cursor: 'pointer' }}>
+                Acepto los{' '}
+                <Link href="/terminos" target="_blank" style={{ color: '#a5b4fc', fontWeight: 700, textDecoration: 'underline' }}>
+                  Términos y Condiciones
+                </Link>{' '}
+                y la{' '}
+                <Link href="/privacidad" target="_blank" style={{ color: '#a5b4fc', fontWeight: 700, textDecoration: 'underline' }}>
+                  Política de Privacidad
+                </Link>
+              </label>
+            </div>
+
             {error && (
               <div style={{
                 background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
@@ -357,7 +475,7 @@ export default function RegisterPage() {
               type="submit"
               className="btn-primary"
               disabled={loading}
-              style={{ marginTop: 4, padding: '0.8rem' }}
+              style={{ marginTop: 4, padding: '0.85rem' }}
             >
               {loading ? (
                 <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
@@ -366,13 +484,6 @@ export default function RegisterPage() {
                 </span>
               ) : 'Crear cuenta'}
             </button>
-
-            <p style={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.25)', textAlign: 'center', lineHeight: 1.5, margin: 0 }}>
-              Al registrarte aceptas nuestros{' '}
-              <Link href="/terminos" style={{ color: 'rgba(255, 255, 255, 0.38)', textDecoration: 'none', transition: 'color 0.2s' }}>Términos y Condiciones</Link>
-              {' '}y la{' '}
-              <Link href="/privacidad" style={{ color: 'rgba(255, 255, 255, 0.38)', textDecoration: 'none', transition: 'color 0.2s' }}>Política de Privacidad</Link>.
-            </p>
           </form>
 
           <div className="divider" />

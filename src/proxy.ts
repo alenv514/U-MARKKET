@@ -1,34 +1,10 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// ── Rate limiter en memoria (entradas expiradas se sobrescriben solas) ──
-const requestLog = new Map<string, { count: number; resetAt: number }>()
-
-function isRateLimited(ip: string, limit: number, windowMs: number): boolean {
-  const now = Date.now()
-  const entry = requestLog.get(ip)
-  if (!entry || now > entry.resetAt) {
-    requestLog.set(ip, { count: 1, resetAt: now + windowMs })
-    return false
-  }
-  if (entry.count >= limit) return true
-  entry.count++
-  return false
-}
-
+// Nota: el rate limiting de login se apoya en el límite nativo de Supabase Auth,
+// ya que el intento de login va directo del navegador a Supabase y no pasa por este
+// middleware. El registro sí tiene rate limiting propio en /api/auth/register.
 export async function proxy(request: NextRequest) {
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    ?? request.headers.get('x-real-ip')
-    ?? 'unknown'
-
-  // ── Rate limiting para login (5 req/min/IP) ──
-  if (request.nextUrl.pathname === '/login' && isRateLimited(`login:${ip}`, 5, 60_000)) {
-    return new NextResponse(
-      JSON.stringify({ error: 'Demasiados intentos. Intenta de nuevo en 1 minuto.' }),
-      { status: 429, headers: { 'Content-Type': 'application/json' } }
-    )
-  }
-
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(

@@ -3,7 +3,7 @@ export type UserRole = 'buyer' | 'seller' | 'moderator' | 'admin'
 export interface Profile {
   id: string
   full_name: string
-  phone: string | null
+  phone?: string | null
   avatar_url: string | null
   role: UserRole
   is_active: boolean
@@ -12,6 +12,12 @@ export interface Profile {
   review_count?: number | null
   faculty: string | null
   semester: string | null
+  is_verified?: boolean
+  verification_status?: 'none' | 'pending' | 'approved' | 'rejected'
+  credential_url?: string | null
+  verification_rejected_reason?: string | null
+  verified_at?: string | null
+  verification_submitted_at?: string | null
   created_at: string
   updated_at: string
 }
@@ -88,6 +94,21 @@ export const SEMESTERS = [
   '5to semestre', '6to semestre', '7mo semestre', '8vo semestre',
   '9no semestre', '10mo semestre',
 ] as const
+
+/** Infiere la facultad a partir del nombre o texto de la carrera del carnet UTA */
+export function getFacultyFromCareer(careerName: string): string | null {
+  if (!careerName) return null
+  const normalized = careerName.trim().toLowerCase()
+  for (const [faculty, careers] of Object.entries(UTA_FACULTY_CAREERS)) {
+    for (const c of careers) {
+      const cNorm = c.toLowerCase()
+      if (normalized.includes(cNorm) || cNorm.includes(normalized)) {
+        return faculty
+      }
+    }
+  }
+  return null
+}
 
 export interface Subscription {
   id: string

@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -15,7 +14,6 @@ export default function LoginPage() {
   const loginAttempts = useRef(0)
   const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const router = useRouter()
-  const supabase = createClient()
 
   // Limpiar intervalo al desmontar
   useEffect(() => () => {
@@ -43,14 +41,20 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
 
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+    const result = await res.json()
 
-    if (authError) {
+    if (!res.ok) {
       loginAttempts.current++
+      const errMsg = (result.error || '').toLowerCase()
       if (loginAttempts.current >= 5) {
         startCooldown()
         setError('Demasiados intentos. Espera 1 minuto antes de intentar de nuevo.')
-      } else if (authError.message.toLowerCase().includes('confirm') || authError.message.toLowerCase().includes('verified')) {
+      } else if (errMsg.includes('confirm') || errMsg.includes('verified')) {
         setError('Por favor, confirma tu correo electrónico usando el enlace enviado a tu bandeja de entrada.')
       } else {
         setError('Correo o contraseña incorrectos')

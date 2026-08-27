@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import ImageCarousel from '@/components/ImageCarousel'
 import StarRating from '@/components/StarRating'
+import VerifiedBadge from '@/components/VerifiedBadge'
 import { createClient } from '@/lib/supabase/client'
 import type { Listing } from '@/types'
 import Link from 'next/link'
@@ -20,12 +21,12 @@ export default function ListingDetailPage() {
   const [contacting, setContacting] = useState(false)
   const [profileComplete, setProfileComplete] = useState(true)
   const [userRole, setUserRole] = useState<string | null>(null)
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      const uid = data.user?.id ?? null
+    supabase.auth.getUser().then(async (res) => {
+      const uid = res.data.user?.id ?? null
       setUserId(uid)
       if (uid) {
         const { data: prof } = await supabase.from('profiles').select('faculty, semester, role').eq('id', uid).single()
@@ -34,22 +35,26 @@ export default function ListingDetailPage() {
       }
     })
 
-    const fetch = async () => {
+    const fetchListingData = async () => {
       const { data } = await supabase
         .from('listings')
-        .select('*, profiles(full_name, avatar_url, phone, rating_avg, review_count)')
+        .select('*, profiles(full_name, avatar_url, rating_avg, review_count, is_verified)')
         .eq('id', id)
         .single()
 
       if (data) {
         setListing(data as Listing)
-        // Incrementar vistas
-        await supabase.from('listings').update({ views: (data.views ?? 0) + 1 }).eq('id', id)
+        // Incrementar vistas de forma atómica
+        supabase.rpc('increment_listing_views', { listing_id: id }).then((rpcRes) => {
+          if (rpcRes.error) {
+            supabase.from('listings').update({ views: (data.views ?? 0) + 1 }).eq('id', id).then(() => {})
+          }
+        })
       }
       setLoading(false)
     }
-    fetch()
-  }, [id])
+    fetchListingData()
+  }, [id, supabase])
 
   const handleReport = async () => {
     if (!userId) { alert('Debes iniciar sesión para reportar'); return }
@@ -118,7 +123,7 @@ export default function ListingDetailPage() {
 
   const isSeller = userId === listing.seller_id
   const isModOrAdmin = userRole === 'admin' || userRole === 'moderator'
-  const sellerPhone = listing?.whatsapp_number || (listing?.profiles as any)?.phone || ''
+  const sellerPhone = listing?.whatsapp_number || ''
 
   const formatPrice = (p: number) => new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' }).format(p)
 
@@ -142,8 +147,9 @@ export default function ListingDetailPage() {
       await deleteListingAction(listing!.id, reason)
       alert('Publicación eliminada correctamente.')
       router.push('/')
-    } catch (err: any) {
-      alert('Error al eliminar: ' + err.message)
+    } catch (err: unknown) {
+      const e = err as Error
+      alert('Error al eliminar: ' + (e?.message || 'Error desconocido'))
     }
   }
 
@@ -200,10 +206,10 @@ export default function ListingDetailPage() {
                   <span style={{ fontSize: '0.78rem', color: '#fde68a', opacity: 0.9 }}>Falta tu facultad y semestre en tu cuenta.</span>
                 </div>
               </div>
-              <a href="/profile" style={{
+              <Link href="/profile" style={{
                 background: '#f59e0b', color: 'white', padding: '0.45rem 1rem',
                 borderRadius: 8, fontWeight: 700, fontSize: '0.8rem', textDecoration: 'none', whiteSpace: 'nowrap'
-              }}>Completar ahora →</a>
+              }}>Completar ahora →</Link>
             </div>
           )}
 
@@ -251,13 +257,17 @@ export default function ListingDetailPage() {
                       overflow: 'hidden'
                     }}>
                       {listing.profiles.avatar_url ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
                         <img src={listing.profiles.avatar_url} alt="avatar" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
                       ) : (
                         listing.profiles.full_name?.[0]?.toUpperCase() ?? '?'
                       )}
                     </div>
                     <div>
-                      <div style={{ fontWeight: 700 }}>{listing.profiles.full_name || 'Vendedor UTA'}</div>
+                      <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <span>{listing.profiles.full_name || 'Vendedor UTA'}</span>
+                        {listing.profiles.is_verified && <VerifiedBadge size="sm" showText />}
+                      </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                         <StarRating rating={Number(listing.profiles.rating_avg || 0)} size={12} />
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>({listing.profiles.review_count || 0})</span>

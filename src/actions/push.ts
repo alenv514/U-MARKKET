@@ -2,7 +2,15 @@
 
 import { createClient } from '@/lib/supabase/server'
 
-export async function savePushSubscriptionAction(subscription: any) {
+interface PushSubscriptionPayload {
+  endpoint: string
+  keys: {
+    p256dh: string
+    auth: string
+  }
+}
+
+export async function savePushSubscriptionAction(subscription: PushSubscriptionPayload) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 

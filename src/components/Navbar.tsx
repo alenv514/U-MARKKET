@@ -5,10 +5,11 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import type { User, RealtimeChannel } from '@supabase/supabase-js'
 import PushManager from './PushManager'
 
 export default function Navbar() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [unreadCount, setUnreadCount] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -50,7 +51,7 @@ export default function Navbar() {
   }, [])
 
   useEffect(() => {
-    let channel: any;
+    let channel: RealtimeChannel | null = null
 
     const fetchUnreadCount = async (userId: string) => {
       const { count } = await supabase
