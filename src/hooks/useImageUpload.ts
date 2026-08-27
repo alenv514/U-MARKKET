@@ -93,9 +93,14 @@ export function useImageUpload({
     setProgress(0)
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const user = session?.user
-      if (!user) throw new Error('Sesión no encontrada. Por favor inicia sesión nuevamente.')
+      const { data: userData } = await supabase.auth.getUser()
+      const { data: sessionData } = await supabase.auth.getSession()
+      const user = userData?.user || sessionData?.session?.user
+      const accessToken = sessionData?.session?.access_token
+
+      if (!user) {
+        throw new Error('No autorizado. Tu sesión ha expirado o debes iniciar sesión nuevamente.')
+      }
 
       const uploadedUrls: string[] = []
 
@@ -120,8 +125,8 @@ export function useImageUpload({
           formData.append('folder', bucket)
           const res = await fetch('/api/upload', {
             method: 'POST',
-            headers: session?.access_token ? {
-              'Authorization': `Bearer ${session.access_token}`
+            headers: accessToken ? {
+              'Authorization': `Bearer ${accessToken}`
             } : {},
             body: formData,
           })

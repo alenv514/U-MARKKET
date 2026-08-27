@@ -27,13 +27,13 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 401 })
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, session: data.session })
   } catch {
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -64,6 +65,16 @@ export default function LoginPage() {
     }
 
     loginAttempts.current = 0
+
+    // Sincronizar sesión en el cliente (Browser Client & LocalStorage)
+    if (result.session) {
+      const supabase = createClient()
+      await supabase.auth.setSession({
+        access_token: result.session.access_token,
+        refresh_token: result.session.refresh_token,
+      })
+    }
+
     router.push('/dashboard')
     router.refresh()
   }
