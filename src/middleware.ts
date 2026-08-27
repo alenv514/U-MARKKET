@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 // Nota: el rate limiting de login se apoya en el límite nativo de Supabase Auth,
 // ya que el intento de login va directo del navegador a Supabase y no pasa por este
 // middleware. El registro sí tiene rate limiting propio en /api/auth/register.
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
