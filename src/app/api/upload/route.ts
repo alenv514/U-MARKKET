@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
-import { createClient } from '@/lib/supabase/server'
 import { r2, R2_BUCKET, R2_PUBLIC_URL } from '@/lib/r2'
 
 // Verifica la firma binaria (magic bytes) del contenido para cada tipo permitido.
@@ -25,8 +25,19 @@ function matchesImageSignature(buffer: Buffer, mime: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    // Autenticación estándar por cookies de sesión (igual que el resto de la app)
-    const supabase = await createClient()
+    // Autenticación leyendo las cookies del request directamente (mismo mecanismo
+    // que el middleware proxy, que sí funciona en móvil). En un route handler es
+    // más fiable usar request.cookies que `cookies()` de next/headers.
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return request.cookies.getAll() },
+          setAll() {}, // no necesitamos escribir cookies aquí
+        },
+      }
+    )
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
