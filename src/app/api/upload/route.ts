@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { r2, R2_BUCKET, R2_PUBLIC_URL } from '@/lib/r2'
 
 // Verifica la firma binaria (magic bytes) del contenido para cada tipo permitido.
@@ -25,27 +25,9 @@ function matchesImageSignature(buffer: Buffer, mime: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Intentar autenticar mediante Bearer token (móviles / PWA) o cookies de sesión
-    let user = null
-    const authHeader = request.headers.get('authorization')
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.replace('Bearer ', '').trim()
-      try {
-        const serviceClient = createServiceClient()
-        const { data: authData, error: authError } = await serviceClient.auth.getUser(token)
-        if (!authError && authData?.user) {
-          user = authData.user
-        }
-      } catch (tokenErr) {
-        console.error('Error validando token en /api/upload:', tokenErr)
-      }
-    }
-
-    if (!user) {
-      const supabase = await createClient()
-      const { data: cookieAuthData } = await supabase.auth.getUser()
-      user = cookieAuthData?.user ?? null
-    }
+    // Autenticación estándar por cookies de sesión (igual que el resto de la app)
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
       return NextResponse.json({ error: 'No autorizado. Tu sesión ha expirado o debes iniciar sesión nuevamente.' }, { status: 401 })

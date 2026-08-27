@@ -329,7 +329,7 @@ export default function ProfilePage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif"
                   onChange={handleAvatarChange}
                   style={{ display: 'none' }}
                 />

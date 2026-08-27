@@ -48,7 +48,7 @@ export function useImageUpload({
     const toAdd = files.slice(0, remaining)
     
     // Validación de tipo de archivo (Solo imágenes permitidas)
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']
     const invalidFormat = toAdd.filter(f => !validTypes.includes(f.type.toLowerCase()))
     if (invalidFormat.length > 0) {
       setError('Solo se permiten archivos de imagen válidos (JPG, PNG, WEBP, GIF)')
@@ -93,10 +93,7 @@ export function useImageUpload({
     setProgress(0)
 
     try {
-      const { data: userData } = await supabase.auth.getUser()
-      const { data: sessionData } = await supabase.auth.getSession()
-      const user = userData?.user || sessionData?.session?.user
-      const accessToken = sessionData?.session?.access_token
+      const { data: { user } } = await supabase.auth.getUser()
 
       if (!user) {
         throw new Error('No autorizado. Tu sesión ha expirado o debes iniciar sesión nuevamente.')
@@ -125,9 +122,7 @@ export function useImageUpload({
           formData.append('folder', bucket)
           const res = await fetch('/api/upload', {
             method: 'POST',
-            headers: accessToken ? {
-              'Authorization': `Bearer ${accessToken}`
-            } : {},
+            credentials: 'same-origin',
             body: formData,
           })
           const data = await res.json()

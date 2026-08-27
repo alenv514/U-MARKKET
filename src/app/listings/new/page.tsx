@@ -374,7 +374,7 @@ export default function NewListingPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif"
                 multiple
                 onChange={handleImageChange}
                 style={{ display: 'none' }}
