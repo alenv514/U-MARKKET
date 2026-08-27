@@ -94,9 +94,19 @@ export function useImageUpload({
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
+      const { data: { session } } = await supabase.auth.getSession()
 
-      if (!user) {
-        throw new Error('No autorizado. Tu sesión ha expirado o debes iniciar sesión nuevamente.')
+      console.log('[DEBUG UPLOAD CLIENT] Iniciando subida:', {
+        userId: user?.id,
+        userEmail: user?.email,
+        hasSession: !!session,
+        hasAccessToken: !!session?.access_token,
+        tokenLength: session?.access_token?.length || 0,
+        filesCount: newFiles.length,
+      })
+
+      if (!user && !session?.user) {
+        throw new Error('No autorizado. Tu sesión no fue encontrada. Inicia sesión nuevamente.')
       }
 
       const uploadedUrls: string[] = []
@@ -108,7 +118,7 @@ export function useImageUpload({
         if (bucket === 'avatars') {
           // Avatares → Supabase Storage (1 GB gratis, fotos pequeñas)
           const ext = file.name.split('.').pop()
-          const filePath = `${user.id}/${Date.now()}.${ext}`
+          const filePath = `${user?.id || session?.user?.id}/${Date.now()}.${ext}`
           const { error: uploadError } = await supabase.storage
             .from('avatars')
             .upload(filePath, file, { upsert: true })
@@ -120,17 +130,27 @@ export function useImageUpload({
           const formData = new FormData()
           formData.append('file', file)
           formData.append('folder', bucket)
+
+          const token = session?.access_token
+          const headers: Record<string, string> = {}
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`
+          }
+
+          console.log(`[DEBUG UPLOAD CLIENT] Enviando foto #${i + 1} a /api/upload... (Header Authorization: ${!!token})`)
+
           const res = await fetch('/api/upload', {
             method: 'POST',
-            credentials: 'same-origin',
+            credentials: 'include',
+            headers,
             body: formData,
           })
           const data = await res.json()
+
+          console.log('[DEBUG UPLOAD CLIENT] Respuesta de /api/upload:', { status: res.status, data })
+
           if (!res.ok || data.error) {
-            if (data.error === 'Unauthorized' || res.status === 401) {
-              throw new Error('No autorizado. Tu sesión ha expirado o debes iniciar sesión nuevamente.')
-            }
-            throw new Error(data.error || 'Error al subir la imagen')
+            throw new Error(data.error || `Error ${res.status} al subir imagen`)
           }
           url = data.url
         }
@@ -144,10 +164,9 @@ export function useImageUpload({
     } catch (err: unknown) {
       const error = err as Error
       const msg = error?.message || ''
+      console.error('[DEBUG UPLOAD CLIENT] ❌ Error capturado en subida:', error)
       if (msg.includes('exceeded') || msg.includes('large') || msg.includes('limit')) {
         setError('📸 La foto es demasiado pesada para el servidor. Por favor, utiliza una app para bajar la resolución de la foto o comprimirla.')
-      } else if (msg === 'Unauthorized') {
-        setError('No autorizado. Por favor vuelve a iniciar sesión.')
       } else {
         setError(msg || 'Error al subir las imágenes')
       }
