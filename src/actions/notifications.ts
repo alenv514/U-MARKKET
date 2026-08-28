@@ -1,9 +1,7 @@
 'use server'
 
-import nodemailer from 'nodemailer'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import webpush from 'web-push'
-import { escapeHtml } from '@/lib/utils'
 
 webpush.setVapidDetails(
   'mailto:support@u-market.com',
@@ -49,9 +47,7 @@ export async function sendNotificationAction(
       return { success: false }
     }
 
-    let pushSent = false
-
-    // Fetch push subscriptions
+    // 3. Enviar únicamente Notificación Web Push al navegador/celular del destinatario
     const { data: subscriptions } = await supabaseAdmin
       .from('push_subscriptions')
       .select('*')
@@ -80,76 +76,14 @@ export async function sendNotificationAction(
         }
       })
 
-      const results = await Promise.all(pushPromises)
-      if (results.some(r => r === true)) pushSent = true
+      await Promise.all(pushPromises)
     }
-
-    if (pushSent) {
-      return { success: true }
-    }
-
-    // Fallback a Correo
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(recipientId)
-    if (userError || !userData?.user?.email) {
-      console.error('Error obteniendo correo:', userError)
-      return { success: false }
-    }
-
-    const recipientEmail = userData.user.email
-
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    })
-
-    // Escapar todos los campos antes de interpolar en HTML
-    const safeRecipientName = escapeHtml(recipientName)
-    const safeSenderName = escapeHtml(senderName)
-    const safeListingTitle = escapeHtml(listingTitle)
-    const safeMessageContent = escapeHtml(messageContent.slice(0, 500))
-    const safeChatUrl = chatUrl.startsWith('http://') || chatUrl.startsWith('https://') || chatUrl.startsWith('/')
-      ? chatUrl
-      : '/'
-
-    const htmlContent = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
-        <div style="background-color: #6366f1; padding: 20px; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 24px;">U-Market</h1>
-        </div>
-        <div style="padding: 20px; background-color: #ffffff;">
-          <h2 style="color: #111827; font-size: 20px; margin-top: 0;">Hola, ${safeRecipientName} 👋</h2>
-          <p style="color: #4b5563; font-size: 16px;">
-            <strong>${safeSenderName}</strong> te ha enviado un nuevo mensaje sobre tu publicación <strong>${safeListingTitle}</strong>.
-          </p>
-          <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0; font-style: italic; color: #374151;">
-            "${safeMessageContent}"
-          </div>
-          <div style="text-align: center; margin-top: 30px;">
-            <a href="${safeChatUrl}" style="background-color: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 99px; font-weight: bold; display: inline-block;">
-              Responder Mensaje
-            </a>
-          </div>
-        </div>
-        <div style="background-color: #f9fafb; padding: 15px; text-align: center; color: #9ca3af; font-size: 12px;">
-          Este es un mensaje automático de U-Market de la Universidad Técnica de Ambato.
-        </div>
-      </div>
-    `
-
-    await transporter.sendMail({
-      from: `"U-Market" <${process.env.EMAIL_USER}>`,
-      to: recipientEmail,
-      subject: `Nuevo mensaje de ${safeSenderName} en U-Market`,
-      html: htmlContent,
-    })
 
     return { success: true }
   } catch (error) {
-    console.error('Error crítico en notificacion:', error)
+    console.error('Error enviando notificación push:', error)
     return { success: false }
   }
 }
+
 
