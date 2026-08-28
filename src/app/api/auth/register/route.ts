@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { sanitize, isValidEcuadorPhone } from '@/lib/utils'
 import { createRateLimiter } from '@/lib/rate-limit'
 
@@ -92,16 +92,22 @@ export async function POST(request: NextRequest) {
     }
 
     if (data.user) {
-      const updatePayload: Record<string, string | null> = {}
-      if (safePhone) updatePayload.phone = safePhone
-      if (safeFaculty) updatePayload.faculty = safeFaculty
-      if (safeSemester) updatePayload.semester = safeSemester
-
-      if (Object.keys(updatePayload).length > 0) {
-        await supabase
+      try {
+        const serviceClient = createServiceClient()
+        await serviceClient
           .from('profiles')
-          .update(updatePayload)
-          .eq('id', data.user.id)
+          .upsert({
+            id: data.user.id,
+            full_name: safeFullName || '',
+            email: email.toLowerCase().trim(),
+            phone: safePhone || null,
+            faculty: safeFaculty || null,
+            semester: safeSemester || null,
+            role: 'buyer',
+            is_active: true,
+          }, { onConflict: 'id' })
+      } catch (profileErr) {
+        console.error('Error persistiendo perfil con serviceClient:', profileErr)
       }
     }
 
