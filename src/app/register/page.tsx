@@ -131,8 +131,8 @@ export default function RegisterPage() {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault()
     const cleanOtp = otpCode.trim()
-    if (!cleanOtp || cleanOtp.length !== 6) {
-      setOtpError('Por favor ingresa el código completo de 6 dígitos')
+    if (!cleanOtp || cleanOtp.length < 6) {
+      setOtpError('Por favor ingresa el código completo de verificación')
       return
     }
 
@@ -155,7 +155,7 @@ export default function RegisterPage() {
       }
     } catch (err: unknown) {
       const e = err as Error
-      setOtpError(e?.message || 'Código incorrecto o expirado. Verifica los 6 dígitos.')
+      setOtpError(e?.message || 'Código incorrecto o expirado. Verifica los números ingresados.')
     } finally {
       setOtpLoading(false)
     }
@@ -164,11 +164,11 @@ export default function RegisterPage() {
   if (success) {
     return (
       <div className="auth-container">
-        <div className="glass-card animate-fade-in" style={{ maxWidth: 440, width: '100%', padding: '2.5rem', textAlign: 'center' }}>
+        <div className="glass-card animate-fade-in" style={{ maxWidth: 440, width: '100%', padding: '2.5rem 1.5rem', textAlign: 'center' }}>
           <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🔢</div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Ingresa tu código</h2>
           <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5, fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-            Enviamos un código de 6 dígitos a <strong style={{ color: 'var(--text-primary)' }}>{email}</strong>.
+            Enviamos el código a <strong style={{ color: 'var(--text-primary)' }}>{email}</strong>.
           </p>
 
           {/* Formulario de Código OTP */}
@@ -177,8 +177,8 @@ export default function RegisterPage() {
               <input
                 id="otp-code-input"
                 type="text"
-                maxLength={6}
-                placeholder="123456"
+                maxLength={8}
+                placeholder="12345678"
                 value={otpCode}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '') // Solo números
@@ -189,10 +189,10 @@ export default function RegisterPage() {
                 style={{
                   width: '100%',
                   textAlign: 'center',
-                  letterSpacing: '8px',
-                  fontSize: '1.75rem',
+                  letterSpacing: '4px',
+                  fontSize: '1.5rem',
                   fontWeight: 800,
-                  padding: '0.75rem 1rem',
+                  padding: '0.75rem 0.5rem',
                   borderRadius: 12,
                   background: 'rgba(255, 255, 255, 0.05)',
                   border: otpError ? '2px solid rgba(239, 68, 68, 0.6)' : '2px solid rgba(99, 102, 241, 0.4)',
@@ -215,15 +215,15 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              disabled={otpLoading || otpCode.trim().length !== 6}
+              disabled={otpLoading || otpCode.trim().length < 6}
               className="btn-primary"
               style={{
                 width: '100%',
                 padding: '0.85rem',
                 fontSize: '0.95rem',
                 fontWeight: 700,
-                opacity: (otpLoading || otpCode.trim().length !== 6) ? 0.6 : 1,
-                cursor: (otpLoading || otpCode.trim().length !== 6) ? 'not-allowed' : 'pointer',
+                opacity: (otpLoading || otpCode.trim().length < 6) ? 0.6 : 1,
+                cursor: (otpLoading || otpCode.trim().length < 6) ? 'not-allowed' : 'pointer',
               }}
             >
               {otpLoading ? 'Verificando...' : 'Verificar y Entrar'}
