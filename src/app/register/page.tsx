@@ -26,6 +26,10 @@ export default function RegisterPage() {
   const [resendLoading, setResendLoading] = useState(false)
   const [resendMessage, setResendMessage] = useState('')
 
+  const [otpCode, setOtpCode] = useState('')
+  const [otpLoading, setOtpLoading] = useState(false)
+  const [otpError, setOtpError] = useState('')
+
   const supabase = createClient()
 
   // Countdown timer for resend
@@ -124,16 +128,107 @@ export default function RegisterPage() {
     setLoading(false)
   }
 
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const cleanOtp = otpCode.trim()
+    if (!cleanOtp || cleanOtp.length !== 6) {
+      setOtpError('Por favor ingresa el código completo de 6 dígitos')
+      return
+    }
+
+    setOtpLoading(true)
+    setOtpError('')
+
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: email.trim().toLowerCase(),
+        token: cleanOtp,
+        type: 'signup',
+      })
+
+      if (error) throw error
+
+      if (data?.session) {
+        window.location.href = '/dashboard'
+      } else {
+        window.location.href = '/login?verified=true'
+      }
+    } catch (err: unknown) {
+      const e = err as Error
+      setOtpError(e?.message || 'Código incorrecto o expirado. Verifica los 6 dígitos.')
+    } finally {
+      setOtpLoading(false)
+    }
+  }
+
   if (success) {
     return (
       <div className="auth-container">
         <div className="glass-card animate-fade-in" style={{ maxWidth: 440, width: '100%', padding: '2.5rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📧</div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.75rem' }}>¡Verifica tu correo!</h2>
-          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-            Te enviamos un enlace de confirmación a <strong style={{ color: 'var(--text-primary)' }}>{email}</strong>.
-            Revisa tu bandeja de entrada o correo no deseado (SPAM) y haz clic en el enlace para activar tu cuenta.
+          <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🔢</div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Ingresa tu código</h2>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5, fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+            Enviamos un código de 6 dígitos a <strong style={{ color: 'var(--text-primary)' }}>{email}</strong>.
           </p>
+
+          {/* Formulario de Código OTP */}
+          <form onSubmit={handleVerifyOtp} style={{ marginBottom: '1.5rem' }}>
+            <div style={{ marginBottom: '1rem' }}>
+              <input
+                id="otp-code-input"
+                type="text"
+                maxLength={6}
+                placeholder="123456"
+                value={otpCode}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '') // Solo números
+                  setOtpCode(val)
+                  if (otpError) setOtpError('')
+                }}
+                autoFocus
+                style={{
+                  width: '100%',
+                  textAlign: 'center',
+                  letterSpacing: '8px',
+                  fontSize: '1.75rem',
+                  fontWeight: 800,
+                  padding: '0.75rem 1rem',
+                  borderRadius: 12,
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: otpError ? '2px solid rgba(239, 68, 68, 0.6)' : '2px solid rgba(99, 102, 241, 0.4)',
+                  color: 'var(--text-primary)',
+                  outline: 'none',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+                  fontFamily: 'monospace',
+                }}
+              />
+            </div>
+
+            {otpError && (
+              <div style={{
+                padding: '0.6rem 0.8rem', borderRadius: 8, marginBottom: '1rem', fontSize: '0.82rem',
+                background: 'rgba(239,68,68,0.15)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)'
+              }}>
+                {otpError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={otpLoading || otpCode.trim().length !== 6}
+              className="btn-primary"
+              style={{
+                width: '100%',
+                padding: '0.85rem',
+                fontSize: '0.95rem',
+                fontWeight: 700,
+                opacity: (otpLoading || otpCode.trim().length !== 6) ? 0.6 : 1,
+                cursor: (otpLoading || otpCode.trim().length !== 6) ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {otpLoading ? 'Verificando...' : 'Verificar y Entrar'}
+            </button>
+          </form>
 
           {resendMessage && (
             <div style={{
@@ -148,11 +243,12 @@ export default function RegisterPage() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <button
+              type="button"
               onClick={handleResendEmail}
               disabled={resendTimer > 0 || resendLoading}
-              className="btn-primary"
+              className="btn-secondary"
               style={{
-                width: '100%', padding: '0.75rem', fontSize: '0.88rem',
+                width: '100%', padding: '0.7rem', fontSize: '0.85rem',
                 opacity: (resendTimer > 0 || resendLoading) ? 0.6 : 1,
                 cursor: (resendTimer > 0 || resendLoading) ? 'not-allowed' : 'pointer'
               }}
@@ -160,12 +256,12 @@ export default function RegisterPage() {
               {resendLoading
                 ? 'Reenviando...'
                 : resendTimer > 0
-                ? `🔄 Reenviar correo en (${formatTimer(resendTimer)})`
-                : '🔄 Reenviar correo de confirmación'}
+                ? `🔄 Reenviar código en (${formatTimer(resendTimer)})`
+                : '🔄 Reenviar nuevo código'}
             </button>
 
             <Link href="/login" style={{ width: '100%', textDecoration: 'none' }}>
-              <button className="btn-secondary" style={{ width: '100%', padding: '0.75rem', fontSize: '0.88rem' }}>
+              <button type="button" className="btn-secondary" style={{ width: '100%', padding: '0.7rem', fontSize: '0.85rem', background: 'transparent', border: 'none', color: 'var(--text-secondary)' }}>
                 Ir al inicio de sesión
               </button>
             </Link>
@@ -183,9 +279,9 @@ export default function RegisterPage() {
             lineHeight: 1.6,
             textAlign: 'center',
           }}>
-            ¿No te llegó el correo ni en SPAM?{' '}
+            ¿No te llegó el código ni en SPAM?{' '}
             <a
-              href="https://wa.me/593999752932?text=Hola,%20me%20registré%20en%20U-Market%20pero%20no%20me%20llegó%20el%20correo%20de%20verificación."
+              href="https://wa.me/593999752932?text=Hola,%20me%20registré%20en%20U-Market%20pero%20no%20me%20llegó%20el%20código%20de%20verificación."
               target="_blank"
               rel="noopener noreferrer"
               style={{
