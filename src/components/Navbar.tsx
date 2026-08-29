@@ -19,9 +19,75 @@ export default function Navbar() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [isModerator, setIsModerator] = useState(false)
   const [showBusinessModal, setShowBusinessModal] = useState(false)
+  const [isInstalled, setIsInstalled] = useState(true) // Default true until verified on client
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  const [isIOS, setIsIOS] = useState(false)
+  const [showInstallModal, setShowInstallModal] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
+
+  // Detect PWA Installation State
+  useEffect(() => {
+    const checkIsStandalone = () => {
+      if (typeof window === 'undefined') return false
+      return (
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true ||
+        document.referrer.includes('android-app://')
+      )
+    }
+
+    const isStandaloneMode = checkIsStandalone()
+    setIsInstalled(isStandaloneMode)
+
+    const isIosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
+    setIsIOS(isIosDevice)
+
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault()
+      setDeferredPrompt(e)
+      setIsInstalled(false)
+    }
+
+    const handleAppInstalled = () => {
+      setIsInstalled(true)
+      setDeferredPrompt(null)
+      setShowInstallModal(false)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    window.addEventListener('appinstalled', handleAppInstalled)
+
+    const mediaQuery = window.matchMedia('(display-mode: standalone)')
+    const handleMediaChange = (e: MediaQueryListEvent) => {
+      if (e.matches) setIsInstalled(true)
+    }
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleMediaChange)
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', handleAppInstalled)
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleMediaChange)
+      }
+    }
+  }, [])
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt()
+      const { outcome } = await deferredPrompt.userChoice
+      if (outcome === 'accepted') {
+        setIsInstalled(true)
+        setDeferredPrompt(null)
+      }
+    } else {
+      setShowInstallModal(true)
+    }
+  }
 
   useEffect(() => {
     const fetchProfileData = async (userId: string) => {
@@ -173,6 +239,47 @@ export default function Navbar() {
               >
                 ❓
               </button>
+
+              {/* Botón Descargar / Instalar App (Solo visible si aún no está instalada) */}
+              {!isInstalled && (
+                <button
+                  onClick={handleInstallClick}
+                  title="Descargar e instalar U-Market en tu dispositivo"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(99,102,241,0.22), rgba(139,92,246,0.28))',
+                    border: '1px solid rgba(139,92,246,0.45)',
+                    color: '#c7d2fe',
+                    borderRadius: 20,
+                    padding: '4px 10px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 0 12px rgba(99,102,241,0.25)',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.transform = 'translateY(-1px)'
+                    e.currentTarget.style.color = '#fff'
+                    e.currentTarget.style.borderColor = '#818cf8'
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.color = '#c7d2fe'
+                    e.currentTarget.style.borderColor = 'rgba(139,92,246,0.45)'
+                  }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  <span>Descargar App</span>
+                </button>
+              )}
+
               <NavLink href="/" active={isActive('/')}>Explorar</NavLink>
             </div>
             {user && <NavLink href="/dashboard" active={isActive('/dashboard')}>Mi Panel</NavLink>}
@@ -271,6 +378,30 @@ export default function Navbar() {
             display: 'flex', flexDirection: 'column', gap: 4,
             borderTop: '1px solid var(--border)',
           }}>
+            {!isInstalled && (
+              <button
+                onClick={() => {
+                  setMenuOpen(false)
+                  handleInstallClick()
+                }}
+                style={{
+                  textAlign: 'left',
+                  padding: '10px 12px',
+                  background: 'linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.25))',
+                  border: '1px solid rgba(139,92,246,0.4)',
+                  borderRadius: 10,
+                  color: '#e0e7ff',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  margin: '4px 0',
+                }}
+              >
+                📲 Descargar / Instalar App
+              </button>
+            )}
             <MobileNavLink href="/" onClick={() => setMenuOpen(false)}>Explorar</MobileNavLink>
             {user && <MobileNavLink href="/dashboard" onClick={() => setMenuOpen(false)}>Mi Panel</MobileNavLink>}
             {isAdmin && (
@@ -339,6 +470,142 @@ export default function Navbar() {
           </div>
         )}
       </div>
+
+      {/* ── Modal de Instalación PWA (Descarga) ── */}
+      {showInstallModal && typeof window !== 'undefined' && createPortal(
+        <div
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            width: '100vw', height: '100vh',
+            background: 'rgba(0,0,0,0.82)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            zIndex: 99999,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '1rem',
+          }}
+          onClick={() => setShowInstallModal(false)}
+        >
+          <div
+            className="glass-card animate-fade-in-up"
+            style={{
+              maxWidth: 500, width: '92%',
+              padding: '2.2rem 1.8rem',
+              borderRadius: 24,
+              background: '#0d121f',
+              border: '1px solid rgba(99, 102, 241, 0.4)',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.95)',
+              position: 'relative',
+              textAlign: 'center',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Cerrar */}
+            <button
+              onClick={() => setShowInstallModal(false)}
+              style={{
+                position: 'absolute', top: 16, right: 16,
+                background: 'rgba(255,255,255,0.08)', border: 'none',
+                color: 'var(--text-secondary)', borderRadius: '50%',
+                width: 32, height: 32, cursor: 'pointer', fontSize: '1rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >✕</button>
+
+            <div style={{
+              width: 56, height: 56,
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              borderRadius: 16,
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '1.7rem', fontWeight: 900, color: 'white',
+              boxShadow: '0 0 24px rgba(99,102,241,0.5)',
+              marginBottom: '1rem',
+            }}>
+              U
+            </div>
+
+            <h2 style={{ fontSize: '1.35rem', fontWeight: 900, marginBottom: '0.4rem', color: '#fff' }}>
+              Instala U-Market en tu Celular o PC
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: '1.25rem' }}>
+              Disfruta de navegación en pantalla completa, acceso rápido desde tu inicio y notificaciones instantáneas.
+            </p>
+
+            {isIOS ? (
+              /* Instrucciones específicas para iPhone / iPad (Safari) */
+              <div style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 16,
+                padding: '1.2rem',
+                textAlign: 'left',
+                marginBottom: '1.2rem',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '0.8rem', color: '#a5b4fc', fontWeight: 700, fontSize: '0.9rem' }}>
+                  <span>🍎</span> Instrucciones para iPhone / iPad (Safari):
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: '0.84rem', color: '#e2e8f0', lineHeight: 1.5 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                    <span style={{ background: '#6366f1', color: 'white', width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, flexShrink: 0 }}>1</span>
+                    <span>Toca el botón <strong>Compartir</strong> <span style={{ fontSize: '1rem' }}>📤</span> en la barra inferior de Safari.</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                    <span style={{ background: '#6366f1', color: 'white', width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, flexShrink: 0 }}>2</span>
+                    <span>Desliza hacia abajo y selecciona <strong>«Agregar a pantalla de inicio»</strong> ➕.</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                    <span style={{ background: '#6366f1', color: 'white', width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, flexShrink: 0 }}>3</span>
+                    <span>Toca <strong>«Agregar»</strong> en la esquina superior derecha. ¡Listo!</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Instrucciones para Android / PC / Chrome / Edge */
+              <div style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 16,
+                padding: '1.2rem',
+                textAlign: 'left',
+                marginBottom: '1.2rem',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '0.8rem', color: '#a5b4fc', fontWeight: 700, fontSize: '0.9rem' }}>
+                  <span>📱</span> Pasos para instalar en tu navegador:
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: '0.84rem', color: '#e2e8f0', lineHeight: 1.5 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                    <span style={{ background: '#6366f1', color: 'white', width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, flexShrink: 0 }}>1</span>
+                    <span>Toca los <strong>tres puntos (⋮)</strong> en la esquina superior de Chrome / Edge.</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                    <span style={{ background: '#6366f1', color: 'white', width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, flexShrink: 0 }}>2</span>
+                    <span>Selecciona <strong>«Instalar aplicación»</strong> o <strong>«Agregar a la pantalla principal»</strong>.</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                    <span style={{ background: '#6366f1', color: 'white', width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, flexShrink: 0 }}>3</span>
+                    <span>Confirma tocando <strong>«Instalar»</strong>.</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={() => setShowInstallModal(false)}
+              className="btn-primary"
+              style={{
+                width: '100%',
+                padding: '0.75rem 1.5rem',
+                fontSize: '0.9rem',
+                fontWeight: 700,
+                borderRadius: 99,
+              }}
+            >
+              Entendido
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* ── Modal de Información para Negocios Externos ── */}
       {showBusinessModal && typeof window !== 'undefined' && createPortal(
