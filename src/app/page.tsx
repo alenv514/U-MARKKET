@@ -5,8 +5,8 @@ import Navbar from '@/components/Navbar'
 import ListingCard from '@/components/ListingCard'
 import LightRays from '@/components/LightRays'
 import { createClient } from '@/lib/supabase/client'
-import { CATEGORIES } from '@/types'
-import type { Listing } from '@/types'
+import { CATEGORIES, CAMPUSES, getCampusFromFaculty } from '@/types'
+import type { Listing, Campus } from '@/types'
 import { sanitize } from '@/lib/utils'
 
 export default function HomePage() {
@@ -15,7 +15,9 @@ export default function HomePage() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('Todos')
+  const [selectedCampus, setSelectedCampus] = useState<Campus>('Todos')
   const [userId, setUserId] = useState<string | null>(null)
+  const [userCampus, setUserCampus] = useState<'Campus Huachi' | 'Campus Ingahurco' | 'Campus Querochaca' | null>(null)
   
   const [page, setPage] = useState(0)
   const [hasMore, setHasMore] = useState(true)
@@ -24,7 +26,16 @@ export default function HomePage() {
   const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null))
+    supabase.auth.getUser().then(async ({ data }) => {
+      const uid = data.user?.id ?? null
+      setUserId(uid)
+      if (uid) {
+        const { data: prof } = await supabase.from('profiles').select('faculty').eq('id', uid).single()
+        if (prof?.faculty) {
+          setUserCampus(getCampusFromFaculty(prof.faculty))
+        }
+      }
+    })
   }, [supabase])
 
   const fetchListings = useCallback(async (pageNum: number, isNewSearch = false) => {
@@ -37,7 +48,7 @@ export default function HomePage() {
 
     let query = supabase
       .from('listings')
-      .select('*, profiles(full_name, avatar_url)')
+      .select('*, profiles(full_name, avatar_url, faculty, is_verified)')
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .range(pageNum * ITEMS_PER_PAGE, (pageNum + 1) * ITEMS_PER_PAGE - 1)
@@ -101,6 +112,26 @@ export default function HomePage() {
       alert('Reporte enviado. Gracias por ayudarnos a mantener U-Market seguro.')
     }
   }
+
+  // Filtrado y priorización inteligente por Campus
+  const displayedListings = useMemo(() => {
+    let list = listings
+
+    if (selectedCampus !== 'Todos') {
+      list = list.filter(l => getCampusFromFaculty(l.profiles?.faculty) === selectedCampus)
+    } else if (userCampus) {
+      // Priorizar primero los productos del campus natal del estudiante
+      list = [...list].sort((a, b) => {
+        const campusA = getCampusFromFaculty(a.profiles?.faculty)
+        const campusB = getCampusFromFaculty(b.profiles?.faculty)
+        if (campusA === userCampus && campusB !== userCampus) return -1
+        if (campusA !== userCampus && campusB === userCampus) return 1
+        return 0
+      })
+    }
+
+    return list
+  }, [listings, selectedCampus, userCampus])
 
   return (
     <>
@@ -181,6 +212,80 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ── Filtro por Campus (Sin emojis) ── */}
+        <section className="page-container" style={{ marginBottom: '1rem' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            overflowX: 'auto',
+            paddingBottom: 4,
+          }}>
+            <span style={{
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              color: 'var(--text-muted)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              marginRight: 4,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+              flexShrink: 0,
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              Campus:
+            </span>
+            {CAMPUSES.map(campus => {
+              const isSelected = selectedCampus === campus
+              const isUserNative = userCampus === campus
+              return (
+                <button
+                  key={campus}
+                  onClick={() => setSelectedCampus(campus)}
+                  style={{
+                    padding: '5px 13px',
+                    borderRadius: 99,
+                    fontSize: '0.8rem',
+                    fontWeight: isSelected ? 700 : 500,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.2s ease',
+                    border: isSelected
+                      ? '1px solid #6366f1'
+                      : '1px solid rgba(255,255,255,0.08)',
+                    background: isSelected
+                      ? 'rgba(99,102,241,0.22)'
+                      : 'rgba(255,255,255,0.03)',
+                    color: isSelected ? '#ffffff' : 'var(--text-secondary)',
+                    boxShadow: isSelected ? '0 0 14px rgba(99,102,241,0.35)' : 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <span>{campus === 'Todos' ? 'Todos los campus' : campus}</span>
+                  {isUserNative && (
+                    <span style={{
+                      fontSize: '0.62rem',
+                      background: 'rgba(99,102,241,0.3)',
+                      color: '#c7d2fe',
+                      padding: '1px 6px',
+                      borderRadius: 99,
+                      fontWeight: 600,
+                      border: '1px solid rgba(139,92,246,0.3)',
+                    }}>
+                      Tu campus
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </section>
 
         {/* ── Categories ── */}
         <section className="page-container" style={{ marginBottom: '1.5rem' }}>
@@ -212,18 +317,22 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-          ) : listings.length === 0 ? (
+          ) : displayedListings.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-secondary)' }}>
               <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
               <h3 style={{ fontWeight: 700, marginBottom: 8 }}>No se encontraron publicaciones</h3>
               <p style={{ fontSize: '0.9rem' }}>
-                {search ? `No hay resultados para "${search}"` : 'Sé el primero en publicar en esta categoría'}
+                {search
+                  ? `No hay resultados para "${search}"`
+                  : selectedCampus !== 'Todos'
+                  ? `No hay publicaciones activas en ${selectedCampus}`
+                  : 'Sé el primero en publicar en esta categoría'}
               </p>
             </div>
           ) : (
             <>
               <div className="listings-grid">
-                {listings.map((listing, i) => (
+                {displayedListings.map((listing, i) => (
                   <div key={listing.id} style={{ animationDelay: `${(i % ITEMS_PER_PAGE) * 0.05}s` }}>
                     <ListingCard listing={listing} currentUserId={userId} onReport={userId ? handleReport : undefined} />
                   </div>
@@ -245,6 +354,7 @@ export default function HomePage() {
             </>
           )}
         </section>
+
         
         {/* ── Section para Negocios Externos ── */}
         <section className="page-container" style={{ paddingBottom: '3rem' }}>

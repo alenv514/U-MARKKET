@@ -110,6 +110,22 @@ export function getFacultyFromCareer(careerName: string): string | null {
   return null
 }
 
+export type Campus = 'Todos' | 'Campus Huachi' | 'Campus Ingahurco' | 'Campus Querochaca'
+export const CAMPUSES: Campus[] = ['Todos', 'Campus Huachi', 'Campus Ingahurco', 'Campus Querochaca']
+
+/** Mapea una facultad al campus geográfico correspondiente de la UTA */
+export function getCampusFromFaculty(faculty?: string | null): 'Campus Huachi' | 'Campus Ingahurco' | 'Campus Querochaca' {
+  if (!faculty) return 'Campus Huachi'
+  const f = faculty.toLowerCase()
+  if (f.includes('salud') || f.includes('medicina') || f.includes('enfermería') || f.includes('fisioterapia')) {
+    return 'Campus Ingahurco'
+  }
+  if (f.includes('agropecuaria') || f.includes('agronomía') || f.includes('veterinaria') || f.includes('agroindustria')) {
+    return 'Campus Querochaca'
+  }
+  return 'Campus Huachi'
+}
+
 export interface Subscription {
   id: string
   user_id: string

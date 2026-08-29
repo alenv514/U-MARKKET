@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import type { Listing } from '@/types'
+import { getCampusFromFaculty } from '@/types'
 import ImageCarousel from './ImageCarousel'
 
 interface ListingCardProps {
@@ -34,6 +35,8 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
   const [contacting, setContacting] = useState(false)
   const [timeAgoText] = useState(() => computeTimeAgo(listing.created_at))
   const supabase = createClient()
+
+  const sellerCampus = getCampusFromFaculty(listing.profiles?.faculty)
 
   const handleContact = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -76,6 +79,31 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
         <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 20 }}>
           <span className="badge badge-indigo">{listing.category}</span>
         </div>
+        {/* Campus badge overlay (Clean, no emojis) */}
+        {listing.profiles?.faculty && (
+          <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 20 }}>
+            <span style={{
+              background: 'rgba(8, 11, 20, 0.88)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255, 255, 255, 0.16)',
+              color: '#c7d2fe',
+              fontSize: '0.68rem',
+              fontWeight: 600,
+              padding: '3px 8px',
+              borderRadius: 6,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+            }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              {sellerCampus.replace('Campus ', '')}
+            </span>
+          </div>
+        )}
       </Link>
 
       {/* Content */}
