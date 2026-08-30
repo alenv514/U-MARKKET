@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import ImageCarousel from '@/components/ImageCarousel'
 import StarRating from '@/components/StarRating'
@@ -23,6 +23,8 @@ export default function ListingDetailPage() {
   const [userRole, setUserRole] = useState<string | null>(null)
   const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const editedPending = searchParams.get('edited') === 'pending'
 
   useEffect(() => {
     supabase.auth.getUser().then(async (res) => {
@@ -174,20 +176,26 @@ export default function ListingDetailPage() {
           {/* Status banner */}
           {listing.status === 'pending_approval' && (
             <div style={{
-              background: 'rgba(99,102,241,0.1)',
-              border: '1px solid rgba(99,102,241,0.25)',
+              background: editedPending ? 'rgba(34,197,94,0.1)' : 'rgba(99,102,241,0.1)',
+              border: editedPending ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(99,102,241,0.25)',
               borderRadius: 12,
               padding: '1rem',
               marginBottom: '1.5rem',
               display: 'flex',
               alignItems: 'center',
               gap: 12,
-              color: '#a5b4fc'
+              color: editedPending ? '#86efac' : '#a5b4fc'
             }}>
-              <span style={{ fontSize: '1.25rem' }}>⏳</span>
+              <span style={{ fontSize: '1.25rem' }}>{editedPending ? '✓' : '⏳'}</span>
               <div>
-                <strong style={{ display: 'block', color: 'white', fontSize: '0.9rem' }}>Publicación en revisión</strong>
-                <span style={{ fontSize: '0.8rem', opacity: 0.85 }}>Esta publicación solo es visible para ti. Estará disponible públicamente una vez que el administrador la apruebe.</span>
+                <strong style={{ display: 'block', color: 'white', fontSize: '0.9rem' }}>
+                  {editedPending ? 'Cambios guardados correctamente' : 'Publicación en revisión'}
+                </strong>
+                <span style={{ fontSize: '0.8rem', opacity: 0.85 }}>
+                  {editedPending
+                    ? 'Tu publicación fue actualizada y enviada a revisión nuevamente. Un moderador la aprobará pronto.'
+                    : 'Esta publicación solo es visible para ti. Estará disponible públicamente una vez que el administrador la apruebe.'}
+                </span>
               </div>
             </div>
           )}

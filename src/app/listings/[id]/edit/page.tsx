@@ -28,6 +28,8 @@ export default function EditListingPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [notFound, setNotFound] = useState(false)
+  const [requireApproval, setRequireApproval] = useState(false)
+  const [userRole, setUserRole] = useState<string>('buyer')
 
   const {
     existingUrls,
@@ -47,16 +49,18 @@ export default function EditListingPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
 
-    const { data, error: fetchErr } = await supabase
-      .from('listings')
-      .select('*')
-      .eq('id', id)
-      .eq('seller_id', user.id) // Solo el dueño puede editar
-      .single()
+    const [listingRes, approvalSettingsRes, profileRes] = await Promise.all([
+      supabase.from('listings').select('*').eq('id', id).eq('seller_id', user.id).single(),
+      supabase.from('platform_settings').select('value').eq('key', 'listings_require_approval').single(),
+      supabase.from('profiles').select('role').eq('id', user.id).single(),
+    ])
 
-    if (fetchErr || !data) { setNotFound(true); setLoading(false); return }
+    if (listingRes.error || !listingRes.data) { setNotFound(true); setLoading(false); return }
 
-    const listing = data as Listing
+    setRequireApproval(approvalSettingsRes.data?.value === true || approvalSettingsRes.data?.value === 'true')
+    setUserRole(profileRes.data?.role ?? 'buyer')
+
+    const listing = listingRes.data as Listing
     setTitle(listing.title)
     setDescription(listing.description ?? '')
     setPrice(listing.price.toString())
@@ -111,16 +115,26 @@ export default function EditListingPage() {
       return
     }
 
+    // Admins y moderadores no necesitan re-aprobación
+    const isPrivileged = userRole === 'admin' || userRole === 'moderator'
+    const needsReApproval = requireApproval && !isPrivileged
+
+    const updatePayload: Record<string, unknown> = {
+      title: sanitize(title),
+      description: description.trim() ? sanitize(description) : null,
+      price: Number(price),
+      category,
+      whatsapp_number: whatsapp.trim() || null,
+      image_url: allImages[0] ?? null,
+    }
+
+    if (needsReApproval) {
+      updatePayload.status = 'pending_approval'
+    }
+
     const { error: updateError } = await supabase
       .from('listings')
-      .update({
-        title: sanitize(title),
-        description: description.trim() ? sanitize(description) : null,
-        price: Number(price),
-        category,
-        whatsapp_number: whatsapp.trim() || null,
-        image_url: allImages[0] ?? null,
-      })
+      .update(updatePayload)
       .eq('id', id)
       .eq('seller_id', user.id)
 
@@ -130,7 +144,11 @@ export default function EditListingPage() {
       return
     }
 
-    router.push(`/listings/${id}`)
+    if (needsReApproval) {
+      router.push(`/listings/${id}?edited=pending`)
+    } else {
+      router.push(`/listings/${id}`)
+    }
   }
 
   const totalPhotos = existingUrls.length + newFiles.length
@@ -183,6 +201,20 @@ export default function EditListingPage() {
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
               Actualiza los datos de tu producto o servicio
             </p>
+            {requireApproval && userRole !== 'admin' && userRole !== 'moderator' && (
+              <div style={{
+                marginTop: '0.75rem',
+                padding: '0.75rem 1rem',
+                background: 'rgba(245, 158, 11, 0.1)',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+                borderRadius: 12,
+                fontSize: '0.82rem',
+                color: '#fcd34d',
+                lineHeight: 1.5,
+              }}>
+                Al guardar los cambios, tu publicación pasará a revisión nuevamente antes de ser visible.
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleSubmit}>
