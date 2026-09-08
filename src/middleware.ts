@@ -1,10 +1,22 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// Nota: el rate limiting de login se apoya en el límite nativo de Supabase Auth,
-// ya que el intento de login va directo del navegador a Supabase y no pasa por este
-// middleware. El registro sí tiene rate limiting propio en /api/auth/register.
+// Rutas que requieren autenticación
+const PROTECTED_ROUTES = ['/dashboard', '/listings/new', '/inbox', '/profile']
+const AUTH_ROUTES = ['/login', '/register']
+
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  const isProtected = PROTECTED_ROUTES.some(r => pathname.startsWith(r))
+  const isAuth = AUTH_ROUTES.some(r => pathname === r)
+  const isAdmin = pathname.startsWith('/admin')
+
+  // Si no es una ruta que necesite verificación, pasar directamente sin llamar a Supabase
+  if (!isProtected && !isAuth && !isAdmin) {
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -30,26 +42,18 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const protectedRoutes = ['/dashboard', '/listings/new']
-  const isProtected = protectedRoutes.some(route =>
-    request.nextUrl.pathname.startsWith(route)
-  )
-
-  // Redirigir al login si no está autenticado
+  // Redirigir al login si no está autenticado en rutas protegidas
   if (isProtected && !user) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
   // Redirigir al dashboard si ya está autenticado e intenta ir a login/register
-  if (user && (
-    request.nextUrl.pathname === '/login' ||
-    request.nextUrl.pathname === '/register'
-  )) {
+  if (isAuth && user) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // ── Verificación de admin en middleware (no solo en cliente) ──
-  if (request.nextUrl.pathname.startsWith('/admin')) {
+  // Verificación de admin en middleware (no solo en cliente)
+  if (isAdmin) {
     if (!user) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
@@ -69,7 +73,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Excluir rutas API (manejan su propia autenticación), archivos estáticos y Next internals
     '/((?!_next/static|_next/image|_next/data|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
