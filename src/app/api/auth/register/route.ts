@@ -3,20 +3,19 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { sanitize, isValidEcuadorPhone } from '@/lib/utils'
 import { createRateLimiter } from '@/lib/rate-limit'
 
-// ── Rate limiter simple en memoria (3 intentos/minuto por IP) ──
-const isRateLimited = createRateLimiter(3, 60_000)
-
-
+// ── Rate limiter adaptado a registros simultáneos en campus UTA (aulas, inducción) ──
+const isIpRateLimited = createRateLimiter(60, 60_000)
+const isEmailRateLimited = createRateLimiter(3, 60_000)
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting por IP
+    // Rate limiting por IP general (permite hasta 60 registros/minuto por red de campus)
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       ?? request.headers.get('x-real-ip')
       ?? 'unknown'
-    if (isRateLimited(ip)) {
+    if (isIpRateLimited(`reg_ip:${ip}`)) {
       return NextResponse.json(
-        { error: 'Demasiados intentos. Intenta de nuevo en 1 minuto.' },
+        { error: 'Demasiadas solicitudes de registro desde esta red. Intenta de nuevo en 1 minuto.' },
         { status: 429 }
       )
     }
@@ -27,6 +26,16 @@ export async function POST(request: NextRequest) {
     // ── Validación de dominio en el backend ──
     if (!email || typeof email !== 'string') {
       return NextResponse.json({ error: 'Correo requerido' }, { status: 400 })
+    }
+
+    const normalizedEmail = email.trim().toLowerCase()
+
+    // Rate limiting específico por correo para evitar abusos sobre una misma cuenta
+    if (isEmailRateLimited(`reg_email:${normalizedEmail}`)) {
+      return NextResponse.json(
+        { error: 'Demasiados intentos de registro para este correo. Intenta de nuevo en 1 minuto.' },
+        { status: 429 }
+      )
     }
 
     const emailRegex = /^[^\s@]+@uta\.edu\.ec$/i

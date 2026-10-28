@@ -46,6 +46,13 @@ function SplashCursor({
   const animationFrameId = useRef<number | null>(null);
 
   useEffect(() => {
+    // Desactivar en pantallas táctiles / móviles o si el usuario prefiere movimiento reducido
+    // para ahorrar batería, evitar sobrecalentamiento y garantizar 60fps constantes en scroll
+    if (typeof window === 'undefined') return;
+    const isTouch = window.matchMedia('(pointer: coarse)').matches || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (isTouch || prefersReducedMotion) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -580,6 +587,10 @@ function SplashCursor({
 
     function updateFrame() {
       if (!isActive) return;
+      if (document.hidden) {
+        animationFrameId.current = requestAnimationFrame(updateFrame);
+        return;
+      }
       const dt = calcDeltaTime();
       if (resizeCanvas()) initFramebuffers();
       updateColors(dt);

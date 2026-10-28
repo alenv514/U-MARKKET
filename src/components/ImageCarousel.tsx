@@ -10,6 +10,7 @@ interface ImageCarouselProps {
   interval?: number
   /** true = modo compacto para cards, false = modo grande para detalle */
   compact?: boolean
+  priority?: boolean
 }
 
 export default function ImageCarousel({
@@ -18,6 +19,7 @@ export default function ImageCarousel({
   autoPlay = true,
   interval = 3000,
   compact = true,
+  priority,
 }: ImageCarouselProps) {
   const [current, setCurrent] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -97,7 +99,7 @@ export default function ImageCarousel({
               style={{ objectFit: 'cover' }}
               onError={() => setImgErrors(prev => ({ ...prev, [i]: true }))}
               sizes={compact ? '(max-width: 768px) 100vw, 33vw' : '(max-width: 1024px) 100vw, 800px'}
-              priority={i === 0}
+              priority={priority !== undefined ? (priority && i === 0) : (!compact && i === 0)}
             />
           ) : (
             <div style={{

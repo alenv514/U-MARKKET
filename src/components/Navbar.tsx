@@ -1,12 +1,21 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import type { User, RealtimeChannel } from '@supabase/supabase-js'
+import type { User } from '@supabase/supabase-js'
 import PushManager from './PushManager'
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>
+}
+
+interface NavigatorWithStandalone extends Navigator {
+  standalone?: boolean
+}
 
 export default function Navbar() {
   const [user, setUser] = useState<User | null>(null)
@@ -20,7 +29,7 @@ export default function Navbar() {
   const [isModerator, setIsModerator] = useState(false)
   const [showBusinessModal, setShowBusinessModal] = useState(false)
   const [isInstalled, setIsInstalled] = useState(true) // Default true until verified on client
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [isIOS, setIsIOS] = useState(false)
   const [showInstallModal, setShowInstallModal] = useState(false)
   const router = useRouter()
@@ -31,9 +40,10 @@ export default function Navbar() {
   useEffect(() => {
     const checkIsStandalone = () => {
       if (typeof window === 'undefined') return false
+      const nav = window.navigator as NavigatorWithStandalone
       return (
         window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as any).standalone === true ||
+        nav.standalone === true ||
         document.referrer.includes('android-app://')
       )
     }
@@ -41,12 +51,12 @@ export default function Navbar() {
     const isStandaloneMode = checkIsStandalone()
     setIsInstalled(isStandaloneMode)
 
-    const isIosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
+    const isIosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !((window as unknown as { MSStream?: unknown }).MSStream)
     setIsIOS(isIosDevice)
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault()
-      setDeferredPrompt(e)
+      setDeferredPrompt(e as BeforeInstallPromptEvent)
       setIsInstalled(false)
     }
 
@@ -116,32 +126,49 @@ export default function Navbar() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => {
-    let channel: RealtimeChannel | null = null
-
-    const fetchUnreadCount = async (userId: string) => {
+  // Consulta optimizada y periódica de mensajes no leídos (sin Thundering Herd masivo)
+  const refreshUnreadCount = useCallback(async (userId: string) => {
+    try {
       const { count } = await supabase
         .from('messages')
         .select('*', { count: 'exact', head: true })
         .eq('is_read', false)
         .neq('sender_id', userId)
       setUnreadCount(count || 0)
+    } catch {
+      // Ignorar fallos transitorios de red
+    }
+  }, [supabase])
+
+  useEffect(() => {
+    if (!user?.id) return
+
+    refreshUnreadCount(user.id)
+
+    // Actualizar al regresar a la pestaña (focus / visible)
+    const onFocus = () => refreshUnreadCount(user.id)
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        refreshUnreadCount(user.id)
+      }
     }
 
-    if (user?.id) {
-      fetchUnreadCount(user.id)
-      
-      channel = supabase.channel('navbar_unread')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
-          fetchUnreadCount(user.id)
-        })
-        .subscribe()
-    }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisibility)
+
+    // Sondeo suave cada 45 segundos para no sobrecargar el servidor
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        refreshUnreadCount(user.id)
+      }
+    }, 45_000)
 
     return () => {
-      if (channel) supabase.removeChannel(channel)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisibility)
+      clearInterval(interval)
     }
-  }, [user?.id, supabase])
+  }, [user?.id, refreshUnreadCount, pathname])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)

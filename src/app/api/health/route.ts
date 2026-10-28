@@ -23,7 +23,7 @@ export async function GET() {
       active_listings: count,
       timestamp: new Date().toISOString(),
     })
-  } catch (e) {
+  } catch {
     return NextResponse.json({ status: 'error', message: 'Internal error' }, { status: 500 })
   }
 }
