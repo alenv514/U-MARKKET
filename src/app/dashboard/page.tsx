@@ -4,15 +4,11 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { createClient } from '@/lib/supabase/client'
-import type { Listing, Profile, Subscription } from '@/types'
+import type { Listing, Profile } from '@/types'
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [subscription, setSubscription] = useState<Subscription | null>(null)
-  const [isSubActive, setIsSubActive] = useState(false)
-  const [daysLeft, setDaysLeft] = useState<number | null>(null)
   const [listings, setListings] = useState<Listing[]>([])
-  const [freePublishingMode, setFreePublishingMode] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [page, setPage] = useState(0)
@@ -28,26 +24,13 @@ export default function DashboardPage() {
       return
     }
 
-    const [profileRes, subRes, settingsRes] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, avatar_url, role, is_active, faculty, semester, created_at, updated_at').eq('id', user.id).single(),
-      supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      supabase.from('platform_settings').select('value').eq('key', 'free_publishing_mode').single()
-    ])
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('id, full_name, avatar_url, role, is_active, faculty, semester, created_at, updated_at')
+      .eq('id', user.id)
+      .single()
 
-    setProfile(profileRes.data)
-    setSubscription(subRes.data)
-
-    if (subRes.data) {
-      const ends = subRes.data.ends_at ? new Date(subRes.data.ends_at).getTime() : null
-      const now = Date.now()
-      setIsSubActive(!ends || ends > now)
-      setDaysLeft(ends ? Math.max(0, Math.floor((ends - now) / 86400000)) : null)
-    } else {
-      setIsSubActive(false)
-      setDaysLeft(null)
-    }
-
-    setFreePublishingMode(settingsRes.data?.value === true || settingsRes.data?.value === 'true')
+    setProfile(profileData)
     
     // Fetch initial listings
     const { data: listingsData } = await supabase
@@ -180,42 +163,6 @@ export default function DashboardPage() {
             <StatCard icon="✅" label="Activas" value={activeListings} color="#10b981" />
             <StatCard icon="⏸️" label="Pausadas" value={listings.filter(l => l.status === 'paused').length} color="#f59e0b" />
             <StatCard icon="👁️" label="Vistas totales" value={listings.reduce((s, l) => s + l.views, 0)} color="#8b5cf6" />
-          </div>
-
-          {/* Subscription status */}
-          <div className="glass-card animate-fade-in-up delay-200" style={{ padding: '1.25rem 1.5rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 12,
-                background: isSubActive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem',
-              }}>
-                {isSubActive ? '🟢' : '🔴'}
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>
-                  {isSubActive ? 'Suscripción activa' : 'Suscripción inactiva'}
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                  {!subscription 
-                    ? 'No tienes un plan activo'
-                    : subscription.plan === 'free'
-                      ? daysLeft !== null
-                        ? daysLeft > 0 ? `Plan gratuito — ${daysLeft} días restantes` : 'Período gratuito expirado'
-                        : 'Plan gratuito'
-                      : 'Plan pagado activo'}
-                </div>
-              </div>
-            </div>
-            {subscription?.plan === 'free' && daysLeft !== null && daysLeft <= 7 && daysLeft > 0 && (
-              <span className="badge badge-amber">⚠️ Renueva pronto</span>
-            )}
-            {!isSubActive && !freePublishingMode && (
-              <span className="badge badge-red">Sin suscripción activa — no puedes publicar</span>
-            )}
-            {!isSubActive && freePublishingMode && (
-              <span className="badge badge-green">Modo de publicación libre activo 🟢</span>
-            )}
           </div>
 
           {/* Listings */}

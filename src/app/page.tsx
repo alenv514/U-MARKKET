@@ -341,57 +341,6 @@ export default function HomePage() {
         </section>
 
         
-        {/* ── Section para Negocios Externos ── */}
-        <section className="page-container" style={{ paddingBottom: '3rem' }}>
-          <div className="glass-card animate-fade-in-up" style={{
-            padding: '2.25rem 2rem',
-            borderRadius: 24,
-            background: 'linear-gradient(135deg, #0a2540 0%, #0052cc 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            boxShadow: '0 12px 36px rgba(10, 37, 64, 0.18)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '1.5rem',
-          }}>
-            <div style={{ maxWidth: 580 }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255, 255, 255, 0.15)', padding: '4px 12px', borderRadius: 99, fontSize: '0.8rem', color: '#e0f2fe', fontWeight: 700, marginBottom: '0.75rem' }}>
-                💼 ¿Tienes un negocio local o emprendimiento externo?
-              </div>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.5rem', color: '#ffffff' }}>
-                Anúnciate y publica en U-Market
-              </h2>
-              <p style={{ color: '#cbd5e1', fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>
-                ¿No eres estudiante pero deseas vender o promocionar tu marca en el marketplace de la UTA? Escríbenos por WhatsApp para solicitar autorización y publicar en la plataforma.
-              </p>
-            </div>
-            
-            <a 
-              href="https://wa.me/593999752932?text=Hola!%20Tengo%20un%20negocio%20externo%20y%20me%20gustar%C3%ADa%20publicar/anunciarme%20en%20U-Market." 
-              target="_blank" 
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 10,
-                backgroundColor: '#25D366',
-                color: '#ffffff',
-                fontWeight: 800,
-                fontSize: '0.95rem',
-                padding: '0.85rem 1.75rem',
-                borderRadius: 99,
-                textDecoration: 'none',
-                boxShadow: '0 8px 24px rgba(37, 211, 102, 0.3)',
-                transition: 'transform 0.2s ease',
-              }}
-            >
-              <span style={{ fontSize: '1.25rem' }}>💬</span>
-              Contactar por WhatsApp
-            </a>
-          </div>
-        </section>
-        
         {/* Simple Footer */}
         <footer style={{ borderTop: '1px solid var(--border)', padding: '2rem 0', textAlign: 'center', background: '#ffffff' }}>
           <div className="page-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem', flexWrap: 'wrap', fontSize: '0.85rem' }}>
