@@ -59,7 +59,7 @@ export default function VerifiedBadge({
         <defs>
           <linearGradient id="verified-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
             <stop stopColor="#3b82f6" />
-            <stop offset="1" stopColor="#6366f1" />
+            <stop offset="1" stopColor="#0052cc" />
           </linearGradient>
         </defs>
       </svg>
