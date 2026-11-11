@@ -112,7 +112,7 @@ function SplashCursor({
         halfFloat = gl.getExtension('OES_texture_half_float');
         supportLinearFiltering = gl.getExtension('OES_texture_half_float_linear');
       }
-      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      gl.clearColor(0.0, 0.0, 0.0, 0.0);
 
       const halfFloatTexType = isWebGL2 ? gl.HALF_FLOAT : halfFloat && halfFloat.HALF_FLOAT_OES;
       let formatRGBA, formatRG, formatR;
@@ -482,7 +482,7 @@ function SplashCursor({
           gl.viewport(0, 0, target.width, target.height);
           gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
         }
-        if (clear) { gl.clearColor(0.0, 0.0, 0.0, 1.0); gl.clear(gl.COLOR_BUFFER_BIT); }
+        if (clear) { gl.clearColor(0.0, 0.0, 0.0, 0.0); gl.clear(gl.COLOR_BUFFER_BIT); }
         gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
       };
     })();
@@ -693,6 +693,11 @@ function SplashCursor({
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function render(target: any) {
+      if (target == null) {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.clearColor(0.0, 0.0, 0.0, 0.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+      }
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.enable(gl.BLEND);
       drawDisplay(target);
@@ -793,14 +798,13 @@ function SplashCursor({
 
     function generateColor() {
       if (config.BLUE_MODE || !config.RAINBOW_MODE) {
-        // Genera tonos dinámicos de azul marino, cobalto y azul zafiro/eléctrico
-        const hue = 0.57 + Math.random() * 0.08; // Entre 205° y 234° (gama azul marino)
-        const sat = 0.85 + Math.random() * 0.15;
-        const val = 0.85 + Math.random() * 0.15;
+        const hue = 0.58 + Math.random() * 0.07;
+        const sat = 0.9;
+        const val = 0.95;
         const c = HSVtoRGB(hue, sat, val);
-        c.r *= 0.25;
-        c.g *= 0.45;
-        c.b *= 0.95;
+        c.r *= 0.3;
+        c.g *= 0.55;
+        c.b *= 1.0;
         return c;
       }
       const c = HSVtoRGB(Math.random(), 1.0, 1.0);
@@ -937,7 +941,7 @@ function SplashCursor({
       <canvas
         ref={canvasRef}
         id="fluid"
-        style={{ width: '100vw', height: '100vh', display: 'block', mixBlendMode: 'multiply' }}
+        style={{ width: '100vw', height: '100vh', display: 'block' }}
       />
     </div>
   );

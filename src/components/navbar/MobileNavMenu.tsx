@@ -37,7 +37,7 @@ export default function MobileNavMenu({
         display: 'flex',
         flexDirection: 'column',
         gap: 4,
-        borderTop: '1px solid var(--border)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.12)',
       }}
     >
       {!isInstalled && (
@@ -49,10 +49,10 @@ export default function MobileNavMenu({
           style={{
             textAlign: 'left',
             padding: '10px 12px',
-            background: 'linear-gradient(135deg, rgba(10,37,64,0.06), rgba(0,82,204,0.12))',
-            border: '1px solid rgba(0,82,204,0.3)',
+            background: 'rgba(255, 255, 255, 0.12)',
+            border: '1px solid rgba(255, 255, 255, 0.25)',
             borderRadius: 10,
-            color: '#0052cc',
+            color: '#ffffff',
             cursor: 'pointer',
             fontWeight: 700,
             display: 'flex',

@@ -19,15 +19,21 @@ export function NavLink({
         borderRadius: 8,
         fontSize: '0.875rem',
         fontWeight: active ? 700 : 500,
-        color: active ? '#0052cc' : 'var(--text-secondary)',
-        background: active ? 'rgba(0, 82, 204, 0.08)' : 'transparent',
+        color: active ? '#ffffff' : '#cbd5e1',
+        background: active ? 'rgba(255, 255, 255, 0.16)' : 'transparent',
         transition: 'all 0.2s ease',
       }}
       onMouseEnter={(e) => {
-        if (!active) (e.target as HTMLElement).style.color = 'var(--text-primary)'
+        if (!active) {
+          ;(e.target as HTMLElement).style.color = '#ffffff'
+          ;(e.target as HTMLElement).style.background = 'rgba(255, 255, 255, 0.08)'
+        }
       }}
       onMouseLeave={(e) => {
-        if (!active) (e.target as HTMLElement).style.color = 'var(--text-secondary)'
+        if (!active) {
+          ;(e.target as HTMLElement).style.color = '#cbd5e1'
+          ;(e.target as HTMLElement).style.background = 'transparent'
+        }
       }}
     >
       {children}
@@ -53,7 +59,7 @@ export function MobileNavLink({
         display: 'block',
         padding: '10px 12px',
         borderRadius: 8,
-        color: 'var(--text-primary)',
+        color: '#ffffff',
         fontWeight: 500,
       }}
     >

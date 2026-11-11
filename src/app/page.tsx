@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import Navbar from '@/components/Navbar'
 import ListingCard from '@/components/ListingCard'
-import LightRays from '@/components/LightRays'
 import { createClient } from '@/lib/supabase/client'
 import { CATEGORIES, CAMPUSES, getCampusFromFaculty } from '@/types'
 import type { Listing, Campus } from '@/types'
@@ -136,31 +135,16 @@ export default function HomePage() {
   return (
     <>
       <Navbar />
-      <main style={{ paddingTop: 64, minHeight: '100vh' }}>
+      <main style={{ paddingTop: 64, minHeight: '100vh', background: '#ffffff' }}>
 
         {/* ── Hero ── */}
         <section style={{
           position: 'relative',
-          paddingTop: '4rem', paddingBottom: '3rem',
-          background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 82, 204, 0.08), transparent)',
+          paddingTop: '4rem', paddingBottom: '3.5rem',
+          background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 82, 204, 0.05), #ffffff 70%)',
           textAlign: 'center',
           overflow: 'hidden',
         }}>
-          {/* Light Rays Background */}
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, opacity: 0.9 }}>
-            <LightRays
-              raysOrigin="top-center"
-              raysColor="#0284c7"
-              raysSpeed={1.5}
-              lightSpread={0.8}
-              rayLength={1.2}
-              followMouse={true}
-              mouseInfluence={0.1}
-              noiseAmount={0.05}
-              distortion={0.05}
-            />
-          </div>
-
           <div className="page-container" style={{ position: 'relative', zIndex: 1 }}>
             <div className="animate-fade-in-up">
               <h1 style={{
@@ -362,8 +346,9 @@ export default function HomePage() {
           <div className="glass-card animate-fade-in-up" style={{
             padding: '2.25rem 2rem',
             borderRadius: 24,
-            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%)',
-            border: '1px solid rgba(99, 102, 241, 0.25)',
+            background: 'linear-gradient(135deg, #0a2540 0%, #0052cc 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            boxShadow: '0 12px 36px rgba(10, 37, 64, 0.18)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -371,13 +356,13 @@ export default function HomePage() {
             gap: '1.5rem',
           }}>
             <div style={{ maxWidth: 580 }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(99,102,241,0.15)', padding: '4px 12px', borderRadius: 99, fontSize: '0.8rem', color: '#a5b4fc', fontWeight: 700, marginBottom: '0.75rem' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255, 255, 255, 0.15)', padding: '4px 12px', borderRadius: 99, fontSize: '0.8rem', color: '#e0f2fe', fontWeight: 700, marginBottom: '0.75rem' }}>
                 💼 ¿Tienes un negocio local o emprendimiento externo?
               </div>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.5rem', color: '#ffffff' }}>
                 Anúnciate y publica en U-Market
               </h2>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>
+              <p style={{ color: '#cbd5e1', fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>
                 ¿No eres estudiante pero deseas vender o promocionar tu marca en el marketplace de la UTA? Escríbenos por WhatsApp para solicitar autorización y publicar en la plataforma.
               </p>
             </div>
@@ -408,15 +393,15 @@ export default function HomePage() {
         </section>
         
         {/* Simple Footer */}
-        <footer style={{ borderTop: '1px solid var(--border)', padding: '2rem 0', textAlign: 'center' }}>
+        <footer style={{ borderTop: '1px solid var(--border)', padding: '2rem 0', textAlign: 'center', background: '#ffffff' }}>
           <div className="page-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem', flexWrap: 'wrap', fontSize: '0.85rem' }}>
-            <a href="/terminos" style={{ color: 'rgba(255, 255, 255, 0.25)', textDecoration: 'none', fontSize: '0.75rem', transition: 'color 0.2s' }}>Términos y Condiciones</a>
-            <a href="/privacidad" style={{ color: 'rgba(255, 255, 255, 0.25)', textDecoration: 'none', fontSize: '0.75rem', transition: 'color 0.2s' }}>Políticas de Privacidad</a>
+            <a href="/terminos" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.75rem', transition: 'color 0.2s' }}>Términos y Condiciones</a>
+            <a href="/privacidad" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.75rem', transition: 'color 0.2s' }}>Políticas de Privacidad</a>
             <a 
               href="https://wa.me/593999752932?text=Hola!%20Tengo%20una%20consulta%20sobre%20U-Market." 
               target="_blank" 
               rel="noopener noreferrer" 
-              style={{ color: '#25D366', textDecoration: 'none', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              style={{ color: '#059669', textDecoration: 'none', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
               💬 Contactar Administración / Negocios
             </a>

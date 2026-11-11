@@ -205,10 +205,10 @@ export default function Navbar() {
         right: 0,
         zIndex: 50,
         transition: 'all 0.3s ease',
-        background: scrolled ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.85)',
+        background: scrolled ? 'rgba(10, 37, 64, 0.98)' : '#0a2540',
         backdropFilter: 'blur(16px)',
-        borderBottom: scrolled ? '1px solid #e2e8f0' : '1px solid transparent',
-        boxShadow: scrolled ? '0 4px 20px rgba(10, 37, 64, 0.06)' : 'none',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+        boxShadow: scrolled ? '0 4px 20px rgba(10, 37, 64, 0.3)' : '0 2px 10px rgba(10, 37, 64, 0.15)',
       }}
     >
       <PushManager user={user} />
@@ -220,15 +220,15 @@ export default function Navbar() {
               style={{
                 width: 36,
                 height: 36,
-                background: 'linear-gradient(135deg, #0a2540, #0052cc)',
+                background: '#ffffff',
                 borderRadius: 10,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '1rem',
-                fontWeight: 800,
-                color: 'white',
-                boxShadow: '0 4px 14px rgba(0, 82, 204, 0.25)',
+                fontSize: '1.05rem',
+                fontWeight: 900,
+                color: '#0a2540',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
               }}
             >
               U
@@ -237,8 +237,9 @@ export default function Navbar() {
               style={{
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
                 fontWeight: 800,
-                fontSize: '1.1rem',
-                color: '#0a2540',
+                fontSize: '1.15rem',
+                color: '#ffffff',
+                letterSpacing: '-0.02em',
               }}
             >
               U-Market
@@ -253,16 +254,16 @@ export default function Navbar() {
                 onClick={() => setShowSuggestModal(true)}
                 title="Enviar una recomendación o sugerencia"
                 style={{
-                  background: 'rgba(245,158,11,0.12)',
-                  border: '1px solid rgba(245,158,11,0.35)',
+                  background: 'rgba(255, 255, 255, 0.12)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
                   color: '#fcd34d',
                   borderRadius: '50%',
-                  width: 28,
-                  height: 28,
+                  width: 30,
+                  height: 30,
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '0.85rem',
+                  fontSize: '0.9rem',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
                 }}
@@ -274,16 +275,16 @@ export default function Navbar() {
                 onClick={() => setShowBusinessModal(true)}
                 title="¿Tienes un negocio externo? Haz clic aquí"
                 style={{
-                  background: 'rgba(99, 102, 241, 0.15)',
-                  border: '1px solid rgba(99, 102, 241, 0.35)',
-                  color: '#a5b4fc',
+                  background: 'rgba(255, 255, 255, 0.12)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  color: '#93c5fd',
                   borderRadius: '50%',
-                  width: 28,
-                  height: 28,
+                  width: 30,
+                  height: 30,
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '0.85rem',
+                  fontSize: '0.9rem',
                   fontWeight: 800,
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
@@ -298,29 +299,28 @@ export default function Navbar() {
                   onClick={handleInstallClick}
                   title="Descargar e instalar U-Market en tu dispositivo"
                   style={{
-                    background: 'rgba(0, 82, 204, 0.08)',
-                    border: '1px solid rgba(0, 82, 204, 0.25)',
-                    color: '#0052cc',
+                    background: 'rgba(255, 255, 255, 0.12)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    color: '#ffffff',
                     borderRadius: 20,
-                    padding: '4px 10px',
+                    padding: '5px 12px',
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 6,
-                    fontSize: '0.78rem',
+                    fontSize: '0.8rem',
                     fontWeight: 700,
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 8px rgba(0, 82, 204, 0.1)',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-1px)'
-                    e.currentTarget.style.color = '#0a2540'
-                    e.currentTarget.style.borderColor = '#0052cc'
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)'
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.color = '#0052cc'
-                    e.currentTarget.style.borderColor = 'rgba(0, 82, 204, 0.25)'
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)'
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)'
                   }}
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -417,8 +417,16 @@ export default function Navbar() {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="btn-secondary"
-                  style={{ padding: '6px 14px', fontSize: '0.8rem' }}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    color: '#ffffff',
+                    padding: '6px 14px',
+                    fontSize: '0.8rem',
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
                 >
                   Salir
                 </button>
@@ -426,12 +434,51 @@ export default function Navbar() {
             ) : (
               <div style={{ display: 'flex', gap: 8, marginLeft: 8 }}>
                 <Link href="/login">
-                  <button className="btn-secondary" style={{ padding: '6px 16px', fontSize: '0.85rem' }}>
+                  <button
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid rgba(255, 255, 255, 0.35)',
+                      color: '#ffffff',
+                      padding: '6px 16px',
+                      fontSize: '0.85rem',
+                      borderRadius: 10,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent'
+                    }}
+                  >
                     Ingresar
                   </button>
                 </Link>
                 <Link href="/register">
-                  <button className="btn-primary" style={{ padding: '6px 16px', fontSize: '0.85rem' }}>
+                  <button
+                    style={{
+                      background: '#ffffff',
+                      color: '#0a2540',
+                      border: 'none',
+                      padding: '6px 16px',
+                      fontSize: '0.85rem',
+                      borderRadius: 10,
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#f1f5f9'
+                      e.currentTarget.style.transform = 'translateY(-1px)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#ffffff'
+                      e.currentTarget.style.transform = 'translateY(0)'
+                    }}
+                  >
                     Registrarse
                   </button>
                 </Link>
@@ -446,7 +493,7 @@ export default function Navbar() {
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              color: 'var(--text-primary)',
+              color: '#ffffff',
               padding: 8,
               display: 'none',
             }}
