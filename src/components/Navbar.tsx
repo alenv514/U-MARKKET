@@ -205,10 +205,10 @@ export default function Navbar() {
         right: 0,
         zIndex: 50,
         transition: 'all 0.3s ease',
-        background: scrolled ? 'rgba(10, 37, 64, 0.98)' : '#0a2540',
+        background: scrolled ? 'rgba(0, 52, 94, 0.98)' : '#00345e',
         backdropFilter: 'blur(16px)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
-        boxShadow: scrolled ? '0 4px 20px rgba(10, 37, 64, 0.3)' : '0 2px 10px rgba(10, 37, 64, 0.15)',
+        boxShadow: scrolled ? '0 4px 20px rgba(0, 52, 94, 0.3)' : '0 2px 10px rgba(0, 52, 94, 0.15)',
       }}
     >
       <PushManager user={user} />
@@ -227,7 +227,7 @@ export default function Navbar() {
                 justifyContent: 'center',
                 fontSize: '1.05rem',
                 fontWeight: 900,
-                color: '#0a2540',
+                color: '#00345e',
                 boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
               }}
             >
@@ -392,7 +392,7 @@ export default function Navbar() {
                     style={{
                       width: 32,
                       height: 32,
-                      background: 'linear-gradient(135deg, #0a2540, #0052cc)',
+                      background: 'linear-gradient(135deg, #00345e, #004b87)',
                       borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
@@ -460,7 +460,7 @@ export default function Navbar() {
                   <button
                     style={{
                       background: '#ffffff',
-                      color: '#0a2540',
+                      color: '#00345e',
                       border: 'none',
                       padding: '6px 16px',
                       fontSize: '0.85rem',

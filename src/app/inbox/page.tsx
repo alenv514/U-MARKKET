@@ -131,8 +131,8 @@ export default function InboxPage() {
                           padding: '1.25rem',
                           paddingRight: '4rem', // espacio para el botón eliminar
                           display: 'flex', alignItems: 'center', gap: '1rem',
-                          border: unread ? '1px solid rgba(99,102,241,0.5)' : undefined,
-                          background: unread ? 'rgba(99,102,241,0.05)' : undefined,
+                          border: unread ? '1px solid rgba(0, 52, 94, 0.4)' : undefined,
+                          background: unread ? 'rgba(0, 52, 94, 0.05)' : undefined,
                           transition: 'all 0.2s ease',
                           cursor: 'pointer',
                           opacity: isDeleting ? 0.4 : 1,
@@ -141,7 +141,7 @@ export default function InboxPage() {
                         {/* Avatar */}
                         <div style={{
                           width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
-                          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                          background: 'linear-gradient(135deg, #00345e, #004b87)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontSize: '1.2rem', fontWeight: 700, color: 'white', overflow: 'hidden'
                         }}>
@@ -163,7 +163,7 @@ export default function InboxPage() {
                               {lastMessage ? new Date(lastMessage.created_at).toLocaleDateString() : ''}
                             </span>
                           </div>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--accent-indigo)', fontWeight: 600, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <div style={{ fontSize: '0.8rem', color: '#00345e', fontWeight: 600, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             📦 {chat.listings?.title}
                           </div>
                           <div style={{

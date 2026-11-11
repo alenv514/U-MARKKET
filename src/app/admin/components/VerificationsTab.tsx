@@ -159,7 +159,7 @@ export default function VerificationsTab({
                     Pendiente de Revisión
                   </span>
                 </div>
-                <div style={{ fontSize: '0.82rem', color: '#0052cc', marginBottom: 2 }}>
+                <div style={{ fontSize: '0.82rem', color: '#00345e', marginBottom: 2 }}>
                   {user.faculty || 'Sin facultad'} {user.semester ? `· ${user.semester}` : ''}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>

@@ -58,13 +58,13 @@ export default function VerifiedBadge({
         />
         <defs>
           <linearGradient id="verified-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#3b82f6" />
-            <stop offset="1" stopColor="#0052cc" />
+            <stop stopColor="#004b87" />
+            <stop offset="1" stopColor="#00345e" />
           </linearGradient>
         </defs>
       </svg>
       {showText && (
-        <span style={{ fontWeight: 700, letterSpacing: '0.2px', color: '#93c5fd' }}>
+        <span style={{ fontWeight: 700, letterSpacing: '0.2px', color: '#00345e' }}>
           Verificado UTA
         </span>
       )}

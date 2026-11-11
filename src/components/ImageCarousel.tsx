@@ -168,7 +168,7 @@ export default function ImageCarousel({
                 width: i === current ? (compact ? 18 : 24) : (compact ? 6 : 8),
                 height: compact ? 6 : 8,
                 borderRadius: 999, border: 'none', cursor: 'pointer',
-                background: i === current ? '#0052cc' : 'rgba(255,255,255,0.4)',
+                background: i === current ? '#00345e' : 'rgba(255,255,255,0.4)',
                 transition: 'all 0.35s cubic-bezier(0.4,0,0.2,1)',
                 padding: 0,
               }}
@@ -200,7 +200,7 @@ export default function ImageCarousel({
             key={current}
             style={{
               height: '100%',
-              background: 'linear-gradient(90deg, #0a2540, #0052cc)',
+              background: 'linear-gradient(90deg, #00345e, #004b87)',
               animation: `progress ${interval}ms linear`,
             }}
           />

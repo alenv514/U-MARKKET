@@ -42,7 +42,7 @@ function SplashCursor({
   TRANSPARENT = true,
   RAINBOW_MODE = false,
   BLUE_MODE = true,
-  COLOR = '#0052cc'
+  COLOR = '#00345e'
 }: SplashCursorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameId = useRef<number | null>(null);
@@ -793,19 +793,15 @@ function SplashCursor({
       const r = parseInt(val.slice(0, 2), 16) / 255;
       const g = parseInt(val.slice(2, 4), 16) / 255;
       const b = parseInt(val.slice(4, 6), 16) / 255;
-      return { r: r * 0.25, g: g * 0.45, b: b * 0.95 };
+      return { r, g, b };
     }
 
     function generateColor() {
+      if (config.COLOR) {
+        return hexToRGB(config.COLOR);
+      }
       if (config.BLUE_MODE || !config.RAINBOW_MODE) {
-        const hue = 0.58 + Math.random() * 0.06;
-        const sat = 0.88;
-        const val = 0.9;
-        const c = HSVtoRGB(hue, sat, val);
-        c.r *= 0.15;
-        c.g *= 0.38;
-        c.b *= 0.85;
-        return c;
+        return { r: 0.0, g: 0.204, b: 0.369 };
       }
       const c = HSVtoRGB(Math.random(), 1.0, 1.0);
       c.r *= 0.15; c.g *= 0.15; c.b *= 0.15;

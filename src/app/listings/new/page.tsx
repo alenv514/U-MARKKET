@@ -306,11 +306,11 @@ export default function NewListingPage() {
                   marginBottom: '0.75rem',
                 }}>
                   {newPreviews.map((src, i) => (
-                    <div key={i} style={{ position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', border: i === 0 ? '2px solid #6366f1' : '2px solid var(--border)' }}>
+                    <div key={i} style={{ position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', border: i === 0 ? '2px solid #00345e' : '2px solid var(--border)' }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={src} alt={`foto ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       {i === 0 && (
-                        <div style={{ position: 'absolute', top: 4, left: 4, background: '#6366f1', borderRadius: 999, padding: '1px 8px', fontSize: '0.65rem', fontWeight: 700, color: 'white' }}>
+                        <div style={{ position: 'absolute', top: 4, left: 4, background: '#00345e', borderRadius: 999, padding: '1px 8px', fontSize: '0.65rem', fontWeight: 700, color: 'white' }}>
                           Portada
                         </div>
                       )}
@@ -337,9 +337,9 @@ export default function NewListingPage() {
                         aspectRatio: '1', borderRadius: 10, border: '2px dashed var(--border)',
                         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                         cursor: 'pointer', gap: 4, transition: 'all 0.2s',
-                        background: 'rgba(99,102,241,0.03)',
+                        background: 'rgba(0, 52, 94, 0.03)',
                       }}
-                      onMouseEnter={e => (e.currentTarget.style.borderColor = '#6366f1')}
+                      onMouseEnter={e => (e.currentTarget.style.borderColor = '#00345e')}
                       onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
                     >
                       <span style={{ fontSize: '1.5rem' }}>+</span>
@@ -356,9 +356,9 @@ export default function NewListingPage() {
                     borderRadius: 12, padding: '2.5rem',
                     textAlign: 'center', cursor: 'pointer',
                     transition: 'all 0.3s ease',
-                    background: 'rgba(99,102,241,0.03)',
+                    background: 'rgba(0, 52, 94, 0.03)',
                   }}
-                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = '#6366f1')}
+                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = '#00345e')}
                   onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--border)')}
                 >
                   <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>📸</div>
@@ -498,7 +498,7 @@ export default function NewListingPage() {
                   <div style={{
                     height: '100%',
                     width: `${progress}%`,
-                    background: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+                    background: 'linear-gradient(90deg, #00345e, #004b87)',
                     transition: 'width 0.3s ease',
                     borderRadius: 999,
                   }} />

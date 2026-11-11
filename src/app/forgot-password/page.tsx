@@ -83,10 +83,10 @@ export default function ForgotPasswordPage() {
           <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: '1rem' }}>
             <div style={{
               width: 52, height: 52,
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              background: 'linear-gradient(135deg, #00345e, #004b87)',
               borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '1.4rem', fontWeight: 900, color: 'white',
-              boxShadow: '0 0 28px rgba(99,102,241,0.4)',
+              boxShadow: '0 4px 20px rgba(0, 52, 94, 0.3)',
             }}>U</div>
           </Link>
           <h1 style={{ fontSize: '1.65rem', fontWeight: 900 }}>Recuperar contraseña</h1>

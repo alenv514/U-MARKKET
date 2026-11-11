@@ -78,7 +78,7 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
         {/* Category badge overlay */}
         <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 20 }}>
           <span style={{
-            background: 'rgba(10, 37, 64, 0.88)',
+            background: 'rgba(0, 52, 94, 0.88)',
             backdropFilter: 'blur(8px)',
             border: '1px solid rgba(255, 255, 255, 0.25)',
             color: '#ffffff',
@@ -86,7 +86,7 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
             fontWeight: 600,
             padding: '3px 9px',
             borderRadius: 6,
-            boxShadow: '0 2px 8px rgba(10, 37, 64, 0.25)',
+            boxShadow: '0 2px 8px rgba(0, 52, 94, 0.25)',
           }}>
             {listing.category}
           </span>
@@ -97,8 +97,8 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
             <span style={{
               background: 'rgba(255, 255, 255, 0.95)',
               backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(10, 37, 64, 0.1)',
-              color: '#0a2540',
+              border: '1px solid rgba(0, 52, 94, 0.1)',
+              color: '#00345e',
               fontSize: '0.7rem',
               fontWeight: 700,
               padding: '3px 8px',
@@ -106,7 +106,7 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
               display: 'inline-flex',
               alignItems: 'center',
               gap: 4,
-              boxShadow: '0 2px 8px rgba(10, 37, 64, 0.12)',
+              boxShadow: '0 2px 8px rgba(0, 52, 94, 0.12)',
             }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
@@ -153,7 +153,7 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 6, borderTop: '1px solid var(--border)' }}>
             <div style={{
               width: 24, height: 24, borderRadius: '50%',
-              background: 'linear-gradient(135deg, #0a2540, #0052cc)',
+              background: 'linear-gradient(135deg, #00345e, #004b87)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '0.65rem', fontWeight: 700, color: 'white', flexShrink: 0,
             }}>

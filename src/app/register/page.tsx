@@ -310,11 +310,11 @@ export default function RegisterPage() {
         <div className="animate-fade-in-up" style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{
             width: 56, height: 56,
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            background: 'linear-gradient(135deg, #00345e, #004b87)',
             borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '1.5rem', fontWeight: 900, color: 'white',
             margin: '0 auto 1rem',
-            boxShadow: '0 0 32px rgba(99,102,241,0.4)',
+            boxShadow: '0 4px 20px rgba(0, 52, 94, 0.3)',
           }}>U</div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 900 }}>Únete a U-Market</h1>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontSize: '0.9rem' }}>
@@ -537,7 +537,7 @@ export default function RegisterPage() {
                 style={{
                   width: 19,
                   height: 19,
-                  accentColor: '#6366f1',
+                  accentColor: '#00345e',
                   cursor: 'pointer',
                   marginTop: 2,
                   flexShrink: 0,
@@ -546,11 +546,11 @@ export default function RegisterPage() {
               />
               <label htmlFor="register-terms" style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5, cursor: 'pointer' }}>
                 Acepto los{' '}
-                <Link href="/terminos" target="_blank" style={{ color: '#a5b4fc', fontWeight: 700, textDecoration: 'underline' }}>
+                <Link href="/terminos" target="_blank" style={{ color: '#00345e', fontWeight: 700, textDecoration: 'underline' }}>
                   Términos y Condiciones
                 </Link>{' '}
                 y la{' '}
-                <Link href="/privacidad" target="_blank" style={{ color: '#a5b4fc', fontWeight: 700, textDecoration: 'underline' }}>
+                <Link href="/privacidad" target="_blank" style={{ color: '#00345e', fontWeight: 700, textDecoration: 'underline' }}>
                   Política de Privacidad
                 </Link>
               </label>

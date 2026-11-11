@@ -41,10 +41,10 @@ export default function AdminStatsGrid({
         </div>
 
         <div className="glass-card" style={{ padding: '1rem 1.5rem', cursor: 'default' }}>
-          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#8b5cf6' }}>{stats.users.total}</div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#00345e' }}>{stats.users.total}</div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Usuarios Registrados</div>
           <div style={{ fontSize: '0.7rem', marginTop: 4, color: 'var(--text-secondary)' }}>
-            <span style={{ color: '#6366f1' }}>{stats.users.sellers} vendedores</span> •{' '}
+            <span style={{ color: '#004b87' }}>{stats.users.sellers} vendedores</span> •{' '}
             <span>{stats.users.buyers} compradores</span> •{' '}
             <span style={{ color: '#ef4444' }}>{stats.users.admins} admins</span>
           </div>
@@ -66,7 +66,7 @@ export default function AdminStatsGrid({
         </div>
 
         <div className="glass-card" style={{ padding: '1rem 1.5rem', cursor: 'default' }}>
-          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#6366f1' }}>{verificationsCount}</div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#00345e' }}>{verificationsCount}</div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Carnets por Verificar</div>
         </div>
 
@@ -168,10 +168,10 @@ export default function AdminStatsGrid({
                   type="monotone"
                   name="Nuevas Publicaciones"
                   dataKey="new_listings"
-                  stroke="#0052cc"
+                  stroke="#00345e"
                   strokeWidth={4}
                   dot={{ r: 4, strokeWidth: 2, fill: '#ffffff' }}
-                  activeDot={{ r: 6, fill: '#0052cc' }}
+                  activeDot={{ r: 6, fill: '#00345e' }}
                 />
                 <Line
                   type="monotone"

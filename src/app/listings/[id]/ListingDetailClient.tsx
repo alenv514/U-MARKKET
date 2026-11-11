@@ -258,7 +258,7 @@ export default function ListingDetailClient({ id }: { id: string }) {
                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                     <div style={{
                       width: 44, height: 44, borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                      background: 'linear-gradient(135deg, #00345e, #004b87)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: '1rem', fontWeight: 700, color: 'white', flexShrink: 0,
                       overflow: 'hidden'

@@ -89,7 +89,7 @@ export default function UsersTab({
                     width: 42,
                     height: 42,
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #0a2540, #0052cc)',
+                    background: 'linear-gradient(135deg, #00345e, #004b87)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',

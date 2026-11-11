@@ -189,7 +189,7 @@ export default function ChatDetailPage() {
             </button>
             <div style={{
               width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              background: 'linear-gradient(135deg, #00345e, #004b87)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '1rem', fontWeight: 700, color: 'white', overflow: 'hidden'
             }}>
@@ -203,7 +203,7 @@ export default function ChatDetailPage() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{otherUser?.full_name || 'Usuario UTA'}</div>
               <Link href={`/listings/${chat.listing_id}`} style={{ textDecoration: 'none' }}>
-                <div style={{ fontSize: '0.8rem', color: 'var(--accent-indigo)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontSize: '0.8rem', color: '#00345e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   📦 {chat.listings?.title}
                 </div>
               </Link>
@@ -231,7 +231,7 @@ export default function ChatDetailPage() {
                       borderRadius: 16,
                       borderBottomRightRadius: isMe ? 4 : 16,
                       borderBottomLeftRadius: !isMe ? 4 : 16,
-                      background: isMe ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(255,255,255,0.08)',
+                      background: isMe ? 'linear-gradient(135deg, #00345e, #004b87)' : '#f1f5f9',
                       color: isMe ? 'white' : 'var(--text-primary)',
                       fontSize: '0.95rem',
                       lineHeight: 1.4,
@@ -268,7 +268,7 @@ export default function ChatDetailPage() {
               disabled={!newMessage.trim()}
               style={{
                 width: 44, height: 44, borderRadius: '50%', border: 'none',
-                background: newMessage.trim() ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'var(--border)',
+                background: newMessage.trim() ? 'linear-gradient(135deg, #00345e, #004b87)' : 'var(--border)',
                 color: 'white', cursor: newMessage.trim() ? 'pointer' : 'default',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 transition: 'all 0.2s'

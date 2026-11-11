@@ -61,11 +61,11 @@ export default function ResetPasswordPage() {
         <div className="animate-fade-in-up" style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{
             width: 52, height: 52,
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            background: 'linear-gradient(135deg, #00345e, #004b87)',
             borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '1.4rem', fontWeight: 900, color: 'white',
             margin: '0 auto 1rem',
-            boxShadow: '0 0 28px rgba(99,102,241,0.4)',
+            boxShadow: '0 4px 20px rgba(0, 52, 94, 0.3)',
           }}>U</div>
           <h1 style={{ fontSize: '1.65rem', fontWeight: 900 }}>Nueva contraseña</h1>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontSize: '0.9rem' }}>

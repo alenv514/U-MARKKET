@@ -297,7 +297,7 @@ export default function ProfilePage() {
               <div style={{ position: 'relative', marginBottom: '1rem' }}>
                 <div style={{
                   width: 100, height: 100, borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  background: 'linear-gradient(135deg, #00345e, #004b87)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '2.5rem', fontWeight: 700, color: 'white',
                   overflow: 'hidden', border: '3px solid var(--bg-card)',
@@ -551,7 +551,7 @@ export default function ProfilePage() {
                       width: 44,
                       height: 44,
                       borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
+                      background: 'linear-gradient(135deg, #00345e, #004b87)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -561,7 +561,7 @@ export default function ProfilePage() {
                       🎓
                     </div>
                     <div>
-                      <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#93c5fd', margin: 0 }}>
+                      <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#00345e', margin: 0 }}>
                         ¡Estudiante Oficial Verificado!
                       </h4>
                       <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
@@ -656,7 +656,7 @@ export default function ProfilePage() {
                             onClick={handleSendVerification}
                             disabled={submittingVerification}
                             className="btn-primary"
-                            style={{ padding: '0.5rem 1.25rem', fontSize: '0.8rem', background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}
+                            style={{ padding: '0.5rem 1.25rem', fontSize: '0.8rem' }}
                           >
                             {submittingVerification ? (
                               <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

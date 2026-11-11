@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0a2540',
+  themeColor: '#00345e',
 }
 
 export default function RootLayout({
@@ -51,7 +51,7 @@ export default function RootLayout({
           CURL={3}
           BLUE_MODE={true}
           RAINBOW_MODE={false}
-          COLOR="#0052cc"
+          COLOR="#00345e"
           SHADING={true}
         />
         <div style={{ position: 'relative', zIndex: 1 }}>

@@ -190,7 +190,7 @@ export default function HomePage() {
                   paddingLeft: '2.75rem', paddingRight: '1rem',
                   fontSize: '1rem', borderRadius: 14,
                   background: '#ffffff',
-                  boxShadow: '0 4px 20px rgba(10, 37, 64, 0.08)',
+                  boxShadow: '0 4px 20px rgba(0, 52, 94, 0.08)',
                 }}
               />
             </div>
@@ -240,13 +240,13 @@ export default function HomePage() {
                     whiteSpace: 'nowrap',
                     transition: 'all 0.2s ease',
                     border: isSelected
-                      ? '1px solid #0052cc'
+                      ? '1px solid #00345e'
                       : '1px solid #e2e8f0',
                     background: isSelected
-                      ? 'linear-gradient(135deg, #0a2540, #0052cc)'
+                      ? 'linear-gradient(135deg, #00345e, #004b87)'
                       : '#ffffff',
                     color: isSelected ? '#ffffff' : 'var(--text-secondary)',
-                    boxShadow: isSelected ? '0 4px 12px rgba(0,82,204,0.25)' : 'none',
+                    boxShadow: isSelected ? '0 4px 12px rgba(0, 52, 94, 0.25)' : 'none',
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 6,
@@ -256,12 +256,12 @@ export default function HomePage() {
                   {isUserNative && (
                     <span style={{
                       fontSize: '0.62rem',
-                      background: isSelected ? 'rgba(255,255,255,0.25)' : 'rgba(0,82,204,0.1)',
-                      color: isSelected ? '#ffffff' : '#0052cc',
+                      background: isSelected ? 'rgba(255,255,255,0.25)' : 'rgba(0, 52, 94, 0.1)',
+                      color: isSelected ? '#ffffff' : '#00345e',
                       padding: '1px 6px',
                       borderRadius: 99,
                       fontWeight: 600,
-                      border: isSelected ? '1px solid rgba(255,255,255,0.4)' : '1px solid rgba(0,82,204,0.2)',
+                      border: isSelected ? '1px solid rgba(255,255,255,0.4)' : '1px solid rgba(0, 52, 94, 0.2)',
                     }}>
                       Tu campus
                     </span>

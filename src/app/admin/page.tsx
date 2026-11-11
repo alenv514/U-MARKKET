@@ -600,9 +600,9 @@ export default function AdminPage() {
                   transition: 'all 0.2s ease',
                   whiteSpace: 'nowrap',
                   flexShrink: 0,
-                  background: tab === t ? 'linear-gradient(135deg, #0a2540, #0052cc)' : 'transparent',
+                  background: tab === t ? 'linear-gradient(135deg, #00345e, #004b87)' : 'transparent',
                   color: tab === t ? 'white' : 'var(--text-secondary)',
-                  boxShadow: tab === t ? '0 4px 12px rgba(0, 82, 204, 0.25)' : 'none',
+                  boxShadow: tab === t ? '0 4px 12px rgba(0, 52, 94, 0.25)' : 'none',
                 }}
               >
                 {t === 'reports'

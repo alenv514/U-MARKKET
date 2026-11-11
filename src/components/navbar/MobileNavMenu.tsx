@@ -146,7 +146,7 @@ export default function MobileNavMenu({
           padding: '10px 12px',
           background: 'none',
           border: 'none',
-          color: '#a5b4fc',
+          color: '#93c5fd',
           cursor: 'pointer',
           fontWeight: 600,
           display: 'flex',

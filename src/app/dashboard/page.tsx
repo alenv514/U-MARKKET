@@ -159,10 +159,10 @@ export default function DashboardPage() {
 
           {/* Stats */}
           <div className="animate-fade-in-up delay-100" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-            <StatCard icon="📦" label="Total publicaciones" value={listings.length} color="#6366f1" />
+            <StatCard icon="📦" label="Total publicaciones" value={listings.length} color="#00345e" />
             <StatCard icon="✅" label="Activas" value={activeListings} color="#10b981" />
             <StatCard icon="⏸️" label="Pausadas" value={listings.filter(l => l.status === 'paused').length} color="#f59e0b" />
-            <StatCard icon="👁️" label="Vistas totales" value={listings.reduce((s, l) => s + l.views, 0)} color="#8b5cf6" />
+            <StatCard icon="👁️" label="Vistas totales" value={listings.reduce((s, l) => s + l.views, 0)} color="#004b87" />
           </div>
 
           {/* Listings */}
@@ -191,7 +191,7 @@ export default function DashboardPage() {
                       width: 56, height: 56, borderRadius: 10, flexShrink: 0,
                       background: listing.image_url
                         ? `url(${listing.image_url}) center/cover`
-                        : 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2))',
+                        : 'linear-gradient(135deg, rgba(0,52,94,0.1), rgba(0,75,135,0.1))',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem',
                     }}>
                       {!listing.image_url && '📦'}

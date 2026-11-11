@@ -246,9 +246,9 @@ export default function EditListingPage() {
                   style={{
                     border: '2px dashed var(--border)', borderRadius: 12,
                     padding: '2rem', textAlign: 'center', cursor: 'pointer',
-                    transition: 'all 0.3s ease', background: 'rgba(99,102,241,0.03)',
+                    transition: 'all 0.3s ease', background: 'rgba(0, 52, 94, 0.03)',
                   }}
-                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = '#6366f1')}
+                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = '#00345e')}
                   onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--border)')}
                 >
                   <div style={{ fontSize: '2rem', marginBottom: 6 }}>📸</div>
@@ -265,12 +265,12 @@ export default function EditListingPage() {
                   {existingUrls.map((src, i) => (
                     <div key={`ex-${i}`} style={{
                       position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden',
-                      border: (i === 0 && newFiles.length === 0) ? '2px solid #6366f1' : '2px solid var(--border)',
+                      border: (i === 0 && newFiles.length === 0) ? '2px solid #00345e' : '2px solid var(--border)',
                     }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={src} alt={`foto ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       {i === 0 && newFiles.length === 0 && (
-                        <div style={{ position: 'absolute', top: 4, left: 4, background: '#6366f1', borderRadius: 999, padding: '1px 8px', fontSize: '0.6rem', fontWeight: 700, color: 'white' }}>
+                        <div style={{ position: 'absolute', top: 4, left: 4, background: '#00345e', borderRadius: 999, padding: '1px 8px', fontSize: '0.6rem', fontWeight: 700, color: 'white' }}>
                           Portada
                         </div>
                       )}
@@ -291,11 +291,11 @@ export default function EditListingPage() {
                   {newPreviews.map((src, i) => (
                     <div key={`new-${i}`} style={{
                       position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden',
-                      border: '2px dashed #6366f1',
+                      border: '2px dashed #00345e',
                     }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={src} alt={`nueva ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <div style={{ position: 'absolute', top: 4, left: 4, background: 'rgba(99,102,241,0.85)', borderRadius: 999, padding: '1px 8px', fontSize: '0.6rem', fontWeight: 700, color: 'white' }}>
+                      <div style={{ position: 'absolute', top: 4, left: 4, background: 'rgba(0, 52, 94, 0.85)', borderRadius: 999, padding: '1px 8px', fontSize: '0.6rem', fontWeight: 700, color: 'white' }}>
                         Nueva
                       </div>
                       <button
@@ -319,9 +319,9 @@ export default function EditListingPage() {
                         aspectRatio: '1', borderRadius: 10, border: '2px dashed var(--border)',
                         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                         cursor: 'pointer', gap: 4, transition: 'all 0.2s',
-                        background: 'rgba(99,102,241,0.03)',
+                        background: 'rgba(0, 52, 94, 0.03)',
                       }}
-                      onMouseEnter={e => (e.currentTarget.style.borderColor = '#6366f1')}
+                      onMouseEnter={e => (e.currentTarget.style.borderColor = '#00345e')}
                       onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
                     >
                       <span style={{ fontSize: '1.5rem' }}>+</span>
@@ -450,7 +450,7 @@ export default function EditListingPage() {
                 <div style={{ background: 'var(--bg-card)', borderRadius: 999, overflow: 'hidden', height: 6 }}>
                   <div style={{
                     height: '100%', width: `${progress}%`,
-                    background: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+                    background: 'linear-gradient(90deg, #00345e, #004b87)',
                     transition: 'width 0.3s ease', borderRadius: 999,
                   }} />
                 </div>
