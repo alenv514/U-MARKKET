@@ -1,12 +1,16 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { createPortal } from 'react-dom'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import PushManager from './PushManager'
+import { NavLink } from './navbar/NavLinks'
+import PWAInstallModal from './navbar/PWAInstallModal'
+import BusinessModal from './navbar/BusinessModal'
+import SuggestModal from './navbar/SuggestModal'
+import MobileNavMenu from './navbar/MobileNavMenu'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>
@@ -23,18 +27,17 @@ export default function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
   const [showSuggestModal, setShowSuggestModal] = useState(false)
-  const [suggestion, setSuggestion] = useState('')
   const [scrolled, setScrolled] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isModerator, setIsModerator] = useState(false)
   const [showBusinessModal, setShowBusinessModal] = useState(false)
-  const [isInstalled, setIsInstalled] = useState(true) // Default true until verified on client
+  const [isInstalled, setIsInstalled] = useState(true)
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [isIOS, setIsIOS] = useState(false)
   const [showInstallModal, setShowInstallModal] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   // Detect PWA Installation State
   useEffect(() => {
@@ -51,7 +54,8 @@ export default function Navbar() {
     const isStandaloneMode = checkIsStandalone()
     setIsInstalled(isStandaloneMode)
 
-    const isIosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !((window as unknown as { MSStream?: unknown }).MSStream)
+    const isIosDevice =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) && !((window as unknown as { MSStream?: unknown }).MSStream)
     setIsIOS(isIosDevice)
 
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -103,17 +107,26 @@ export default function Navbar() {
     const fetchProfileData = async (userId: string) => {
       const { data } = await supabase.from('profiles').select('avatar_url, role').eq('id', userId).single()
       if (data?.avatar_url) setAvatarUrl(data.avatar_url)
-      if (data?.role === 'admin') { setIsAdmin(true); setIsModerator(false) }
-      else if (data?.role === 'moderator') { setIsModerator(true); setIsAdmin(false) }
-      else { setIsAdmin(false); setIsModerator(false) }
+      if (data?.role === 'admin') {
+        setIsAdmin(true)
+        setIsModerator(false)
+      } else if (data?.role === 'moderator') {
+        setIsModerator(true)
+        setIsAdmin(false)
+      } else {
+        setIsAdmin(false)
+        setIsModerator(false)
+      }
     }
 
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user)
       if (data.user) fetchProfileData(data.user.id)
     })
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_ev, session) => {
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_ev, session) => {
       setUser(session?.user ?? null)
       if (session?.user) fetchProfileData(session.user.id)
       else {
@@ -123,29 +136,29 @@ export default function Navbar() {
       }
     })
     return () => subscription.unsubscribe()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // Consulta optimizada y periódica de mensajes no leídos (sin Thundering Herd masivo)
-  const refreshUnreadCount = useCallback(async (userId: string) => {
-    try {
-      const { count } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_read', false)
-        .neq('sender_id', userId)
-      setUnreadCount(count || 0)
-    } catch {
-      // Ignorar fallos transitorios de red
-    }
   }, [supabase])
+
+  const refreshUnreadCount = useCallback(
+    async (userId: string) => {
+      try {
+        const { count } = await supabase
+          .from('messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_read', false)
+          .neq('sender_id', userId)
+        setUnreadCount(count || 0)
+      } catch {
+        // Ignorar fallos transitorios de red
+      }
+    },
+    [supabase]
+  )
 
   useEffect(() => {
     if (!user?.id) return
 
     refreshUnreadCount(user.id)
 
-    // Actualizar al regresar a la pestaña (focus / visible)
     const onFocus = () => refreshUnreadCount(user.id)
     const onVisibility = () => {
       if (document.visibilityState === 'visible') {
@@ -156,7 +169,6 @@ export default function Navbar() {
     window.addEventListener('focus', onFocus)
     document.addEventListener('visibilitychange', onVisibility)
 
-    // Sondeo suave cada 45 segundos para no sobrecargar el servidor
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         refreshUnreadCount(user.id)
@@ -187,37 +199,51 @@ export default function Navbar() {
   return (
     <nav
       style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
         transition: 'all 0.3s ease',
-        background: scrolled
-          ? 'rgba(8, 11, 20, 0.92)'
-          : 'rgba(8, 11, 20, 0.6)',
+        background: scrolled ? 'rgba(8, 11, 20, 0.92)' : 'rgba(8, 11, 20, 0.6)',
         backdropFilter: 'blur(16px)',
-        borderBottom: scrolled
-          ? '1px solid rgba(255,255,255,0.08)'
-          : '1px solid transparent',
+        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.08)' : '1px solid transparent',
       }}
     >
       <PushManager user={user} />
       <div className="page-container">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
-
           {/* Logo */}
           <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 36, height: 36,
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-              borderRadius: 10,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1rem', fontWeight: 800, color: 'white',
-              boxShadow: '0 0 16px rgba(99,102,241,0.4)',
-            }}>U</div>
-            <span style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontWeight: 800, fontSize: '1.1rem',
-              background: 'linear-gradient(135deg, #f0f4ff, #a5b4fc)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            }}>U-Market</span>
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                borderRadius: 10,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1rem',
+                fontWeight: 800,
+                color: 'white',
+                boxShadow: '0 0 16px rgba(99,102,241,0.4)',
+              }}
+            >
+              U
+            </div>
+            <span
+              style={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontWeight: 800,
+                fontSize: '1.1rem',
+                background: 'linear-gradient(135deg, #f0f4ff, #a5b4fc)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              U-Market
+            </span>
           </Link>
 
           {/* Desktop nav */}
@@ -267,7 +293,7 @@ export default function Navbar() {
                 ❓
               </button>
 
-              {/* Botón Descargar / Instalar App (Solo visible si aún no está instalada) */}
+              {/* Botón Descargar / Instalar App */}
               {!isInstalled && (
                 <button
                   onClick={handleInstallClick}
@@ -287,12 +313,12 @@ export default function Navbar() {
                     transition: 'all 0.2s ease',
                     boxShadow: '0 0 12px rgba(99,102,241,0.25)',
                   }}
-                  onMouseEnter={e => {
+                  onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-1px)'
                     e.currentTarget.style.color = '#fff'
                     e.currentTarget.style.borderColor = '#818cf8'
                   }}
-                  onMouseLeave={e => {
+                  onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'translateY(0)'
                     e.currentTarget.style.color = '#c7d2fe'
                     e.currentTarget.style.borderColor = 'rgba(139,92,246,0.45)'
@@ -307,9 +333,15 @@ export default function Navbar() {
                 </button>
               )}
 
-              <NavLink href="/" active={isActive('/')}>Explorar</NavLink>
+              <NavLink href="/" active={isActive('/')}>
+                Explorar
+              </NavLink>
             </div>
-            {user && <NavLink href="/dashboard" active={isActive('/dashboard')}>Mi Panel</NavLink>}
+            {user && (
+              <NavLink href="/dashboard" active={isActive('/dashboard')}>
+                Mi Panel
+              </NavLink>
+            )}
             {isAdmin && (
               <NavLink href="/admin" active={isActive('/admin')}>
                 <span style={{ color: '#ef4444', fontWeight: isActive('/admin') ? 800 : 600 }}>🛡️ Admin</span>
@@ -320,19 +352,33 @@ export default function Navbar() {
                 <span style={{ color: '#f59e0b', fontWeight: isActive('/admin') ? 800 : 600 }}>🛡️ Moderador</span>
               </NavLink>
             )}
-            {user && <NavLink href="/listings/new" active={isActive('/listings/new')}>Publicar</NavLink>}
+            {user && (
+              <NavLink href="/listings/new" active={isActive('/listings/new')}>
+                Publicar
+              </NavLink>
+            )}
             {user && (
               <NavLink href="/inbox" active={isActive('/inbox') || pathname.startsWith('/inbox/')}>
                 <span style={{ position: 'relative' }}>
                   Mensajes
                   {unreadCount > 0 && (
-                    <span style={{
-                      position: 'absolute', top: -6, right: -12,
-                      background: 'var(--accent-red, #ef4444)', color: 'white',
-                      fontSize: '0.65rem', fontWeight: 'bold',
-                      width: 16, height: 16, borderRadius: '50%',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center'
-                    }}>
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: -6,
+                        right: -12,
+                        background: 'var(--accent-red, #ef4444)',
+                        color: 'white',
+                        fontSize: '0.65rem',
+                        fontWeight: 'bold',
+                        width: 16,
+                        height: 16,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
                       {unreadCount}
                     </span>
                   )}
@@ -343,23 +389,38 @@ export default function Navbar() {
             {user ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 8 }}>
                 <Link href="/profile" style={{ textDecoration: 'none' }} title="Mi Perfil">
-                  <div style={{
-                    width: 32, height: 32,
-                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                    borderRadius: '50%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '0.75rem', fontWeight: 700, color: 'white',
-                    overflow: 'hidden',
-                  }}>
+                  <div
+                    style={{
+                      width: 32,
+                      height: 32,
+                      background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: 'white',
+                      overflow: 'hidden',
+                    }}
+                  >
                     {avatarUrl ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img
+                        src={avatarUrl}
+                        alt="Avatar"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
                     ) : (
                       user.email?.[0].toUpperCase()
                     )}
                   </div>
                 </Link>
-                <button onClick={handleLogout} className="btn-secondary" style={{ padding: '6px 14px', fontSize: '0.8rem' }}>
+                <button
+                  onClick={handleLogout}
+                  className="btn-secondary"
+                  style={{ padding: '6px 14px', fontSize: '0.8rem' }}
+                >
                   Salir
                 </button>
               </div>
@@ -383,448 +444,63 @@ export default function Navbar() {
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: 'var(--text-primary)', padding: 8, display: 'none',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--text-primary)',
+              padding: 8,
+              display: 'none',
             }}
             className="mobile-menu-btn"
             aria-label="Menú"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              {menuOpen
-                ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>
-                : <><line x1="3" y1="8" x2="21" y2="8"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="16" x2="21" y2="16"/></>
-              }
+              {menuOpen ? (
+                <>
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </>
+              ) : (
+                <>
+                  <line x1="3" y1="8" x2="21" y2="8" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="16" x2="21" y2="16" />
+                </>
+              )}
             </svg>
           </button>
         </div>
 
-        {/* Mobile menu */}
-        {menuOpen && (
-          <div style={{
-            paddingBottom: '1rem',
-            display: 'flex', flexDirection: 'column', gap: 4,
-            borderTop: '1px solid var(--border)',
-          }}>
-            {!isInstalled && (
-              <button
-                onClick={() => {
-                  setMenuOpen(false)
-                  handleInstallClick()
-                }}
-                style={{
-                  textAlign: 'left',
-                  padding: '10px 12px',
-                  background: 'linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.25))',
-                  border: '1px solid rgba(139,92,246,0.4)',
-                  borderRadius: 10,
-                  color: '#e0e7ff',
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  margin: '4px 0',
-                }}
-              >
-                📲 Descargar / Instalar App
-              </button>
-            )}
-            <MobileNavLink href="/" onClick={() => setMenuOpen(false)}>Explorar</MobileNavLink>
-            {user && <MobileNavLink href="/dashboard" onClick={() => setMenuOpen(false)}>Mi Panel</MobileNavLink>}
-            {isAdmin && (
-              <MobileNavLink href="/admin" onClick={() => setMenuOpen(false)}>
-                <span style={{ color: '#ef4444', fontWeight: 600 }}>🛡️ Panel Admin</span>
-              </MobileNavLink>
-            )}
-            {user && <MobileNavLink href="/listings/new" onClick={() => setMenuOpen(false)}>Publicar</MobileNavLink>}
-            {user && (
-              <MobileNavLink href="/inbox" onClick={() => setMenuOpen(false)}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  Mensajes
-                  {unreadCount > 0 && (
-                    <span style={{
-                      background: 'var(--accent-red, #ef4444)', color: 'white',
-                      fontSize: '0.65rem', fontWeight: 'bold',
-                      padding: '2px 6px', borderRadius: 99
-                    }}>
-                      {unreadCount}
-                    </span>
-                  )}
-                </span>
-              </MobileNavLink>
-            )}
-            {user && <MobileNavLink href="/profile" onClick={() => setMenuOpen(false)}>Mi Perfil</MobileNavLink>}
-            <button
-              onClick={() => {
-                setMenuOpen(false)
-                setShowSuggestModal(true)
-              }}
-              style={{
-                textAlign: 'left', padding: '10px 12px', background: 'none',
-                border: 'none', color: '#fcd34d', cursor: 'pointer',
-                fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8,
-              }}
-            >
-              💡 Enviar recomendación
-            </button>
-            <button
-              onClick={() => {
-                setMenuOpen(false)
-                setShowBusinessModal(true)
-              }}
-              style={{
-                textAlign: 'left',
-                padding: '10px 12px',
-                background: 'none',
-                border: 'none',
-                color: '#a5b4fc',
-                cursor: 'pointer',
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
-              💼 ¿Negocio externo? (Contactar)
-            </button>
-            {user
-              ? <button onClick={handleLogout} style={{ textAlign: 'left', padding: '10px 12px', background: 'none', border: 'none', color: 'var(--accent-red)', cursor: 'pointer', fontWeight: 600 }}>Cerrar sesión</button>
-              : <>
-                  <MobileNavLink href="/login" onClick={() => setMenuOpen(false)}>Ingresar</MobileNavLink>
-                  <MobileNavLink href="/register" onClick={() => setMenuOpen(false)}>Registrarse</MobileNavLink>
-                </>
-            }
-          </div>
-        )}
+        {/* Mobile menu drawer */}
+        <MobileNavMenu
+          isOpen={menuOpen}
+          isInstalled={isInstalled}
+          user={user}
+          isAdmin={isAdmin}
+          unreadCount={unreadCount}
+          onClose={() => setMenuOpen(false)}
+          onInstallClick={handleInstallClick}
+          onOpenSuggestModal={() => setShowSuggestModal(true)}
+          onOpenBusinessModal={() => setShowBusinessModal(true)}
+          onLogout={handleLogout}
+        />
       </div>
 
-      {/* ── Modal de Instalación PWA (Descarga) ── */}
-      {showInstallModal && typeof window !== 'undefined' && createPortal(
-        <div
-          style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            width: '100vw', height: '100vh',
-            background: 'rgba(0,0,0,0.82)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            zIndex: 99999,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '1rem',
-          }}
-          onClick={() => setShowInstallModal(false)}
-        >
-          <div
-            className="glass-card animate-fade-in-up"
-            style={{
-              maxWidth: 500, width: '92%',
-              padding: '2.2rem 1.8rem',
-              borderRadius: 24,
-              background: '#0d121f',
-              border: '1px solid rgba(99, 102, 241, 0.4)',
-              boxShadow: '0 25px 60px rgba(0,0,0,0.95)',
-              position: 'relative',
-              textAlign: 'center',
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Cerrar */}
-            <button
-              onClick={() => setShowInstallModal(false)}
-              style={{
-                position: 'absolute', top: 16, right: 16,
-                background: 'rgba(255,255,255,0.08)', border: 'none',
-                color: 'var(--text-secondary)', borderRadius: '50%',
-                width: 32, height: 32, cursor: 'pointer', fontSize: '1rem',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >✕</button>
+      <PWAInstallModal
+        isOpen={showInstallModal}
+        isIOS={isIOS}
+        onClose={() => setShowInstallModal(false)}
+      />
 
-            <div style={{
-              width: 56, height: 56,
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-              borderRadius: 16,
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1.7rem', fontWeight: 900, color: 'white',
-              boxShadow: '0 0 24px rgba(99,102,241,0.5)',
-              marginBottom: '1rem',
-            }}>
-              U
-            </div>
+      <BusinessModal
+        isOpen={showBusinessModal}
+        onClose={() => setShowBusinessModal(false)}
+      />
 
-            <h2 style={{ fontSize: '1.35rem', fontWeight: 900, marginBottom: '0.4rem', color: '#fff' }}>
-              Instala U-Market en tu Celular o PC
-            </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-              Disfruta de navegación en pantalla completa, acceso rápido desde tu inicio y notificaciones instantáneas.
-            </p>
-
-            {isIOS ? (
-              /* Instrucciones específicas para iPhone / iPad (Safari) */
-              <div style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 16,
-                padding: '1.2rem',
-                textAlign: 'left',
-                marginBottom: '1.2rem',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '0.8rem', color: '#a5b4fc', fontWeight: 700, fontSize: '0.9rem' }}>
-                  <span>🍎</span> Instrucciones para iPhone / iPad (Safari):
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: '0.84rem', color: '#e2e8f0', lineHeight: 1.5 }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                    <span style={{ background: '#6366f1', color: 'white', width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, flexShrink: 0 }}>1</span>
-                    <span>Toca el botón <strong>Compartir</strong> <span style={{ fontSize: '1rem' }}>📤</span> en la barra inferior de Safari.</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                    <span style={{ background: '#6366f1', color: 'white', width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, flexShrink: 0 }}>2</span>
-                    <span>Desliza hacia abajo y selecciona <strong>«Agregar a pantalla de inicio»</strong> ➕.</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                    <span style={{ background: '#6366f1', color: 'white', width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, flexShrink: 0 }}>3</span>
-                    <span>Toca <strong>«Agregar»</strong> en la esquina superior derecha. ¡Listo!</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* Instrucciones para Android / PC / Chrome / Edge */
-              <div style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 16,
-                padding: '1.2rem',
-                textAlign: 'left',
-                marginBottom: '1.2rem',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '0.8rem', color: '#a5b4fc', fontWeight: 700, fontSize: '0.9rem' }}>
-                  <span>📱</span> Pasos para instalar en tu navegador:
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: '0.84rem', color: '#e2e8f0', lineHeight: 1.5 }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                    <span style={{ background: '#6366f1', color: 'white', width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, flexShrink: 0 }}>1</span>
-                    <span>Toca los <strong>tres puntos (⋮)</strong> en la esquina superior de Chrome / Edge.</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                    <span style={{ background: '#6366f1', color: 'white', width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, flexShrink: 0 }}>2</span>
-                    <span>Selecciona <strong>«Instalar aplicación»</strong> o <strong>«Agregar a la pantalla principal»</strong>.</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                    <span style={{ background: '#6366f1', color: 'white', width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, flexShrink: 0 }}>3</span>
-                    <span>Confirma tocando <strong>«Instalar»</strong>.</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <button
-              onClick={() => setShowInstallModal(false)}
-              className="btn-primary"
-              style={{
-                width: '100%',
-                padding: '0.75rem 1.5rem',
-                fontSize: '0.9rem',
-                fontWeight: 700,
-                borderRadius: 99,
-              }}
-            >
-              Entendido
-            </button>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* ── Modal de Información para Negocios Externos ── */}
-      {showBusinessModal && typeof window !== 'undefined' && createPortal(
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0, left: 0, right: 0, bottom: 0,
-            width: '100vw', height: '100vh',
-            background: 'rgba(0, 0, 0, 0.78)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            zIndex: 99999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1rem',
-          }}
-          onClick={() => setShowBusinessModal(false)}
-        >
-          <div 
-            className="glass-card animate-fade-in-up" 
-            style={{
-              maxWidth: 480,
-              width: '90%',
-              padding: '2.5rem 2rem',
-              borderRadius: 24,
-              background: '#0d121f',
-              border: '1px solid rgba(99, 102, 241, 0.35)',
-              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.9)',
-              position: 'relative',
-              textAlign: 'center',
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <button 
-              onClick={() => setShowBusinessModal(false)}
-              style={{
-                position: 'absolute', top: 16, right: 16,
-                background: 'rgba(255,255,255,0.08)',
-                border: 'none', color: 'var(--text-secondary)',
-                borderRadius: '50%', width: 32, height: 32,
-                cursor: 'pointer', fontSize: '1rem',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}
-            >
-              ✕
-            </button>
-
-            <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>💼</div>
-
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.75rem', color: '#ffffff' }}>
-              ¿Tienes un negocio o marca externa?
-            </h2>
-
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.75rem' }}>
-              ¿No eres estudiante de la UTA pero te gustaría vender o promocionar tu negocio en U-Market? Solicita autorización a la administración a través de nuestro WhatsApp oficial.
-            </p>
-
-            <a 
-              href="https://wa.me/593999752932?text=Hola!%20Tengo%20un%20negocio%20externo%20y%20me%20gustar%C3%ADa%20publicar/anunciarme%20en%20U-Market." 
-              target="_blank" 
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 10,
-                backgroundColor: '#25D366',
-                color: '#ffffff',
-                fontWeight: 800,
-                fontSize: '0.95rem',
-                padding: '0.85rem 1.75rem',
-                borderRadius: 99,
-                textDecoration: 'none',
-                boxShadow: '0 8px 24px rgba(37, 211, 102, 0.35)',
-                width: '100%',
-              }}
-            >
-              <span style={{ fontSize: '1.25rem' }}>💬</span>
-              Contactar por WhatsApp
-            </a>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* ── Modal de Recomendaciones / Sugerencias ── */}
-      {showSuggestModal && typeof window !== 'undefined' && createPortal(
-        <div
-          style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            width: '100vw', height: '100vh',
-            background: 'rgba(0,0,0,0.78)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            zIndex: 99999,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '1rem',
-          }}
-          onClick={() => setShowSuggestModal(false)}
-        >
-          <div
-            className="glass-card animate-fade-in-up"
-            style={{
-              maxWidth: 480, width: '90%',
-              padding: '2.5rem 2rem',
-              borderRadius: 24,
-              background: '#0d121f',
-              border: '1px solid rgba(245,158,11,0.3)',
-              boxShadow: '0 25px 60px rgba(0,0,0,0.9)',
-              position: 'relative',
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Cerrar */}
-            <button
-              onClick={() => setShowSuggestModal(false)}
-              style={{
-                position: 'absolute', top: 16, right: 16,
-                background: 'rgba(255,255,255,0.08)', border: 'none',
-                color: 'var(--text-secondary)', borderRadius: '50%',
-                width: 32, height: 32, cursor: 'pointer', fontSize: '1rem',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >✕</button>
-
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem', textAlign: 'center' }}>💡</div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.5rem', color: '#fff', textAlign: 'center' }}>
-              ¿Tienes una recomendación?
-            </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.6, marginBottom: '1.25rem', textAlign: 'center' }}>
-              Escríbenos qué mejorarías o qué función te gustaría ver en U-Market. Tu mensaje llegará directo al desarrollador.
-            </p>
-
-            <textarea
-              value={suggestion}
-              onChange={e => setSuggestion(e.target.value)}
-              placeholder="Ej: Me gustaría que hubiera un filtro por facultad..."
-              rows={4}
-              style={{
-                width: '100%',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(245,158,11,0.3)',
-                borderRadius: 12,
-                color: '#fff',
-                fontSize: '0.9rem',
-                padding: '0.85rem 1rem',
-                resize: 'none',
-                outline: 'none',
-                fontFamily: 'inherit',
-                lineHeight: 1.6,
-                marginBottom: '1rem',
-              }}
-            />
-
-            <a
-              href={suggestion.trim()
-                ? `https://wa.me/593999752932?text=${encodeURIComponent('💡 Recomendación para U-Market:\n\n' + suggestion.trim())}`
-                : '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={e => {
-                if (!suggestion.trim()) { e.preventDefault(); return; }
-                setShowSuggestModal(false)
-                setSuggestion('')
-              }}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                backgroundColor: suggestion.trim() ? '#25D366' : 'rgba(37,211,102,0.25)',
-                color: '#fff',
-                fontWeight: 800, fontSize: '0.95rem',
-                padding: '0.85rem 1.75rem',
-                borderRadius: 99,
-                textDecoration: 'none',
-                boxShadow: suggestion.trim() ? '0 8px 24px rgba(37,211,102,0.35)' : 'none',
-                transition: 'all 0.2s ease',
-                cursor: suggestion.trim() ? 'pointer' : 'not-allowed',
-                pointerEvents: suggestion.trim() ? 'auto' : 'none',
-                width: '100%',
-              }}
-            >
-              <span style={{ fontSize: '1.2rem' }}>💬</span>
-              Enviar por WhatsApp
-            </a>
-
-            <p style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>
-              Escribe tu sugerencia para activar el botón de envío.
-            </p>
-          </div>
-        </div>,
-        document.body
-      )}
+      <SuggestModal
+        isOpen={showSuggestModal}
+        onClose={() => setShowSuggestModal(false)}
+      />
 
       <style>{`
         @media (max-width: 768px) {
@@ -833,37 +509,5 @@ export default function Navbar() {
         }
       `}</style>
     </nav>
-  )
-}
-
-function NavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
-  return (
-    <Link href={href} style={{
-      textDecoration: 'none',
-      padding: '6px 14px',
-      borderRadius: 8,
-      fontSize: '0.875rem',
-      fontWeight: active ? 600 : 500,
-      color: active ? 'white' : 'var(--text-secondary)',
-      background: active ? 'rgba(99,102,241,0.15)' : 'transparent',
-      transition: 'all 0.2s ease',
-    }}
-      onMouseEnter={e => { if (!active) (e.target as HTMLElement).style.color = 'var(--text-primary)' }}
-      onMouseLeave={e => { if (!active) (e.target as HTMLElement).style.color = 'var(--text-secondary)' }}
-    >
-      {children}
-    </Link>
-  )
-}
-
-function MobileNavLink({ href, children, onClick }: { href: string; children: React.ReactNode; onClick: () => void }) {
-  return (
-    <Link href={href} onClick={onClick} style={{
-      textDecoration: 'none', display: 'block',
-      padding: '10px 12px', borderRadius: 8,
-      color: 'var(--text-primary)', fontWeight: 500,
-    }}>
-      {children}
-    </Link>
   )
 }
