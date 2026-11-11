@@ -42,19 +42,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={`${inter.variable} ${plusJakartaSans.variable}`} suppressHydrationWarning>
-      <body suppressHydrationWarning style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
+      <body suppressHydrationWarning style={{ backgroundColor: '#ffffff', minHeight: '100vh', position: 'relative' }}>
         <SplashCursor
-          DENSITY_DISSIPATION={3.5}
-          VELOCITY_DISSIPATION={2}
-          SPLAT_RADIUS={0.25}
-          SPLAT_FORCE={6000}
+          DENSITY_DISSIPATION={4.2}
+          VELOCITY_DISSIPATION={2.5}
+          SPLAT_RADIUS={0.14}
+          SPLAT_FORCE={4000}
           CURL={3}
           BLUE_MODE={true}
           RAINBOW_MODE={false}
           COLOR="#0052cc"
           SHADING={true}
         />
-        {children}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          {children}
+        </div>
       </body>
     </html>
   )

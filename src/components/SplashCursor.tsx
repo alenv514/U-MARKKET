@@ -296,7 +296,7 @@ function SplashCursor({
               float diffuse = clamp(dot(n, l) + 0.7, 0.7, 1.0);
               c *= diffuse;
           #endif
-          float a = max(c.r, max(c.g, c.b));
+          float a = clamp(max(c.r, max(c.g, c.b)) * 0.75, 0.0, 0.45);
           gl_FragColor = vec4(c, a);
       }
     `;
@@ -798,13 +798,13 @@ function SplashCursor({
 
     function generateColor() {
       if (config.BLUE_MODE || !config.RAINBOW_MODE) {
-        const hue = 0.58 + Math.random() * 0.07;
-        const sat = 0.9;
-        const val = 0.95;
+        const hue = 0.58 + Math.random() * 0.06;
+        const sat = 0.88;
+        const val = 0.9;
         const c = HSVtoRGB(hue, sat, val);
-        c.r *= 0.3;
-        c.g *= 0.55;
-        c.b *= 1.0;
+        c.r *= 0.15;
+        c.g *= 0.38;
+        c.b *= 0.85;
         return c;
       }
       const c = HSVtoRGB(Math.random(), 1.0, 1.0);

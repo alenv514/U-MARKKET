@@ -135,13 +135,13 @@ export default function HomePage() {
   return (
     <>
       <Navbar />
-      <main style={{ paddingTop: 64, minHeight: '100vh', background: '#ffffff' }}>
+      <main style={{ paddingTop: 64, minHeight: '100vh', background: 'transparent' }}>
 
         {/* ── Hero ── */}
         <section style={{
           position: 'relative',
           paddingTop: '4rem', paddingBottom: '3.5rem',
-          background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 82, 204, 0.05), #ffffff 70%)',
+          background: 'transparent',
           textAlign: 'center',
           overflow: 'hidden',
         }}>
