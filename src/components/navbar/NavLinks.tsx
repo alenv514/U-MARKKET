@@ -18,9 +18,9 @@ export function NavLink({
         padding: '6px 14px',
         borderRadius: 8,
         fontSize: '0.875rem',
-        fontWeight: active ? 600 : 500,
-        color: active ? 'white' : 'var(--text-secondary)',
-        background: active ? 'rgba(99,102,241,0.15)' : 'transparent',
+        fontWeight: active ? 700 : 500,
+        color: active ? '#0052cc' : 'var(--text-secondary)',
+        background: active ? 'rgba(0, 82, 204, 0.08)' : 'transparent',
         transition: 'all 0.2s ease',
       }}
       onMouseEnter={(e) => {

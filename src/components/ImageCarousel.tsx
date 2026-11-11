@@ -74,7 +74,7 @@ export default function ImageCarousel({
         position: 'relative', overflow: 'hidden',
         width: '100%', aspectRatio: compact ? '4/3' : '16/9',
         borderRadius: compact ? '16px 16px 0 0' : 16,
-        background: '#0d1117',
+        background: '#f1f5f9',
       }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}

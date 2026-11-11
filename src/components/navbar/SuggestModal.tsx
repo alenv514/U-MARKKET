@@ -23,7 +23,7 @@ export default function SuggestModal({ isOpen, onClose }: SuggestModalProps) {
         bottom: 0,
         width: '100vw',
         height: '100vh',
-        background: 'rgba(0,0,0,0.78)',
+        background: 'rgba(10, 37, 64, 0.45)',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
         zIndex: 99999,
@@ -41,9 +41,9 @@ export default function SuggestModal({ isOpen, onClose }: SuggestModalProps) {
           width: '90%',
           padding: '2.5rem 2rem',
           borderRadius: 24,
-          background: '#0d121f',
-          border: '1px solid rgba(245,158,11,0.3)',
-          boxShadow: '0 25px 60px rgba(0,0,0,0.9)',
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 25px 60px rgba(10, 37, 64, 0.2)',
           position: 'relative',
         }}
         onClick={(e) => e.stopPropagation()}
@@ -54,9 +54,9 @@ export default function SuggestModal({ isOpen, onClose }: SuggestModalProps) {
             position: 'absolute',
             top: 16,
             right: 16,
-            background: 'rgba(255,255,255,0.08)',
+            background: '#f1f5f9',
             border: 'none',
-            color: 'var(--text-secondary)',
+            color: '#64748b',
             borderRadius: '50%',
             width: 32,
             height: 32,
@@ -71,7 +71,7 @@ export default function SuggestModal({ isOpen, onClose }: SuggestModalProps) {
         </button>
 
         <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem', textAlign: 'center' }}>💡</div>
-        <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.5rem', color: '#fff', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.5rem', color: '#0a192f', textAlign: 'center' }}>
           ¿Tienes una recomendación?
         </h2>
         <p
@@ -93,10 +93,10 @@ export default function SuggestModal({ isOpen, onClose }: SuggestModalProps) {
           rows={4}
           style={{
             width: '100%',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(245,158,11,0.3)',
+            background: '#f8fafc',
+            border: '1px solid #cbd5e1',
             borderRadius: 12,
-            color: '#fff',
+            color: '#0a192f',
             fontSize: '0.9rem',
             padding: '0.85rem 1rem',
             resize: 'none',

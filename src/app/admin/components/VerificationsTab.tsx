@@ -103,8 +103,8 @@ export default function VerificationsTab({
                     overflow: 'hidden',
                     cursor: 'zoom-in',
                     flexShrink: 0,
-                    border: '2px solid rgba(99,102,241,0.4)',
-                    background: '#0d1117',
+                    border: '2px solid rgba(0,82,204,0.3)',
+                    background: '#f8fafc',
                     position: 'relative',
                   }}
                   title="Click para ampliar imagen del carnet"
@@ -121,8 +121,8 @@ export default function VerificationsTab({
                       bottom: 0,
                       left: 0,
                       right: 0,
-                      background: 'rgba(0,0,0,0.75)',
-                      color: '#93c5fd',
+                      background: 'rgba(10,37,64,0.75)',
+                      color: '#ffffff',
                       fontSize: '0.65rem',
                       textAlign: 'center',
                       padding: '2px 0',
@@ -137,7 +137,7 @@ export default function VerificationsTab({
                     width: 70,
                     height: 90,
                     borderRadius: 10,
-                    background: 'rgba(255,255,255,0.05)',
+                    background: '#f1f5f9',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -159,7 +159,7 @@ export default function VerificationsTab({
                     Pendiente de Revisión
                   </span>
                 </div>
-                <div style={{ fontSize: '0.82rem', color: '#a5b4fc', marginBottom: 2 }}>
+                <div style={{ fontSize: '0.82rem', color: '#0052cc', marginBottom: 2 }}>
                   {user.faculty || 'Sin facultad'} {user.semester ? `· ${user.semester}` : ''}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>

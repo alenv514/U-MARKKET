@@ -142,7 +142,7 @@ export default function HomePage() {
         <section style={{
           position: 'relative',
           paddingTop: '4rem', paddingBottom: '3rem',
-          background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99,102,241,0.15), transparent)',
+          background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 82, 204, 0.08), transparent)',
           textAlign: 'center',
           overflow: 'hidden',
         }}>
@@ -150,7 +150,7 @@ export default function HomePage() {
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, opacity: 0.9 }}>
             <LightRays
               raysOrigin="top-center"
-              raysColor="#a5b4fc"
+              raysColor="#0284c7"
               raysSpeed={1.5}
               lightSpread={0.8}
               rayLength={1.2}
@@ -205,7 +205,8 @@ export default function HomePage() {
                 style={{
                   paddingLeft: '2.75rem', paddingRight: '1rem',
                   fontSize: '1rem', borderRadius: 14,
-                  background: 'rgba(255,255,255,0.05)',
+                  background: '#ffffff',
+                  boxShadow: '0 4px 20px rgba(10, 37, 64, 0.08)',
                 }}
               />
             </div>
@@ -255,13 +256,13 @@ export default function HomePage() {
                     whiteSpace: 'nowrap',
                     transition: 'all 0.2s ease',
                     border: isSelected
-                      ? '1px solid #6366f1'
-                      : '1px solid rgba(255,255,255,0.08)',
+                      ? '1px solid #0052cc'
+                      : '1px solid #e2e8f0',
                     background: isSelected
-                      ? 'rgba(99,102,241,0.22)'
-                      : 'rgba(255,255,255,0.03)',
+                      ? 'linear-gradient(135deg, #0a2540, #0052cc)'
+                      : '#ffffff',
                     color: isSelected ? '#ffffff' : 'var(--text-secondary)',
-                    boxShadow: isSelected ? '0 0 14px rgba(99,102,241,0.35)' : 'none',
+                    boxShadow: isSelected ? '0 4px 12px rgba(0,82,204,0.25)' : 'none',
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 6,
@@ -271,12 +272,12 @@ export default function HomePage() {
                   {isUserNative && (
                     <span style={{
                       fontSize: '0.62rem',
-                      background: 'rgba(99,102,241,0.3)',
-                      color: '#c7d2fe',
+                      background: isSelected ? 'rgba(255,255,255,0.25)' : 'rgba(0,82,204,0.1)',
+                      color: isSelected ? '#ffffff' : '#0052cc',
                       padding: '1px 6px',
                       borderRadius: 99,
                       fontWeight: 600,
-                      border: '1px solid rgba(139,92,246,0.3)',
+                      border: isSelected ? '1px solid rgba(255,255,255,0.4)' : '1px solid rgba(0,82,204,0.2)',
                     }}>
                       Tu campus
                     </span>

@@ -56,8 +56,8 @@ export default function UsersTab({
           className="input-field"
           style={{
             paddingLeft: '2.75rem',
-            background: 'rgba(255, 255, 255, 0.03)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            background: '#ffffff',
+            border: '1px solid #cbd5e1',
           }}
         />
       </div>
@@ -89,7 +89,7 @@ export default function UsersTab({
                     width: 42,
                     height: 42,
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                    background: 'linear-gradient(135deg, #0a2540, #0052cc)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',

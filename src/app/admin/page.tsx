@@ -576,8 +576,8 @@ export default function AdminPage() {
               display: 'flex',
               gap: 6,
               marginBottom: '1.5rem',
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
               borderRadius: 14,
               padding: 6,
               width: '100%',
@@ -600,9 +600,9 @@ export default function AdminPage() {
                   transition: 'all 0.2s ease',
                   whiteSpace: 'nowrap',
                   flexShrink: 0,
-                  background: tab === t ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'transparent',
+                  background: tab === t ? 'linear-gradient(135deg, #0a2540, #0052cc)' : 'transparent',
                   color: tab === t ? 'white' : 'var(--text-secondary)',
-                  boxShadow: tab === t ? '0 4px 12px rgba(99, 102, 241, 0.3)' : 'none',
+                  boxShadow: tab === t ? '0 4px 12px rgba(0, 82, 204, 0.25)' : 'none',
                 }}
               >
                 {t === 'reports'

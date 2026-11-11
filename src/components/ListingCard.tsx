@@ -83,10 +83,10 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
         {listing.profiles?.faculty && (
           <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 20 }}>
             <span style={{
-              background: 'rgba(8, 11, 20, 0.88)',
+              background: 'rgba(10, 37, 64, 0.88)',
               backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255, 255, 255, 0.16)',
-              color: '#c7d2fe',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: '#ffffff',
               fontSize: '0.68rem',
               fontWeight: 600,
               padding: '3px 8px',
@@ -94,7 +94,7 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
               display: 'inline-flex',
               alignItems: 'center',
               gap: 4,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+              boxShadow: '0 2px 8px rgba(10, 37, 64, 0.2)',
             }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />

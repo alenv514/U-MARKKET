@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#6366f1',
+  themeColor: '#0a2540',
 }
 
 export default function RootLayout({
@@ -49,7 +49,9 @@ export default function RootLayout({
           SPLAT_RADIUS={0.25}
           SPLAT_FORCE={6000}
           CURL={3}
-          RAINBOW_MODE={true}
+          BLUE_MODE={true}
+          RAINBOW_MODE={false}
+          COLOR="#0052cc"
           SHADING={true}
         />
         {children}

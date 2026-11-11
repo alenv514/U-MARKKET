@@ -20,7 +20,7 @@ export default function BusinessModal({ isOpen, onClose }: BusinessModalProps) {
         bottom: 0,
         width: '100vw',
         height: '100vh',
-        background: 'rgba(0, 0, 0, 0.78)',
+        background: 'rgba(10, 37, 64, 0.45)',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
         zIndex: 99999,
@@ -38,9 +38,9 @@ export default function BusinessModal({ isOpen, onClose }: BusinessModalProps) {
           width: '90%',
           padding: '2.5rem 2rem',
           borderRadius: 24,
-          background: '#0d121f',
-          border: '1px solid rgba(99, 102, 241, 0.35)',
-          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.9)',
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 25px 60px rgba(10, 37, 64, 0.2)',
           position: 'relative',
           textAlign: 'center',
         }}
@@ -52,9 +52,9 @@ export default function BusinessModal({ isOpen, onClose }: BusinessModalProps) {
             position: 'absolute',
             top: 16,
             right: 16,
-            background: 'rgba(255,255,255,0.08)',
+            background: '#f1f5f9',
             border: 'none',
-            color: 'var(--text-secondary)',
+            color: '#64748b',
             borderRadius: '50%',
             width: 32,
             height: 32,
@@ -70,7 +70,7 @@ export default function BusinessModal({ isOpen, onClose }: BusinessModalProps) {
 
         <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>💼</div>
 
-        <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.75rem', color: '#ffffff' }}>
+        <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.75rem', color: '#0a192f' }}>
           ¿Tienes un negocio o marca externa?
         </h2>
 

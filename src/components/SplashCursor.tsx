@@ -21,6 +21,7 @@ interface SplashCursorProps {
   BACK_COLOR?: { r: number; g: number; b: number };
   TRANSPARENT?: boolean;
   RAINBOW_MODE?: boolean;
+  BLUE_MODE?: boolean;
   COLOR?: string;
 }
 
@@ -39,8 +40,9 @@ function SplashCursor({
   COLOR_UPDATE_SPEED = 10,
   BACK_COLOR = { r: 0.5, g: 0, b: 0 },
   TRANSPARENT = true,
-  RAINBOW_MODE = true,
-  COLOR = '#ff0000'
+  RAINBOW_MODE = false,
+  BLUE_MODE = true,
+  COLOR = '#0052cc'
 }: SplashCursorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameId = useRef<number | null>(null);
@@ -81,7 +83,7 @@ function SplashCursor({
       DENSITY_DISSIPATION, VELOCITY_DISSIPATION, PRESSURE,
       PRESSURE_ITERATIONS, CURL, SPLAT_RADIUS, SPLAT_FORCE,
       SHADING, COLOR_UPDATE_SPEED, PAUSED: false,
-      BACK_COLOR, TRANSPARENT, RAINBOW_MODE, COLOR
+      BACK_COLOR, TRANSPARENT, RAINBOW_MODE, BLUE_MODE, COLOR
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -786,11 +788,21 @@ function SplashCursor({
       const r = parseInt(val.slice(0, 2), 16) / 255;
       const g = parseInt(val.slice(2, 4), 16) / 255;
       const b = parseInt(val.slice(4, 6), 16) / 255;
-      return { r: r * 0.15, g: g * 0.15, b: b * 0.15 };
+      return { r: r * 0.25, g: g * 0.45, b: b * 0.95 };
     }
 
     function generateColor() {
-      if (!config.RAINBOW_MODE) return hexToRGB(config.COLOR);
+      if (config.BLUE_MODE || !config.RAINBOW_MODE) {
+        // Genera tonos dinámicos de azul marino, cobalto y azul zafiro/eléctrico
+        const hue = 0.57 + Math.random() * 0.08; // Entre 205° y 234° (gama azul marino)
+        const sat = 0.85 + Math.random() * 0.15;
+        const val = 0.85 + Math.random() * 0.15;
+        const c = HSVtoRGB(hue, sat, val);
+        c.r *= 0.25;
+        c.g *= 0.45;
+        c.b *= 0.95;
+        return c;
+      }
       const c = HSVtoRGB(Math.random(), 1.0, 1.0);
       c.r *= 0.15; c.g *= 0.15; c.b *= 0.15;
       return c;
@@ -925,7 +937,7 @@ function SplashCursor({
       <canvas
         ref={canvasRef}
         id="fluid"
-        style={{ width: '100vw', height: '100vh', display: 'block' }}
+        style={{ width: '100vw', height: '100vh', display: 'block', mixBlendMode: 'multiply' }}
       />
     </div>
   );

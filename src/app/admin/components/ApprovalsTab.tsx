@@ -52,7 +52,7 @@ export default function ApprovalsTab({
                   flexShrink: 0,
                   background: listing.image_url
                     ? `url(${listing.image_url}) center/cover`
-                    : 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2))',
+                    : 'linear-gradient(135deg, rgba(10,37,64,0.06), rgba(0,82,204,0.12))',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',

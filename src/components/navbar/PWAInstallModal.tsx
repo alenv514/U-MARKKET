@@ -21,9 +21,9 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
         bottom: 0,
         width: '100vw',
         height: '100vh',
-        background: 'rgba(0,0,0,0.82)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        background: 'rgba(10, 37, 64, 0.45)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
         zIndex: 99999,
         display: 'flex',
         alignItems: 'center',
@@ -39,9 +39,9 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
           width: '92%',
           padding: '2.2rem 1.8rem',
           borderRadius: 24,
-          background: '#0d121f',
-          border: '1px solid rgba(99, 102, 241, 0.4)',
-          boxShadow: '0 25px 60px rgba(0,0,0,0.95)',
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 25px 60px rgba(10, 37, 64, 0.2)',
           position: 'relative',
           textAlign: 'center',
         }}
@@ -53,9 +53,9 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
             position: 'absolute',
             top: 16,
             right: 16,
-            background: 'rgba(255,255,255,0.08)',
+            background: '#f1f5f9',
             border: 'none',
-            color: 'var(--text-secondary)',
+            color: '#64748b',
             borderRadius: '50%',
             width: 32,
             height: 32,
@@ -73,7 +73,7 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
           style={{
             width: 56,
             height: 56,
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            background: 'linear-gradient(135deg, #0a2540, #0052cc)',
             borderRadius: 16,
             display: 'inline-flex',
             alignItems: 'center',
@@ -81,14 +81,14 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
             fontSize: '1.7rem',
             fontWeight: 900,
             color: 'white',
-            boxShadow: '0 0 24px rgba(99,102,241,0.5)',
+            boxShadow: '0 4px 16px rgba(0, 82, 204, 0.3)',
             marginBottom: '1rem',
           }}
         >
           U
         </div>
 
-        <h2 style={{ fontSize: '1.35rem', fontWeight: 900, marginBottom: '0.4rem', color: '#fff' }}>
+        <h2 style={{ fontSize: '1.35rem', fontWeight: 900, marginBottom: '0.4rem', color: '#0a192f' }}>
           Instala U-Market en tu Celular o PC
         </h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: '1.25rem' }}>
@@ -98,8 +98,8 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
         {isIOS ? (
           <div
             style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
               borderRadius: 16,
               padding: '1.2rem',
               textAlign: 'left',
@@ -112,7 +112,7 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
                 alignItems: 'center',
                 gap: 8,
                 marginBottom: '0.8rem',
-                color: '#a5b4fc',
+                color: '#0052cc',
                 fontWeight: 700,
                 fontSize: '0.9rem',
               }}
@@ -125,14 +125,14 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
                 flexDirection: 'column',
                 gap: 10,
                 fontSize: '0.84rem',
-                color: '#e2e8f0',
+                color: '#334155',
                 lineHeight: 1.5,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                 <span
                   style={{
-                    background: '#6366f1',
+                    background: '#0052cc',
                     color: 'white',
                     width: 20,
                     height: 20,
@@ -155,7 +155,7 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                 <span
                   style={{
-                    background: '#6366f1',
+                    background: '#0052cc',
                     color: 'white',
                     width: 20,
                     height: 20,
@@ -177,7 +177,7 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                 <span
                   style={{
-                    background: '#6366f1',
+                    background: '#0052cc',
                     color: 'white',
                     width: 20,
                     height: 20,
@@ -201,8 +201,8 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
         ) : (
           <div
             style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
               borderRadius: 16,
               padding: '1.2rem',
               textAlign: 'left',
@@ -215,7 +215,7 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
                 alignItems: 'center',
                 gap: 8,
                 marginBottom: '0.8rem',
-                color: '#a5b4fc',
+                color: '#0052cc',
                 fontWeight: 700,
                 fontSize: '0.9rem',
               }}
@@ -228,14 +228,14 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
                 flexDirection: 'column',
                 gap: 10,
                 fontSize: '0.84rem',
-                color: '#e2e8f0',
+                color: '#334155',
                 lineHeight: 1.5,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                 <span
                   style={{
-                    background: '#6366f1',
+                    background: '#0052cc',
                     color: 'white',
                     width: 20,
                     height: 20,
@@ -257,7 +257,7 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                 <span
                   style={{
-                    background: '#6366f1',
+                    background: '#0052cc',
                     color: 'white',
                     width: 20,
                     height: 20,
@@ -279,7 +279,7 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                 <span
                   style={{
-                    background: '#6366f1',
+                    background: '#0052cc',
                     color: 'white',
                     width: 20,
                     height: 20,

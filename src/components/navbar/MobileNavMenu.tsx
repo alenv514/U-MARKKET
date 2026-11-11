@@ -49,10 +49,10 @@ export default function MobileNavMenu({
           style={{
             textAlign: 'left',
             padding: '10px 12px',
-            background: 'linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.25))',
-            border: '1px solid rgba(139,92,246,0.4)',
+            background: 'linear-gradient(135deg, rgba(10,37,64,0.06), rgba(0,82,204,0.12))',
+            border: '1px solid rgba(0,82,204,0.3)',
             borderRadius: 10,
-            color: '#e0e7ff',
+            color: '#0052cc',
             cursor: 'pointer',
             fontWeight: 700,
             display: 'flex',

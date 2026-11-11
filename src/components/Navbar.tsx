@@ -205,9 +205,10 @@ export default function Navbar() {
         right: 0,
         zIndex: 50,
         transition: 'all 0.3s ease',
-        background: scrolled ? 'rgba(8, 11, 20, 0.92)' : 'rgba(8, 11, 20, 0.6)',
+        background: scrolled ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.85)',
         backdropFilter: 'blur(16px)',
-        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.08)' : '1px solid transparent',
+        borderBottom: scrolled ? '1px solid #e2e8f0' : '1px solid transparent',
+        boxShadow: scrolled ? '0 4px 20px rgba(10, 37, 64, 0.06)' : 'none',
       }}
     >
       <PushManager user={user} />
@@ -219,7 +220,7 @@ export default function Navbar() {
               style={{
                 width: 36,
                 height: 36,
-                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                background: 'linear-gradient(135deg, #0a2540, #0052cc)',
                 borderRadius: 10,
                 display: 'flex',
                 alignItems: 'center',
@@ -227,7 +228,7 @@ export default function Navbar() {
                 fontSize: '1rem',
                 fontWeight: 800,
                 color: 'white',
-                boxShadow: '0 0 16px rgba(99,102,241,0.4)',
+                boxShadow: '0 4px 14px rgba(0, 82, 204, 0.25)',
               }}
             >
               U
@@ -237,9 +238,7 @@ export default function Navbar() {
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
                 fontWeight: 800,
                 fontSize: '1.1rem',
-                background: 'linear-gradient(135deg, #f0f4ff, #a5b4fc)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
+                color: '#0a2540',
               }}
             >
               U-Market
@@ -299,9 +298,9 @@ export default function Navbar() {
                   onClick={handleInstallClick}
                   title="Descargar e instalar U-Market en tu dispositivo"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(99,102,241,0.22), rgba(139,92,246,0.28))',
-                    border: '1px solid rgba(139,92,246,0.45)',
-                    color: '#c7d2fe',
+                    background: 'rgba(0, 82, 204, 0.08)',
+                    border: '1px solid rgba(0, 82, 204, 0.25)',
+                    color: '#0052cc',
                     borderRadius: 20,
                     padding: '4px 10px',
                     display: 'inline-flex',
@@ -311,17 +310,17 @@ export default function Navbar() {
                     fontWeight: 700,
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    boxShadow: '0 0 12px rgba(99,102,241,0.25)',
+                    boxShadow: '0 2px 8px rgba(0, 82, 204, 0.1)',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-1px)'
-                    e.currentTarget.style.color = '#fff'
-                    e.currentTarget.style.borderColor = '#818cf8'
+                    e.currentTarget.style.color = '#0a2540'
+                    e.currentTarget.style.borderColor = '#0052cc'
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.color = '#c7d2fe'
-                    e.currentTarget.style.borderColor = 'rgba(139,92,246,0.45)'
+                    e.currentTarget.style.color = '#0052cc'
+                    e.currentTarget.style.borderColor = 'rgba(0, 82, 204, 0.25)'
                   }}
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -393,7 +392,7 @@ export default function Navbar() {
                     style={{
                       width: 32,
                       height: 32,
-                      background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                      background: 'linear-gradient(135deg, #0a2540, #0052cc)',
                       borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',

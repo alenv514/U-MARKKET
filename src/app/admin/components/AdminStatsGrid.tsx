@@ -149,18 +149,18 @@ export default function AdminStatsGrid({
           ) : weeklyStats.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={weeklyStats} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                 <XAxis dataKey="formattedDay" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{
-                    background: 'rgba(8, 11, 20, 0.95)',
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    background: '#ffffff',
+                    border: '1px solid #e2e8f0',
                     borderRadius: 12,
-                    color: '#fff',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                    color: '#0a192f',
+                    boxShadow: '0 8px 32px rgba(10,37,64,0.15)',
                   }}
-                  itemStyle={{ color: '#fff', fontWeight: 600 }}
+                  itemStyle={{ color: '#0a192f', fontWeight: 600 }}
                   labelStyle={{ color: 'var(--text-muted)', marginBottom: 4 }}
                 />
                 <Legend wrapperStyle={{ paddingTop: 20 }} />
@@ -168,19 +168,19 @@ export default function AdminStatsGrid({
                   type="monotone"
                   name="Nuevas Publicaciones"
                   dataKey="new_listings"
-                  stroke="#3b82f6"
+                  stroke="#0052cc"
                   strokeWidth={4}
-                  dot={{ r: 4, strokeWidth: 2, fill: '#080b14' }}
-                  activeDot={{ r: 6, fill: '#3b82f6' }}
+                  dot={{ r: 4, strokeWidth: 2, fill: '#ffffff' }}
+                  activeDot={{ r: 6, fill: '#0052cc' }}
                 />
                 <Line
                   type="monotone"
                   name="Nuevos Usuarios"
                   dataKey="new_users"
-                  stroke="#10b981"
+                  stroke="#059669"
                   strokeWidth={4}
-                  dot={{ r: 4, strokeWidth: 2, fill: '#080b14' }}
-                  activeDot={{ r: 6, fill: '#10b981' }}
+                  dot={{ r: 4, strokeWidth: 2, fill: '#ffffff' }}
+                  activeDot={{ r: 6, fill: '#059669' }}
                 />
               </LineChart>
             </ResponsiveContainer>
