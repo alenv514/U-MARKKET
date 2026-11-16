@@ -15,6 +15,7 @@ export default function HomePage() {
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('Todos')
   const [selectedCampus, setSelectedCampus] = useState<Campus>('Todos')
+  const [onlyUrgent, setOnlyUrgent] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const [userCampus, setUserCampus] = useState<'Campus Huachi' | 'Campus Ingahurco' | 'Campus Querochaca' | null>(null)
   
@@ -47,8 +48,10 @@ export default function HomePage() {
 
     let query = supabase
       .from('listings')
-      .select('*, profiles(full_name, avatar_url, faculty, is_verified)')
+      .select('*, profiles(full_name, avatar_url, faculty, is_verified, rating_avg, review_count)')
       .eq('status', 'active')
+      .order('is_featured', { ascending: false, nullsFirst: false })
+      .order('bumped_at', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false })
       .range(pageNum * ITEMS_PER_PAGE, (pageNum + 1) * ITEMS_PER_PAGE - 1)
 
@@ -112,9 +115,13 @@ export default function HomePage() {
     }
   }
 
-  // Filtrado y priorización inteligente por Campus
+  // Filtrado y priorización inteligente por Campus y Ofertas
   const displayedListings = useMemo(() => {
     let list = listings
+
+    if (onlyUrgent) {
+      list = list.filter(l => l.is_urgent)
+    }
 
     if (selectedCampus !== 'Todos') {
       list = list.filter(l => getCampusFromFaculty(l.profiles?.faculty) === selectedCampus)
@@ -130,7 +137,7 @@ export default function HomePage() {
     }
 
     return list
-  }, [listings, selectedCampus, userCampus])
+  }, [listings, selectedCampus, userCampus, onlyUrgent])
 
   return (
     <>
@@ -269,6 +276,32 @@ export default function HomePage() {
                 </button>
               )
             })}
+
+            <button
+              onClick={() => setOnlyUrgent(prev => !prev)}
+              style={{
+                padding: '5px 13px',
+                borderRadius: 99,
+                fontSize: '0.8rem',
+                fontWeight: onlyUrgent ? 700 : 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s ease',
+                border: onlyUrgent ? '1px solid #d97706' : '1px solid #fed7aa',
+                background: onlyUrgent ? 'linear-gradient(135deg, #d97706, #b45309)' : '#fffbeb',
+                color: onlyUrgent ? '#ffffff' : '#b45309',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                boxShadow: onlyUrgent ? '0 4px 12px rgba(217, 119, 6, 0.25)' : 'none',
+                marginLeft: 'auto',
+                flexShrink: 0,
+              }}
+              title="Filtrar ventas y ofertas relámpago de hoy"
+            >
+              <span>⚡ Ofertas de Hoy</span>
+              {onlyUrgent && <span style={{ fontSize: '0.7rem' }}>✕</span>}
+            </button>
           </div>
         </section>
 

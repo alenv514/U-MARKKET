@@ -17,6 +17,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getOrCreateChat } from '@/lib/chat'
 
 import VerifiedBadge from './VerifiedBadge'
+import { computeReputation } from '@/lib/reputation'
 
 function computeTimeAgo(dateStr?: string | null) {
   if (!dateStr) return ''
@@ -76,7 +77,7 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
           interval={3500}
         />
         {/* Category badge overlay */}
-        <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 20 }}>
+        <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 20, display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
           <span style={{
             background: 'rgba(0, 52, 94, 0.88)',
             backdropFilter: 'blur(8px)',
@@ -90,6 +91,19 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
           }}>
             {listing.category}
           </span>
+          {listing.is_urgent && (
+            <span style={{
+              background: 'linear-gradient(135deg, #d97706, #b45309)',
+              color: '#ffffff',
+              fontSize: '0.68rem',
+              fontWeight: 800,
+              padding: '2px 8px',
+              borderRadius: 6,
+              boxShadow: '0 2px 8px rgba(217, 119, 6, 0.35)',
+            }}>
+              ⚡ Oferta Flash
+            </span>
+          )}
         </div>
         {/* Campus badge overlay (Clean, no emojis) */}
         {listing.profiles?.faculty && (
@@ -149,24 +163,48 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
         </div>
 
         {/* Seller info */}
-        {listing.profiles && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 6, borderTop: '1px solid var(--border)' }}>
-            <div style={{
-              width: 24, height: 24, borderRadius: '50%',
-              background: 'linear-gradient(135deg, #00345e, #004b87)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.65rem', fontWeight: 700, color: 'white', flexShrink: 0,
-            }}>
-              {listing.profiles.full_name?.[0]?.toUpperCase() ?? '?'}
+        {listing.profiles && (() => {
+          const rep = computeReputation(listing.profiles)
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 6, borderTop: '1px solid var(--border)' }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: '50%',
+                background: 'linear-gradient(135deg, #00345e, #004b87)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.7rem', fontWeight: 700, color: 'white', flexShrink: 0,
+              }}>
+                {listing.profiles.full_name?.[0]?.toUpperCase() ?? '?'}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {listing.profiles.full_name || 'Vendedor UTA'}
+                  </span>
+                  {listing.profiles.is_verified && <VerifiedBadge size="sm" />}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 1 }}>
+                  <span style={{
+                    fontSize: '0.62rem',
+                    fontWeight: 700,
+                    color: rep.badgeColor,
+                    background: `${rep.badgeColor}15`,
+                    padding: '0px 5px',
+                    borderRadius: 99,
+                    border: `1px solid ${rep.badgeColor}25`,
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {rep.badgeLabel}
+                  </span>
+                  {Boolean(listing.profiles.rating_avg && Number(listing.profiles.rating_avg) > 0) && (
+                    <span style={{ fontSize: '0.66rem', fontWeight: 700, color: '#d97706', display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                      ★ {Number(listing.profiles.rating_avg).toFixed(1)}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, overflow: 'hidden' }}>
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {listing.profiles.full_name || 'Vendedor UTA'}
-              </span>
-              {listing.profiles.is_verified && <VerifiedBadge size="sm" />}
-            </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>

@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import StarRating from '@/components/StarRating'
 import ReviewForm from '@/components/ReviewForm'
 import VerifiedBadge from '@/components/VerifiedBadge'
+import { computeReputation } from '@/lib/reputation'
 import type { Listing } from '@/types'
 
 interface ReviewWithReviewer {
@@ -54,6 +55,11 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
     .eq('reviewee_id', params.id)
     .order('created_at', { ascending: false })
 
+  const rep = computeReputation(profile, {
+    activeListings: listings?.length || 0,
+    bookListings: listings?.filter((l: Listing) => l.category === 'Libros y Apuntes').length || 0,
+  })
+
   return (
     <div className="container" style={{ paddingTop: '3rem', paddingBottom: '3rem' }}>
       
@@ -87,9 +93,20 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: '0.5rem' }}>
           <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: 0 }}>{profile.full_name}</h1>
           {profile.is_verified && <VerifiedBadge size="md" showText />}
+          <span style={{
+            fontSize: '0.75rem',
+            fontWeight: 800,
+            color: rep.badgeColor,
+            background: `${rep.badgeColor}15`,
+            border: `1px solid ${rep.badgeColor}30`,
+            padding: '3px 10px',
+            borderRadius: 99,
+          }}>
+            {rep.badgeLabel}
+          </span>
         </div>
         {profile.faculty && (
-          <div style={{ fontSize: '0.85rem', color: '#a5b4fc', marginBottom: '0.5rem', fontWeight: 500 }}>
+          <div style={{ fontSize: '0.85rem', color: '#00345e', marginBottom: '0.5rem', fontWeight: 600 }}>
             {profile.faculty} {profile.semester ? `· ${profile.semester}` : ''}
           </div>
         )}
@@ -98,11 +115,44 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
         </p>
 
         {/* Reputación en Cabecera */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(0,0,0,0.2)', padding: '0.75rem 1.5rem', borderRadius: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#f8fafc', border: '1px solid var(--border)', padding: '0.75rem 1.5rem', borderRadius: 20 }}>
           <StarRating rating={Number(profile.rating_avg || 0)} size={22} showLabel />
           <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
             ({profile.review_count} {profile.review_count === 1 ? 'reseña' : 'reseñas'})
           </span>
+        </div>
+
+        {/* Vitrina de Logros e Insignias Universitarias */}
+        <div style={{ marginTop: '1.75rem', width: '100%', maxWidth: 640 }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
+            Logros e Insignias Universitarias
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10 }}>
+            {rep.badges.map(b => (
+              <div
+                key={b.id}
+                style={{
+                  background: b.unlocked ? '#ffffff' : '#f8fafc',
+                  border: b.unlocked ? `1px solid ${rep.badgeColor}40` : '1px solid #e2e8f0',
+                  borderRadius: 12,
+                  padding: '10px 8px',
+                  textAlign: 'center',
+                  opacity: b.unlocked ? 1 : 0.45,
+                  boxShadow: b.unlocked ? `0 2px 8px ${rep.badgeColor}15` : 'none',
+                  transition: 'all 0.2s',
+                }}
+                title={b.description}
+              >
+                <div style={{ fontSize: '1.6rem', marginBottom: 3 }}>{b.icon}</div>
+                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: b.unlocked ? 'var(--text-primary)' : 'var(--text-muted)', lineHeight: 1.2 }}>
+                  {b.title}
+                </div>
+                <div style={{ fontSize: '0.62rem', color: b.unlocked ? rep.badgeColor : 'var(--text-muted)', marginTop: 3, fontWeight: 600 }}>
+                  {b.unlocked ? 'Desbloqueado' : 'Pendiente'}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

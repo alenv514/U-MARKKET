@@ -8,6 +8,8 @@ import type { Chat, Message } from '@/types'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { sendNotificationAction } from '@/actions/notifications'
+import { computeReputation } from '@/lib/reputation'
+import VerifiedBadge from '@/components/VerifiedBadge'
 
 export default function ChatDetailPage() {
   const { chatId } = useParams<{ chatId: string }>()
@@ -44,8 +46,8 @@ export default function ChatDetailPage() {
         .select(`
           *,
           listings(id, title, image_url, price),
-          buyer:buyer_id(id, full_name, avatar_url),
-          seller:seller_id(id, full_name, avatar_url)
+          buyer:buyer_id(id, full_name, avatar_url, is_verified, rating_avg, review_count),
+          seller:seller_id(id, full_name, avatar_url, is_verified, rating_avg, review_count)
         `)
         .eq('id', chatId)
         .single()
@@ -201,9 +203,28 @@ export default function ChatDetailPage() {
               )}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{otherUser?.full_name || 'Usuario UTA'}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>{otherUser?.full_name || 'Usuario UTA'}</span>
+                {otherUser?.is_verified && <VerifiedBadge size="sm" />}
+                {otherUser && (() => {
+                  const rep = computeReputation(otherUser)
+                  return (
+                    <span style={{
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      color: rep.badgeColor,
+                      background: `${rep.badgeColor}15`,
+                      border: `1px solid ${rep.badgeColor}30`,
+                      padding: '1px 6px',
+                      borderRadius: 99,
+                    }}>
+                      {rep.badgeLabel}
+                    </span>
+                  )
+                })()}
+              </div>
               <Link href={`/listings/${chat.listing_id}`} style={{ textDecoration: 'none' }}>
-                <div style={{ fontSize: '0.8rem', color: '#00345e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontSize: '0.8rem', color: '#00345e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>
                   📦 {chat.listings?.title}
                 </div>
               </Link>

@@ -5,12 +5,16 @@ import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { createClient } from '@/lib/supabase/client'
 import type { Listing, Profile } from '@/types'
+import { computeReputation } from '@/lib/reputation'
+import { bumpListingAction, toggleUrgentAction } from '@/actions/reputation'
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [bumpingId, setBumpingId] = useState<string | null>(null)
+  const [urgentId, setUrgentId] = useState<string | null>(null)
   const [page, setPage] = useState(0)
   const [hasMore, setHasMore] = useState(true)
   const ITEMS_PER_PAGE = 10
@@ -26,7 +30,7 @@ export default function DashboardPage() {
 
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('id, full_name, avatar_url, role, is_active, faculty, semester, created_at, updated_at')
+      .select('id, full_name, avatar_url, role, is_active, faculty, semester, is_verified, rating_avg, review_count, created_at, updated_at')
       .eq('id', user.id)
       .single()
 
@@ -94,6 +98,29 @@ export default function DashboardPage() {
     setListings(prev => prev.map(l => l.id === listing.id ? { ...l, status: newStatus } : l))
   }
 
+  const handleBump = async (listingId: string) => {
+    setBumpingId(listingId)
+    const res = await bumpListingAction(listingId)
+    setBumpingId(null)
+    if (!res.success) {
+      alert(res.error || 'No se pudo subir la publicación.')
+    } else {
+      alert('¡Tu publicación ha sido subida al inicio del catálogo con éxito!')
+      setListings(prev => prev.map(l => l.id === listingId ? { ...l, bumped_at: res.bumped_at } : l))
+    }
+  }
+
+  const handleToggleUrgent = async (listingId: string) => {
+    setUrgentId(listingId)
+    const res = await toggleUrgentAction(listingId)
+    setUrgentId(null)
+    if (!res.success) {
+      alert(res.error || 'No se pudo actualizar la oferta.')
+    } else {
+      setListings(prev => prev.map(l => l.id === listingId ? { ...l, is_urgent: res.is_urgent } : l))
+    }
+  }
+
   const activeListings = listings.filter(l => l.status === 'active').length
 
   if (loading) {
@@ -157,6 +184,68 @@ export default function DashboardPage() {
             </Link>
           </div>
 
+          {/* Nivel de Confianza y Recompensas UTA */}
+          {profile && (() => {
+            const rep = computeReputation(profile, {
+              activeListings,
+              bookListings: listings.filter(l => l.category === 'Libros y Apuntes').length,
+            })
+            return (
+              <div className="glass-card animate-fade-in-up" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem', borderLeft: `4px solid ${rep.badgeColor}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Tu reputación estudiantil
+                      </span>
+                      <span style={{
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        color: rep.badgeColor,
+                        background: `${rep.badgeColor}15`,
+                        padding: '2px 8px',
+                        borderRadius: 99,
+                        border: `1px solid ${rep.badgeColor}30`,
+                      }}>
+                        {rep.badgeLabel}
+                      </span>
+                    </div>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: 4, margin: 0 }}>
+                      Nivel {rep.level}: {rep.levelName}
+                    </h3>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <Link href="/profile" style={{ fontSize: '0.82rem', fontWeight: 700, color: '#00345e', textDecoration: 'none' }}>
+                      Ver Vitrina de Logros →
+                    </Link>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '0.85rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>
+                    <span>Progreso de confianza: <strong>{rep.progressPercent}%</strong></span>
+                    {rep.nextLevelName && <span>Siguiente: <strong>{rep.nextLevelName}</strong></span>}
+                  </div>
+                  <div style={{ width: '100%', height: 6, background: '#f1f5f9', borderRadius: 999, overflow: 'hidden' }}>
+                    <div style={{ width: `${rep.progressPercent}%`, height: '100%', background: `linear-gradient(90deg, #00345e, ${rep.badgeColor})`, borderRadius: 999, transition: 'width 0.4s ease' }} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 16, marginTop: '0.85rem', flexWrap: 'wrap', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    {profile.is_verified ? '✅' : '🔒'} Bump diario ({profile.is_verified ? 'Desbloqueado' : 'Requiere verificar carnet'})
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    ⭐ {profile.review_count ?? 0} {profile.review_count === 1 ? 'opinión' : 'opiniones'}
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    📦 Publicaciones gratuitas ilimitadas
+                  </span>
+                </div>
+              </div>
+            )
+          })()}
+
           {/* Stats */}
           <div className="animate-fade-in-up delay-100" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
             <StatCard icon="📦" label="Total publicaciones" value={listings.length} color="#00345e" />
@@ -215,6 +304,54 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="actions-wrap">
+                      {listing.status === 'active' && (() => {
+                        const lastBump = new Date(listing.bumped_at || listing.created_at).getTime()
+                        const diffHours = (Date.now() - lastBump) / (1000 * 60 * 60)
+                        const canBumpNow = diffHours >= 24
+                        const hoursLeft = Math.max(1, Math.ceil(24 - diffHours))
+
+                        return (
+                          <>
+                            <button
+                              onClick={() => handleBump(listing.id)}
+                              disabled={!canBumpNow || bumpingId === listing.id}
+                              className="btn-primary"
+                              style={{
+                                padding: '6px 12px',
+                                fontSize: '0.78rem',
+                                opacity: canBumpNow ? 1 : 0.6,
+                                cursor: canBumpNow ? 'pointer' : 'not-allowed',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                              }}
+                              title={canBumpNow ? 'Subir al inicio del catálogo (gratis cada 24h)' : `Próximo bump disponible en ${hoursLeft} horas`}
+                            >
+                              {bumpingId === listing.id ? 'Subiendo...' : canBumpNow ? '🚀 Subir al inicio' : `Reactivado (${hoursLeft}h)`}
+                            </button>
+
+                            <button
+                              onClick={() => handleToggleUrgent(listing.id)}
+                              disabled={urgentId === listing.id}
+                              style={{
+                                padding: '6px 10px',
+                                fontSize: '0.78rem',
+                                fontWeight: 700,
+                                borderRadius: 8,
+                                cursor: 'pointer',
+                                border: listing.is_urgent ? '1px solid #d97706' : '1px solid var(--border)',
+                                background: listing.is_urgent ? '#fffbeb' : '#ffffff',
+                                color: listing.is_urgent ? '#b45309' : 'var(--text-secondary)',
+                                transition: 'all 0.2s',
+                              }}
+                              title="Destacar como oferta rápida del día"
+                            >
+                              {listing.is_urgent ? '⚡ Oferta activa' : '⚡ Oferta hoy'}
+                            </button>
+                          </>
+                        )
+                      })()}
+
                       {listing.status !== 'pending_approval' && (
                         <button
                           onClick={() => handleToggleStatus(listing)}

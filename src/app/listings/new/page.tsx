@@ -17,6 +17,7 @@ export default function NewListingPage() {
   const [price, setPrice] = useState('')
   const [category, setCategory] = useState('Otros')
   const [whatsapp, setWhatsapp] = useState('')
+  const [isUrgent, setIsUrgent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [initialCheckLoading, setInitialCheckLoading] = useState(true)
   const [userRole, setUserRole] = useState<UserRole | null>(null)
@@ -145,6 +146,8 @@ export default function NewListingPage() {
         image_url: imageUrls[0] ?? null,
         whatsapp_number: whatsapp.trim() || null,
         status: finalStatus,
+        is_urgent: isUrgent,
+        bumped_at: new Date().toISOString(),
       })
       .select()
       .single()
@@ -477,6 +480,32 @@ export default function NewListingPage() {
                 <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                   Los compradores te contactarán por WhatsApp
                 </p>
+              </div>
+
+              <div style={{
+                background: '#fffbeb',
+                border: '1px solid #fed7aa',
+                borderRadius: 12,
+                padding: '0.85rem 1rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 12,
+              }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#b45309', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>⚡</span> Oferta Flash / Venta de Hoy
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#92400e', marginTop: 2 }}>
+                    Destaca tu publicación con un distintivo ámbar para liquidar o vender hoy mismo en el campus.
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={isUrgent}
+                  onChange={e => setIsUrgent(e.target.checked)}
+                  style={{ width: 19, height: 19, accentColor: '#d97706', cursor: 'pointer', flexShrink: 0 }}
+                />
               </div>
             </div>
 

@@ -23,6 +23,7 @@ export default function EditListingPage() {
   const [price, setPrice] = useState('')
   const [category, setCategory] = useState('Otros')
   const [whatsapp, setWhatsapp] = useState('')
+  const [isUrgent, setIsUrgent] = useState(false)
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -66,6 +67,7 @@ export default function EditListingPage() {
     setPrice(listing.price.toString())
     setCategory(listing.category)
     setWhatsapp(listing.whatsapp_number ?? '')
+    setIsUrgent(Boolean(listing.is_urgent))
     // Priorizar el array images, sino usar image_url
     setExistingUrls(
       listing.image_url ? [listing.image_url] : []
@@ -126,6 +128,7 @@ export default function EditListingPage() {
       category,
       whatsapp_number: whatsapp.trim() || null,
       image_url: allImages[0] ?? null,
+      is_urgent: isUrgent,
     }
 
     if (needsReApproval) {
@@ -427,6 +430,32 @@ export default function EditListingPage() {
                   value={whatsapp}
                   onChange={e => setWhatsapp(e.target.value)}
                   className="input-field"
+                />
+              </div>
+
+              <div style={{
+                background: '#fffbeb',
+                border: '1px solid #fed7aa',
+                borderRadius: 12,
+                padding: '0.85rem 1rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 12,
+              }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#b45309', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>⚡</span> Oferta Flash / Venta de Hoy
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#92400e', marginTop: 2 }}>
+                    Destaca tu publicación con un distintivo ámbar para liquidar o vender hoy mismo en el campus.
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={isUrgent}
+                  onChange={e => setIsUrgent(e.target.checked)}
+                  style={{ width: 19, height: 19, accentColor: '#d97706', cursor: 'pointer', flexShrink: 0 }}
                 />
               </div>
             </div>

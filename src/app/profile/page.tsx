@@ -11,6 +11,7 @@ import { detectFace } from '@/lib/utils'
 import { deleteOwnAccountAction } from '@/actions/account'
 import { submitVerificationAction, getFeatureFlagAction } from '@/actions/verification'
 import VerifiedBadge from '@/components/VerifiedBadge'
+import { computeReputation } from '@/lib/reputation'
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -539,8 +540,8 @@ export default function ProfilePage() {
 
                 {profile?.is_verified ? (
                   <div style={{
-                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(99, 102, 241, 0.12))',
-                    border: '1px solid rgba(99, 102, 241, 0.25)',
+                    background: 'rgba(0, 52, 94, 0.05)',
+                    border: '1px solid rgba(0, 52, 94, 0.18)',
                     borderRadius: 16,
                     padding: '1.25rem',
                     display: 'flex',
@@ -718,6 +719,80 @@ export default function ProfilePage() {
                 )}
               </div>
             )}
+
+            {/* Módulo de Reputación y Logros UTA */}
+            {profile && (() => {
+              const rep = computeReputation(profile)
+              return (
+                <div style={{ marginTop: '2.5rem', paddingTop: '1.75rem', borderTop: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: 8 }}>
+                    <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span>🏆</span> Tu Nivel de Confianza y Logros
+                    </h3>
+                    <span style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 800,
+                      color: rep.badgeColor,
+                      background: `${rep.badgeColor}15`,
+                      border: `1px solid ${rep.badgeColor}30`,
+                      padding: '3px 10px',
+                      borderRadius: 99,
+                    }}>
+                      {rep.badgeLabel}
+                    </span>
+                  </div>
+
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '1.25rem' }}>
+                    En U-Market la reputación es gratuita y se gana con actividad y honestidad. Cuanto mayor sea tu nivel, más rápido venderás en tu campus.
+                  </p>
+
+                  <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: 16, padding: '1.25rem', marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginBottom: 6 }}>
+                      <span>Nivel {rep.level}: {rep.levelName}</span>
+                      <span style={{ color: rep.badgeColor }}>{rep.progressPercent}%</span>
+                    </div>
+                    <div style={{ width: '100%', height: 8, background: '#e2e8f0', borderRadius: 999, overflow: 'hidden' }}>
+                      <div style={{ width: `${rep.progressPercent}%`, height: '100%', background: `linear-gradient(90deg, #00345e, ${rep.badgeColor})`, borderRadius: 999, transition: 'width 0.4s' }} />
+                    </div>
+                    {rep.nextLevelName && (
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 8, margin: '8px 0 0 0' }}>
+                        Próximo nivel: <strong>{rep.nextLevelName}</strong>
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Vitrina de Logros */}
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
+                    Insignias y Medallas Universitarias
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
+                    {rep.badges.map(b => (
+                      <div
+                        key={b.id}
+                        style={{
+                          background: b.unlocked ? '#ffffff' : '#f8fafc',
+                          border: b.unlocked ? `1px solid ${rep.badgeColor}40` : '1px solid #e2e8f0',
+                          borderRadius: 12,
+                          padding: '12px 8px',
+                          textAlign: 'center',
+                          opacity: b.unlocked ? 1 : 0.45,
+                          boxShadow: b.unlocked ? `0 2px 8px ${rep.badgeColor}15` : 'none',
+                        }}
+                        title={b.description}
+                      >
+                        <div style={{ fontSize: '1.6rem', marginBottom: 4 }}>{b.icon}</div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: b.unlocked ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                          {b.title}
+                        </div>
+                        <div style={{ fontSize: '0.65rem', color: b.unlocked ? rep.badgeColor : 'var(--text-muted)', marginTop: 4, fontWeight: 600 }}>
+                          {b.unlocked ? '✅ Desbloqueado' : '🔒 Pendiente'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
             
             {/* Delete Account Section */}
             <div style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)' }}>

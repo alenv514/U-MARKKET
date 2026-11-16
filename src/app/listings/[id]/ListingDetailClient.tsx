@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar'
 import ImageCarousel from '@/components/ImageCarousel'
 import StarRating from '@/components/StarRating'
 import VerifiedBadge from '@/components/VerifiedBadge'
+import { computeReputation } from '@/lib/reputation'
 import { createClient } from '@/lib/supabase/client'
 import type { Listing } from '@/types'
 import Link from 'next/link'
@@ -230,8 +231,21 @@ export default function ListingDetailClient({ id }: { id: string }) {
                 compact={false}
                 interval={4000}
               />
-              <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 20 }}>
+              <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 20, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 <span className="badge badge-indigo">{listing.category}</span>
+                {listing.is_urgent && (
+                  <span style={{
+                    background: 'linear-gradient(135deg, #d97706, #b45309)',
+                    color: '#ffffff',
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    padding: '3px 9px',
+                    borderRadius: 99,
+                    boxShadow: '0 2px 8px rgba(217, 119, 6, 0.35)',
+                  }}>
+                    ⚡ Oferta Flash
+                  </span>
+                )}
               </div>
             </div>
 
@@ -274,6 +288,22 @@ export default function ListingDetailClient({ id }: { id: string }) {
                       <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                         <span>{listing.profiles.full_name || 'Vendedor UTA'}</span>
                         {listing.profiles.is_verified && <VerifiedBadge size="sm" showText />}
+                        {(() => {
+                          const rep = computeReputation(listing.profiles)
+                          return (
+                            <span style={{
+                              fontSize: '0.68rem',
+                              fontWeight: 700,
+                              color: rep.badgeColor,
+                              background: `${rep.badgeColor}15`,
+                              border: `1px solid ${rep.badgeColor}30`,
+                              padding: '1px 7px',
+                              borderRadius: 99,
+                            }}>
+                              {rep.badgeLabel}
+                            </span>
+                          )
+                        })()}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                         <StarRating rating={Number(listing.profiles.rating_avg || 0)} size={12} />

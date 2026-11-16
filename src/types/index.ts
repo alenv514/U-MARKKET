@@ -150,6 +150,9 @@ export interface Listing {
   views: number
   created_at: string
   updated_at: string
+  bumped_at?: string | null
+  is_featured?: boolean
+  is_urgent?: boolean
   profiles?: Profile
 }
 
@@ -200,4 +203,25 @@ export interface Message {
   is_read: boolean
   created_at: string
   sender?: Profile
+}
+
+export type ReputationTier = 1 | 2 | 3 | 4
+
+export interface AchievementBadge {
+  id: string
+  icon: string
+  title: string
+  description: string
+  unlocked: boolean
+}
+
+export interface ReputationInfo {
+  level: ReputationTier
+  levelName: string
+  badgeLabel: string
+  badgeColor: string
+  badges: AchievementBadge[]
+  canBump: boolean
+  progressPercent: number
+  nextLevelName: string | null
 }
