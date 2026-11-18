@@ -203,9 +203,9 @@ export default function InboxPage() {
                         width: 34,
                         height: 34,
                         borderRadius: '50%',
-                        border: '1px solid rgba(239,68,68,0.3)',
-                        background: 'rgba(239,68,68,0.08)',
-                        color: isDeleting ? 'rgba(239,68,68,0.3)' : '#f87171',
+                        border: '1px solid #fecaca',
+                        background: '#fef2f2',
+                        color: isDeleting ? 'rgba(220,38,38,0.4)' : '#dc2626',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -216,13 +216,13 @@ export default function InboxPage() {
                       }}
                       onMouseEnter={e => {
                         if (!isDeleting) {
-                          (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.22)'
-                          ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(239,68,68,0.6)'
+                          (e.currentTarget as HTMLButtonElement).style.background = '#fee2e2'
+                          ;(e.currentTarget as HTMLButtonElement).style.borderColor = '#dc2626'
                         }
                       }}
                       onMouseLeave={e => {
-                        (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.08)'
-                        ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(239,68,68,0.3)'
+                        (e.currentTarget as HTMLButtonElement).style.background = '#fef2f2'
+                        ;(e.currentTarget as HTMLButtonElement).style.borderColor = '#fecaca'
                       }}
                     >
                       {isDeleting ? '⏳' : '🗑️'}

@@ -244,7 +244,6 @@ export default function UsersTab({
                                 style={{
                                   padding: '6px 12px',
                                   fontSize: '0.75rem',
-                                  background: '#ef4444',
                                   flex: '1 1 auto',
                                   minHeight: 32,
                                 }}
@@ -257,15 +256,10 @@ export default function UsersTab({
                       )}
                       <button
                         onClick={() => onDeleteUser(user.id, user.full_name || user.email || 'Usuario')}
+                        className="btn-danger"
                         style={{
                           padding: '6px 10px',
                           fontSize: '0.8rem',
-                          background: 'rgba(127,29,29,0.4)',
-                          border: '1px solid rgba(239,68,68,0.35)',
-                          borderRadius: 8,
-                          color: '#fca5a5',
-                          cursor: 'pointer',
-                          fontWeight: 700,
                           minHeight: 32,
                           display: 'flex',
                           alignItems: 'center',

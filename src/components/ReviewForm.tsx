@@ -74,7 +74,7 @@ export default function ReviewForm({ revieweeId, currentUserId }: { revieweeId: 
         />
       </div>
 
-      {error && <p style={{ color: '#ef4444', fontSize: '0.85rem' }}>{error}</p>}
+      {error && <p style={{ color: '#dc2626', fontSize: '0.85rem' }}>{error}</p>}
 
       <button type="submit" className="btn-primary" disabled={loading} style={{ alignSelf: 'flex-start', padding: '0.6rem 1.2rem' }}>
         {loading ? 'Enviando...' : 'Enviar calificación'}

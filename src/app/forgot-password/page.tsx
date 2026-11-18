@@ -110,9 +110,9 @@ export default function ForgotPasswordPage() {
               {resendMessage && (
                 <div style={{
                   padding: '0.6rem 0.8rem', borderRadius: 8, marginBottom: '1rem', fontSize: '0.82rem',
-                  background: resendMessage.includes('Error') ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
-                  color: resendMessage.includes('Error') ? '#fca5a5' : '#6ee7b7',
-                  border: resendMessage.includes('Error') ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(16,185,129,0.3)'
+                  background: resendMessage.includes('Error') ? '#fef2f2' : '#ecfdf5',
+                  color: resendMessage.includes('Error') ? '#b91c1c' : '#047857',
+                  border: resendMessage.includes('Error') ? '1px solid #fecaca' : '1px solid #a7f3d0'
                 }}>
                   {resendMessage}
                 </div>
@@ -161,9 +161,9 @@ export default function ForgotPasswordPage() {
 
               {error && (
                 <div style={{
-                  background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
+                  background: '#fef2f2', border: '1px solid #fecaca',
                   borderRadius: 10, padding: '0.75rem 1rem',
-                  fontSize: '0.85rem', color: '#fca5a5', display: 'flex', alignItems: 'center', gap: 8,
+                  fontSize: '0.85rem', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: 8,
                 }}>
                   <span>⚠️</span> {error}
                 </div>

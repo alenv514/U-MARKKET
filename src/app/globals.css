@@ -213,9 +213,9 @@ select option {
   border: 1px solid rgba(5, 150, 105, 0.25);
 }
 .badge-red {
-  background: rgba(220, 38, 38, 0.1);
+  background: #fef2f2;
   color: #b91c1c;
-  border: 1px solid rgba(220, 38, 38, 0.25);
+  border: 1px solid #fecaca;
 }
 
 /* ── Gradient text ── */

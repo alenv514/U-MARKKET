@@ -276,6 +276,14 @@ export default function ProfilePage() {
 
   const displayAvatar = newPreviews.length > 0 ? newPreviews[0] : avatarUrl
 
+  const lockedFieldStyle = {
+    cursor: 'not-allowed',
+    background: '#f8fafc',
+    color: '#334155',
+    WebkitTextFillColor: '#334155',
+    borderColor: '#e2e8f0',
+  } as const
+
   return (
     <>
       <Navbar />
@@ -336,8 +344,8 @@ export default function ProfilePage() {
                 />
               </div>
               {faceChecking ? (
-                <div style={{ fontSize: '0.8rem', color: '#a5b4fc', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span className="animate-spin" style={{ width: 14, height: 14, border: '2px solid rgba(165,180,252,0.3)', borderTopColor: '#a5b4fc', borderRadius: '50%', display: 'inline-block' }} />
+                <div style={{ fontSize: '0.8rem', color: '#00345e', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="animate-spin" style={{ width: 14, height: 14, border: '2px solid rgba(0,52,94,0.2)', borderTopColor: '#00345e', borderRadius: '50%', display: 'inline-block' }} />
                   Verificando rostro...
                 </div>
               ) : (
@@ -360,7 +368,7 @@ export default function ProfilePage() {
                   disabled={hasLockedAcademicData}
                   className="input-field"
                   placeholder="Tu nombre y apellido"
-                  style={hasLockedAcademicData ? { opacity: 0.65, cursor: 'not-allowed', background: 'rgba(255,255,255,0.03)', color: '#f0f4ff' } : {}}
+                  style={hasLockedAcademicData ? lockedFieldStyle : undefined}
                   required
                 />
               </div>
@@ -391,7 +399,7 @@ export default function ProfilePage() {
                   readOnly
                   disabled
                   className="input-field"
-                  style={{ opacity: 0.75, cursor: 'not-allowed', background: 'rgba(255,255,255,0.03)', color: '#f0f4ff' }}
+                  style={lockedFieldStyle}
                 />
               </div>
 
@@ -406,18 +414,17 @@ export default function ProfilePage() {
                     readOnly
                     disabled
                     className="input-field"
-                    style={{ opacity: 0.65, cursor: 'not-allowed', background: 'rgba(255,255,255,0.03)', color: '#f0f4ff' }}
+                    style={lockedFieldStyle}
                   />
                 ) : (
                   <select
                     value={faculty}
                     onChange={e => { setFaculty(e.target.value); setCareer('') }}
                     className="input-field"
-                    style={{ background: '#0d1117', color: '#f0f4ff' }}
                   >
-                    <option value="" style={{ background: '#0d1117', color: '#f0f4ff' }}>Selecciona tu facultad...</option>
+                    <option value="">Selecciona tu facultad...</option>
                     {Object.keys(UTA_FACULTY_CAREERS).map(f => (
-                      <option key={f} value={f} style={{ background: '#0d1117', color: '#f0f4ff' }}>{f}</option>
+                      <option key={f} value={f}>{f}</option>
                     ))}
                   </select>
                 )}
@@ -435,18 +442,17 @@ export default function ProfilePage() {
                       readOnly
                       disabled
                       className="input-field"
-                      style={{ opacity: 0.65, cursor: 'not-allowed', background: 'rgba(255,255,255,0.03)', color: '#f0f4ff' }}
+                      style={lockedFieldStyle}
                     />
                   ) : (
                     <select
                       value={career}
                       onChange={e => setCareer(e.target.value)}
                       className="input-field"
-                      style={{ background: '#0d1117', color: '#f0f4ff' }}
                     >
-                      <option value="" style={{ background: '#0d1117', color: '#f0f4ff' }}>Selecciona tu carrera...</option>
+                      <option value="">Selecciona tu carrera...</option>
                       {faculty && UTA_FACULTY_CAREERS[faculty]?.map(c => (
-                        <option key={c} value={c} style={{ background: '#0d1117', color: '#f0f4ff' }}>{c}</option>
+                        <option key={c} value={c}>{c}</option>
                       ))}
                     </select>
                   )}
@@ -464,18 +470,17 @@ export default function ProfilePage() {
                     readOnly
                     disabled
                     className="input-field"
-                    style={{ opacity: 0.65, cursor: 'not-allowed', background: 'rgba(255,255,255,0.03)', color: '#f0f4ff' }}
+                    style={lockedFieldStyle}
                   />
                 ) : (
                   <select
                     value={semester}
                     onChange={e => setSemester(e.target.value)}
                     className="input-field"
-                    style={{ background: '#0d1117', color: '#f0f4ff' }}
                   >
-                    <option value="" style={{ background: '#0d1117', color: '#f0f4ff' }}>Selecciona tu semestre...</option>
+                    <option value="">Selecciona tu semestre...</option>
                     {SEMESTERS.map(s => (
-                      <option key={s} value={s} style={{ background: '#0d1117', color: '#f0f4ff' }}>{s}</option>
+                      <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
                 )}
@@ -483,9 +488,9 @@ export default function ProfilePage() {
 
               {(error || uploadError) && (
                 <div className="animate-fade-in" style={{
-                  background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
+                  background: '#fef2f2', border: '1px solid #fecaca',
                   borderRadius: 10, padding: '0.75rem 1rem', fontSize: '0.85rem',
-                  color: '#fca5a5', display: 'flex', alignItems: 'center', gap: 8,
+                  color: '#b91c1c', display: 'flex', alignItems: 'center', gap: 8,
                 }}>
                   <span>⚠️</span> {error || uploadError}
                 </div>
@@ -493,9 +498,9 @@ export default function ProfilePage() {
 
               {success && (
                 <div className="animate-fade-in" style={{
-                  background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)',
+                  background: '#ecfdf5', border: '1px solid #a7f3d0',
                   borderRadius: 10, padding: '0.75rem 1rem', fontSize: '0.85rem',
-                  color: '#6ee7b7', display: 'flex', alignItems: 'center', gap: 8,
+                  color: '#047857', display: 'flex', alignItems: 'center', gap: 8,
                 }}>
                   <span>✅</span> {success}
                 </div>
@@ -530,7 +535,7 @@ export default function ProfilePage() {
                   ) : profile?.verification_status === 'rejected' ? (
                     <span className="badge badge-red" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>❌ Rechazado</span>
                   ) : (
-                    <span className="badge badge-gray" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>⚪ No verificado</span>
+                    <span className="badge" style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>⚪ No verificado</span>
                   )}
                 </div>
 
@@ -572,8 +577,8 @@ export default function ProfilePage() {
                   </div>
                 ) : profile?.verification_status === 'pending' ? (
                   <div style={{
-                    background: 'rgba(245, 158, 11, 0.08)',
-                    border: '1px solid rgba(245, 158, 11, 0.25)',
+                    background: '#fffbeb',
+                    border: '1px solid #fde68a',
                     borderRadius: 16,
                     padding: '1.25rem',
                     display: 'flex',
@@ -582,14 +587,14 @@ export default function ProfilePage() {
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <span style={{ fontSize: '1.25rem' }}>⏳</span>
-                      <strong style={{ color: '#fcd34d', fontSize: '0.9rem' }}>Credencial en proceso de revisión</strong>
+                      <strong style={{ color: '#92400e', fontSize: '0.9rem' }}>Credencial en proceso de revisión</strong>
                     </div>
-                    <p style={{ fontSize: '0.8rem', color: '#fde68a', margin: 0, lineHeight: 1.5 }}>
+                    <p style={{ fontSize: '0.8rem', color: '#78350f', margin: 0, lineHeight: 1.5 }}>
                       Hemos recibido la imagen de tu credencial UTA. El equipo de moderación verificará que los datos coincidan y activará tu insignia pronto.
                     </p>
                     {profile.credential_url && (
                       <div style={{ marginTop: 6 }}>
-                        <a href={profile.credential_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.78rem', color: '#93c5fd', textDecoration: 'underline' }}>
+                        <a href={profile.credential_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.78rem', color: '#00345e', fontWeight: 600, textDecoration: 'underline' }}>
                           Ver credencial enviada ↗
                         </a>
                       </div>
@@ -597,8 +602,8 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <div style={{
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: '#f8fafc',
+                    border: '1px solid var(--border)',
                     borderRadius: 16,
                     padding: '1.25rem',
                     display: 'flex',
@@ -607,12 +612,12 @@ export default function ProfilePage() {
                   }}>
                     {profile?.verification_status === 'rejected' && (
                       <div style={{
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px solid rgba(239, 68, 68, 0.25)',
+                        background: '#fef2f2',
+                        border: '1px solid #fecaca',
                         borderRadius: 12,
                         padding: '0.85rem 1rem',
                         fontSize: '0.82rem',
-                        color: '#fca5a5',
+                        color: '#b91c1c',
                       }}>
                         <strong>Solicitud anterior no aprobada:</strong> {profile.verification_rejected_reason || 'La imagen no era legible.'} Puedes subir una nueva captura clara a continuación.
                       </div>
@@ -637,9 +642,9 @@ export default function ProfilePage() {
                             maxWidth: 240,
                             maxHeight: 320,
                             borderRadius: 12,
-                            border: '2px solid rgba(99, 102, 241, 0.4)',
+                            border: '2px solid rgba(0, 52, 94, 0.25)',
                             objectFit: 'contain',
-                            background: '#0d1117',
+                            background: '#ffffff',
                           }}
                         />
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -675,8 +680,8 @@ export default function ProfilePage() {
                         type="button"
                         onClick={() => credentialInputRef.current?.click()}
                         style={{
-                          background: 'rgba(99, 102, 241, 0.05)',
-                          border: '2px dashed rgba(99, 102, 241, 0.3)',
+                          background: 'rgba(0, 52, 94, 0.04)',
+                          border: '2px dashed rgba(0, 52, 94, 0.25)',
                           borderRadius: 14,
                           padding: '1.5rem',
                           display: 'flex',
@@ -689,19 +694,19 @@ export default function ProfilePage() {
                           transition: 'all 0.2s ease',
                           width: '100%',
                         }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.6)'; e.currentTarget.style.background = 'rgba(99, 102, 241, 0.08)' }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.3)'; e.currentTarget.style.background = 'rgba(99, 102, 241, 0.05)' }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#00345e'; e.currentTarget.style.background = 'rgba(0, 52, 94, 0.08)' }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0, 52, 94, 0.25)'; e.currentTarget.style.background = 'rgba(0, 52, 94, 0.04)' }}
                       >
                         <span style={{ fontSize: '2rem' }}>🪪</span>
-                        <strong style={{ color: '#a5b4fc', fontSize: '0.9rem' }}>Subir captura de Credencial Digital UTA</strong>
+                        <strong style={{ color: '#00345e', fontSize: '0.9rem' }}>Subir captura de Credencial Digital UTA</strong>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Formatos JPG, PNG o WEBP (máx. 8MB)</span>
                       </button>
                     )}
 
                     {verificationError && (
                       <div className="animate-fade-in" style={{
-                        background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
-                        borderRadius: 10, padding: '0.6rem 0.9rem', fontSize: '0.8rem', color: '#fca5a5',
+                        background: '#fef2f2', border: '1px solid #fecaca',
+                        borderRadius: 10, padding: '0.6rem 0.9rem', fontSize: '0.8rem', color: '#b91c1c',
                       }}>
                         ⚠️ {verificationError}
                       </div>
@@ -709,8 +714,8 @@ export default function ProfilePage() {
 
                     {verificationSuccess && (
                       <div className="animate-fade-in" style={{
-                        background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)',
-                        borderRadius: 10, padding: '0.6rem 0.9rem', fontSize: '0.8rem', color: '#6ee7b7',
+                        background: '#ecfdf5', border: '1px solid #a7f3d0',
+                        borderRadius: 10, padding: '0.6rem 0.9rem', fontSize: '0.8rem', color: '#047857',
                       }}>
                         ✅ {verificationSuccess}
                       </div>
@@ -796,7 +801,7 @@ export default function ProfilePage() {
             
             {/* Delete Account Section */}
             <div style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ef4444', marginBottom: '0.5rem' }}>Zona de Peligro</h3>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#dc2626', marginBottom: '0.5rem' }}>Zona de Peligro</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
                 Eliminar tu cuenta borrará todos tus datos personales, historial y publicaciones de forma permanente (Cumplimiento GDPR).
               </p>

@@ -511,9 +511,9 @@ export default function NewListingPage() {
 
             {(error || uploadError) && (
               <div className="animate-fade-in" style={{
-                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
+                background: '#fef2f2', border: '1px solid #fecaca',
                 borderRadius: 10, padding: '0.75rem 1rem',
-                fontSize: '0.85rem', color: '#fca5a5', marginBottom: '1rem',
+                fontSize: '0.85rem', color: '#b91c1c', marginBottom: '1rem',
                 display: 'flex', alignItems: 'center', gap: 8,
               }}>
                 <span>⚠️</span> {error || uploadError}

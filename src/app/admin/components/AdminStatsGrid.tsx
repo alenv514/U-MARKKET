@@ -46,7 +46,7 @@ export default function AdminStatsGrid({
           <div style={{ fontSize: '0.7rem', marginTop: 4, color: 'var(--text-secondary)' }}>
             <span style={{ color: '#004b87' }}>{stats.users.sellers} vendedores</span> •{' '}
             <span>{stats.users.buyers} compradores</span> •{' '}
-            <span style={{ color: '#ef4444' }}>{stats.users.admins} admins</span>
+            <span style={{ color: '#dc2626' }}>{stats.users.admins} admins</span>
           </div>
         </div>
 
@@ -56,7 +56,7 @@ export default function AdminStatsGrid({
         </div>
 
         <div className="glass-card" style={{ padding: '1rem 1.5rem', cursor: 'default' }}>
-          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#ef4444' }}>{reportsCount}</div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#dc2626' }}>{reportsCount}</div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Reportes Pendientes</div>
         </div>
 
@@ -78,7 +78,7 @@ export default function AdminStatsGrid({
             cursor: 'default',
             borderColor:
               storageUsedMB !== null && storageUsedMB > 800
-                ? 'rgba(239,68,68,0.4)'
+                ? 'rgba(220,38,38,0.45)'
                 : storageUsedMB !== null && storageUsedMB > 600
                 ? 'rgba(245,158,11,0.4)'
                 : undefined,
@@ -90,7 +90,7 @@ export default function AdminStatsGrid({
               fontWeight: 900,
               color:
                 storageUsedMB !== null && storageUsedMB > 800
-                  ? '#ef4444'
+                  ? '#dc2626'
                   : storageUsedMB !== null && storageUsedMB > 600
                   ? '#f59e0b'
                   : '#06b6d4',
@@ -108,7 +108,7 @@ export default function AdminStatsGrid({
                   width: storageUsedMB !== null ? `${Math.min((storageUsedMB / 1024) * 100, 100)}%` : '0%',
                   background:
                     storageUsedMB !== null && storageUsedMB > 800
-                      ? '#ef4444'
+                      ? '#dc2626'
                       : storageUsedMB !== null && storageUsedMB > 600
                       ? '#f59e0b'
                       : '#06b6d4',
@@ -135,7 +135,7 @@ export default function AdminStatsGrid({
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#ef4444',
+                color: '#dc2626',
                 textAlign: 'center',
               }}
             >

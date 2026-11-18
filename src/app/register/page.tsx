@@ -195,7 +195,7 @@ export default function RegisterPage() {
                   padding: '0.75rem 0.5rem',
                   borderRadius: 12,
                   background: 'rgba(255, 255, 255, 0.05)',
-                  border: otpError ? '2px solid rgba(239, 68, 68, 0.6)' : '2px solid rgba(99, 102, 241, 0.4)',
+                  border: otpError ? '2px solid #dc2626' : '2px solid rgba(0, 52, 94, 0.35)',
                   color: 'var(--text-primary)',
                   outline: 'none',
                   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
@@ -207,7 +207,7 @@ export default function RegisterPage() {
             {otpError && (
               <div style={{
                 padding: '0.6rem 0.8rem', borderRadius: 8, marginBottom: '1rem', fontSize: '0.82rem',
-                background: 'rgba(239,68,68,0.15)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)'
+                background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca'
               }}>
                 {otpError}
               </div>
@@ -233,9 +233,9 @@ export default function RegisterPage() {
           {resendMessage && (
             <div style={{
               padding: '0.6rem 0.8rem', borderRadius: 8, marginBottom: '1rem', fontSize: '0.82rem',
-              background: resendMessage.includes('Error') ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
-              color: resendMessage.includes('Error') ? '#fca5a5' : '#6ee7b7',
-              border: resendMessage.includes('Error') ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(16,185,129,0.3)'
+              background: resendMessage.includes('Error') ? '#fef2f2' : '#ecfdf5',
+              color: resendMessage.includes('Error') ? '#b91c1c' : '#047857',
+              border: resendMessage.includes('Error') ? '1px solid #fecaca' : '1px solid #a7f3d0'
             }}>
               {resendMessage}
             </div>
@@ -558,9 +558,9 @@ export default function RegisterPage() {
 
             {error && (
               <div style={{
-                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
+                background: '#fef2f2', border: '1px solid #fecaca',
                 borderRadius: 10, padding: '0.75rem 1rem',
-                fontSize: '0.85rem', color: '#fca5a5', display: 'flex', alignItems: 'center', gap: 8,
+                fontSize: '0.85rem', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: 8,
               }}>
                 <span>⚠️</span> {error}
               </div>

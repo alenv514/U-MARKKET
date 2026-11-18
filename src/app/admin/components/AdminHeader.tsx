@@ -77,15 +77,15 @@ export default function AdminHeader({
         <div
           className="animate-fade-in-up"
           style={{
-            background: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
             borderRadius: 12,
             padding: '1rem 1.5rem',
             marginBottom: '1.5rem',
             display: 'flex',
             alignItems: 'center',
             gap: 12,
-            color: '#ef4444',
+            color: '#b91c1c',
           }}
         >
           <span style={{ fontSize: '1.5rem' }}>⚠️</span>

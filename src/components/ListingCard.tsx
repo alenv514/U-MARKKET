@@ -230,12 +230,12 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
               onClick={() => onReport(listing.id)}
               title="Reportar publicación"
               style={{
-                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)',
+                background: '#fef2f2', border: '1px solid #fecaca',
                 borderRadius: 8, padding: '0.6rem', cursor: 'pointer', color: 'var(--accent-red)',
                 transition: 'all 0.2s ease',
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.2)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.1)')}
+              onMouseEnter={e => (e.currentTarget.style.background = '#fee2e2')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#fef2f2')}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
