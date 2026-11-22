@@ -37,6 +37,9 @@ export default function ProfilePage() {
   const [submittingVerification, setSubmittingVerification] = useState(false)
   const [verificationSuccess, setVerificationSuccess] = useState('')
   const [verificationError, setVerificationError] = useState('')
+  const [badgeNotice, setBadgeNotice] = useState('')
+  const [activeListingCount, setActiveListingCount] = useState(0)
+  const [bookListingCount, setBookListingCount] = useState(0)
   const credentialInputRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -63,7 +66,7 @@ export default function ProfilePage() {
 
       setEmail(user.email || '')
 
-      const [{ data, error: profileErr }, { data: contactData }, flagRes] = await Promise.all([
+      const [{ data, error: profileErr }, { data: contactData }, flagRes, { data: activeListingsData }] = await Promise.all([
         supabase
           .from('profiles')
           .select('id, full_name, avatar_url, role, is_active, faculty, semester, is_verified, verification_status, credential_url, verification_rejected_reason, verified_at, verification_submitted_at, rating_avg, review_count, created_at, updated_at')
@@ -71,7 +74,16 @@ export default function ProfilePage() {
           .single(),
         supabase.rpc('get_own_contact'),
         getFeatureFlagAction('student_verification_enabled'),
+        supabase
+          .from('listings')
+          .select('category')
+          .eq('seller_id', user.id)
+          .eq('status', 'active'),
       ])
+
+      const activeList = activeListingsData ?? []
+      setActiveListingCount(activeList.length)
+      setBookListingCount(activeList.filter(item => item.category === 'Libros y Apuntes').length)
 
       setVerificationEnabled(flagRes.enabled ?? false)
 
@@ -532,7 +544,7 @@ export default function ProfilePage() {
             
             {/* Módulo de Verificación Estudiantil con Carnet UTA */}
             {verificationEnabled && (
-              <div style={{ marginTop: '2.5rem', paddingTop: '1.75rem', borderTop: '1px solid var(--border)' }}>
+              <div id="verificacion-uta" style={{ marginTop: '2.5rem', paddingTop: '1.75rem', borderTop: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: 8 }}>
                   <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Icon name="graduation" size={20} style={{ color: '#00345e' }} /> Verificación de Identidad UTA
@@ -746,7 +758,40 @@ export default function ProfilePage() {
 
             {/* Módulo de Reputación y Logros UTA */}
             {profile && (() => {
-              const rep = computeReputation(profile)
+              const rep = computeReputation(profile, {
+                activeListings: activeListingCount,
+                bookListings: bookListingCount,
+              })
+              const badgeActionMeta: Record<string, { label: string; onClick: () => void }> = {
+                verified: {
+                  label: 'Subir carnet',
+                  onClick: () => {
+                    const section = document.getElementById('verificacion-uta')
+                    if (section) {
+                      setBadgeNotice('')
+                      section.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    } else {
+                      setBadgeNotice('La verificación con carnet UTA será habilitada pronto por administración.')
+                    }
+                  },
+                },
+                five_stars: {
+                  label: 'Ver reseñas',
+                  onClick: () => router.push(`/profile/${profile.id}#resenas`),
+                },
+                frequent: {
+                  label: 'Ir a Mi Panel',
+                  onClick: () => router.push('/dashboard'),
+                },
+                books: {
+                  label: 'Publicar libro',
+                  onClick: () => router.push('/listings/new?category=Libros%20y%20Apuntes'),
+                },
+                active: {
+                  label: 'Publicar ahora',
+                  onClick: () => router.push('/listings/new'),
+                },
+              }
               return (
                 <div style={{ marginTop: '2.5rem', paddingTop: '1.75rem', borderTop: '1px solid var(--border)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: 8 }}>
@@ -792,43 +837,89 @@ export default function ProfilePage() {
                   </div>
 
                   {/* Vitrina de Logros */}
-                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
                     Insignias y Medallas Universitarias
                   </div>
+                  <p style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginBottom: 12 }}>
+                    Toca cualquier insignia para ir al apartado donde puedes conseguirla o revisarla.
+                  </p>
+                  {badgeNotice && (
+                    <div style={{
+                      marginBottom: 12,
+                      padding: '0.65rem 0.9rem',
+                      borderRadius: 10,
+                      background: '#eff6ff',
+                      border: '1px solid #bfdbfe',
+                      color: '#00345e',
+                      fontSize: '0.8rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                    }}>
+                      <Icon name="alert" size={15} style={{ flexShrink: 0 }} />
+                      <span>{badgeNotice}</span>
+                    </div>
+                  )}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
-                    {rep.badges.map(b => (
-                      <div
-                        key={b.id}
-                        style={{
-                          background: b.unlocked ? '#ffffff' : '#f8fafc',
-                          border: b.unlocked ? `1px solid ${rep.badgeColor}40` : '1px solid #e2e8f0',
-                          borderRadius: 12,
-                          padding: '12px 8px',
-                          textAlign: 'center',
-                          opacity: b.unlocked ? 1 : 0.45,
-                          boxShadow: b.unlocked ? `0 2px 8px ${rep.badgeColor}15` : 'none',
-                        }}
-                        title={b.description}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6, color: b.unlocked ? rep.badgeColor : 'var(--text-muted)' }}>
-                          <Icon name={b.icon} size={24} />
-                        </div>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: b.unlocked ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                          {b.title}
-                        </div>
-                        <div style={{ fontSize: '0.65rem', color: b.unlocked ? rep.badgeColor : 'var(--text-muted)', marginTop: 4, fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                          {b.unlocked ? (
-                            <>
-                              <Icon name="checkCircle" size={11} /> Desbloqueado
-                            </>
-                          ) : (
-                            <>
-                              <Icon name="lock" size={11} /> Pendiente
-                            </>
+                    {rep.badges.map(b => {
+                      const action = badgeActionMeta[b.id]
+                      return (
+                        <button
+                          key={b.id}
+                          type="button"
+                          onClick={action?.onClick}
+                          className="achievement-btn"
+                          style={{
+                            background: b.unlocked ? '#ffffff' : '#f8fafc',
+                            border: b.unlocked ? `1px solid ${rep.badgeColor}40` : '1px solid #cbd5e1',
+                            borderRadius: 12,
+                            padding: '12px 8px',
+                            textAlign: 'center',
+                            opacity: b.unlocked ? 1 : 0.88,
+                            boxShadow: b.unlocked ? `0 2px 8px ${rep.badgeColor}15` : '0 1px 3px rgba(0, 52, 94, 0.05)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            width: '100%',
+                          }}
+                          title={`${b.description}${action ? ` — ${action.label}` : ''}`}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6, color: b.unlocked ? rep.badgeColor : '#64748b' }}>
+                            <Icon name={b.icon} size={24} />
+                          </div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: b.unlocked ? 'var(--text-primary)' : '#0a192f' }}>
+                            {b.title}
+                          </div>
+                          <div style={{ fontSize: '0.65rem', color: b.unlocked ? rep.badgeColor : 'var(--text-muted)', marginTop: 4, fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                            {b.unlocked ? (
+                              <>
+                                <Icon name="checkCircle" size={11} /> Desbloqueado
+                              </>
+                            ) : (
+                              <>
+                                <Icon name="lock" size={11} /> Pendiente
+                              </>
+                            )}
+                          </div>
+                          {action && (
+                            <span style={{
+                              marginTop: 7,
+                              fontSize: '0.66rem',
+                              fontWeight: 700,
+                              color: '#00345e',
+                              background: 'rgba(0, 52, 94, 0.08)',
+                              padding: '3px 8px',
+                              borderRadius: 99,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 3,
+                            }}>
+                              {action.label} <Icon name="arrowUpRight" size={11} />
+                            </span>
                           )}
-                        </div>
-                      </div>
-                    ))}
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               )

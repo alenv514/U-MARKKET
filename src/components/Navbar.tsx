@@ -183,8 +183,11 @@ export default function Navbar() {
   }, [user?.id, refreshUnreadCount, pathname])
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', onScroll)
+    const onScroll = () => {
+      const isScrolled = window.scrollY > 20
+      setScrolled(prev => (prev === isScrolled ? prev : isScrolled))
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
@@ -204,9 +207,8 @@ export default function Navbar() {
         left: 0,
         right: 0,
         zIndex: 50,
-        transition: 'all 0.3s ease',
+        transition: 'background 0.25s ease, box-shadow 0.25s ease',
         background: scrolled ? 'rgba(0, 52, 94, 0.98)' : '#00345e',
-        backdropFilter: 'blur(16px)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
         boxShadow: scrolled ? '0 4px 20px rgba(0, 52, 94, 0.3)' : '0 2px 10px rgba(0, 52, 94, 0.15)',
       }}

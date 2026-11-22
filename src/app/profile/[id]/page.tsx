@@ -197,9 +197,27 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
         </div>
 
         {/* Sección de Reseñas */}
-        <div className="animate-fade-in-up delay-200">
+        <div id="resenas" className="animate-fade-in-up delay-200">
           <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>Reseñas</h2>
-          
+
+          {currentUserId === profile.id && (
+            <div style={{
+              marginBottom: '1.25rem',
+              padding: '0.9rem 1rem',
+              borderRadius: 12,
+              background: '#eff6ff',
+              border: '1px solid #bfdbfe',
+              color: '#0a192f',
+              fontSize: '0.84rem',
+              lineHeight: 1.5,
+            }}>
+              Aquí aparecen las calificaciones que te dejan otros estudiantes después de concretar compras o ventas.{' '}
+              <Link href="/dashboard" style={{ color: '#00345e', fontWeight: 700, textDecoration: 'underline' }}>
+                Ir a Mi Panel
+              </Link>
+            </div>
+          )}
+
           <div style={{ marginBottom: '2rem' }}>
             <ReviewForm revieweeId={profile.id} currentUserId={currentUserId} />
           </div>

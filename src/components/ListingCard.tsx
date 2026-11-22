@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import type { Listing } from '@/types'
 import { getCampusFromFaculty } from '@/types'
 import ImageCarousel from './ImageCarousel'
@@ -10,6 +10,7 @@ interface ListingCardProps {
   listing: Listing
   currentUserId?: string | null
   onReport?: (id: string) => void
+  priority?: boolean
 }
 
 import { useRouter } from 'next/navigation'
@@ -31,7 +32,7 @@ function computeTimeAgo(dateStr?: string | null) {
   return `hace ${Math.max(1, mins)}m`
 }
 
-export default function ListingCard({ listing, currentUserId, onReport }: ListingCardProps) {
+function ListingCard({ listing, currentUserId, onReport, priority = false }: ListingCardProps) {
   const router = useRouter()
 
   const [contacting, setContacting] = useState(false)
@@ -76,12 +77,12 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
           title={listing.title}
           compact
           interval={3500}
+          priority={priority}
         />
         {/* Category badge overlay */}
         <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 20, display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
           <span style={{
-            background: 'rgba(0, 52, 94, 0.88)',
-            backdropFilter: 'blur(8px)',
+            background: 'rgba(0, 52, 94, 0.92)',
             border: '1px solid rgba(255, 255, 255, 0.25)',
             color: '#ffffff',
             fontSize: '0.72rem',
@@ -114,8 +115,7 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
         {listing.profiles?.faculty && (
           <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 20 }}>
             <span style={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(8px)',
+              background: 'rgba(255, 255, 255, 0.96)',
               border: '1px solid rgba(0, 52, 94, 0.1)',
               color: '#00345e',
               fontSize: '0.7rem',
@@ -258,3 +258,5 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
     </div>
   )
 }
+
+export default memo(ListingCard)

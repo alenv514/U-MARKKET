@@ -101,7 +101,7 @@ export default function HomePage() {
     fetchListings(nextPage, false)
   }
 
-  const handleReport = async (listingId: string) => {
+  const handleReport = useCallback(async (listingId: string) => {
     if (!userId) { alert('Debes iniciar sesión para reportar'); return }
     const reason = prompt('¿Por qué reportas esta publicación?')
     if (!reason) return
@@ -114,7 +114,7 @@ export default function HomePage() {
     } else if (!error) {
       alert('Reporte enviado. Gracias por ayudarnos a mantener U-Market seguro.')
     }
-  }
+  }, [userId, supabase])
 
   // Filtrado y priorización inteligente por Campus y Ofertas
   const displayedListings = useMemo(() => {
@@ -356,7 +356,7 @@ export default function HomePage() {
               <div className="listings-grid">
                 {displayedListings.map((listing, i) => (
                   <div key={listing.id} style={{ animationDelay: `${(i % ITEMS_PER_PAGE) * 0.05}s` }}>
-                    <ListingCard listing={listing} currentUserId={userId} onReport={userId ? handleReport : undefined} />
+                    <ListingCard listing={listing} currentUserId={userId} onReport={userId ? handleReport : undefined} priority={i < 4} />
                   </div>
                 ))}
               </div>

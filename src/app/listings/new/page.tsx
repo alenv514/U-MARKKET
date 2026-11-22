@@ -65,6 +65,14 @@ export default function NewListingPage() {
     checkRole()
   }, [router, supabase])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const catParam = new URLSearchParams(window.location.search).get('category')
+    if (catParam && CATEGORIES.includes(catParam as (typeof CATEGORIES)[number]) && catParam !== 'Todos') {
+      setCategory(catParam)
+    }
+  }, [])
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? [])
     if (files.length) addFiles(files)

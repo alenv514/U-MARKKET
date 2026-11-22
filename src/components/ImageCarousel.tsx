@@ -85,13 +85,17 @@ export default function ImageCarousel({
       {validImages.map((src, i) => (
         <div
           key={src}
-          style={{
-            position: 'absolute', inset: 0,
-            opacity: i === current ? 1 : 0,
-            transform: i === current ? 'scale(1)' : 'scale(1.04)',
-            transition: 'opacity 0.4s ease, transform 0.4s ease',
-            zIndex: i === current ? 1 : 0,
-          }}
+          style={
+            total > 1
+              ? {
+                  position: 'absolute',
+                  inset: 0,
+                  opacity: i === current ? 1 : 0,
+                  transition: 'opacity 0.3s ease',
+                  zIndex: i === current ? 1 : 0,
+                }
+              : { position: 'absolute', inset: 0 }
+          }
         >
           {!imgErrors[i] ? (
             <Image

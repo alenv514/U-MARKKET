@@ -66,9 +66,8 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 16px;
-  backdrop-filter: blur(12px);
   box-shadow: 0 4px 20px rgba(0, 52, 94, 0.05);
-  transition: all 0.3s ease;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 .glass-card:hover {
   background: var(--bg-card-hover);
@@ -377,4 +376,20 @@ select option {
   font-weight: 800;
   font-size: 1.25rem;
   color: #00345e;
+}
+
+.achievement-btn {
+  appearance: none;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+.achievement-btn:hover {
+  transform: translateY(-2px);
+  border-color: #00345e !important;
+  box-shadow: 0 6px 16px rgba(0, 52, 94, 0.12) !important;
+}
+.achievement-btn:focus-visible {
+  outline: 2px solid #00345e;
+  outline-offset: 2px;
 }
