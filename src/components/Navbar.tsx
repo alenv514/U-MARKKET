@@ -6,7 +6,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import PushManager from './PushManager'
-import { NavLink } from './navbar/NavLinks'
+import { NavLink, LightbulbIcon, QuestionIcon, DownloadIcon, ShieldIcon } from './navbar/NavLinks'
 import PWAInstallModal from './navbar/PWAInstallModal'
 import BusinessModal from './navbar/BusinessModal'
 import SuggestModal from './navbar/SuggestModal'
@@ -253,44 +253,43 @@ export default function Navbar() {
               <button
                 onClick={() => setShowSuggestModal(true)}
                 title="Enviar una recomendación o sugerencia"
+                aria-label="Enviar una recomendación o sugerencia"
                 style={{
                   background: 'rgba(255, 255, 255, 0.12)',
                   border: '1px solid rgba(255, 255, 255, 0.25)',
-                  color: '#fcd34d',
+                  color: '#ffffff',
                   borderRadius: '50%',
                   width: 30,
                   height: 30,
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '0.9rem',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
                 }}
               >
-                💡
+                <LightbulbIcon size={15} />
               </button>
               {/* Botón Negocios Externos */}
               <button
                 onClick={() => setShowBusinessModal(true)}
                 title="¿Tienes un negocio externo? Haz clic aquí"
+                aria-label="¿Tienes un negocio externo?"
                 style={{
                   background: 'rgba(255, 255, 255, 0.12)',
                   border: '1px solid rgba(255, 255, 255, 0.25)',
-                  color: '#93c5fd',
+                  color: '#ffffff',
                   borderRadius: '50%',
                   width: 30,
                   height: 30,
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '0.9rem',
-                  fontWeight: 800,
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
                 }}
               >
-                ❓
+                <QuestionIcon size={15} />
               </button>
 
               {/* Botón Descargar / Instalar App */}
@@ -323,11 +322,7 @@ export default function Navbar() {
                     e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)'
                   }}
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
+                  <DownloadIcon size={13} />
                   <span>Descargar App</span>
                 </button>
               )}
@@ -343,12 +338,18 @@ export default function Navbar() {
             )}
             {isAdmin && (
               <NavLink href="/admin" active={isActive('/admin')}>
-                <span style={{ color: '#ef4444', fontWeight: isActive('/admin') ? 800 : 600 }}>🛡️ Admin</span>
+                <span style={{ color: '#ffffff', fontWeight: isActive('/admin') ? 800 : 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <ShieldIcon size={15} />
+                  Admin
+                </span>
               </NavLink>
             )}
             {isModerator && (
               <NavLink href="/admin" active={isActive('/admin')}>
-                <span style={{ color: '#f59e0b', fontWeight: isActive('/admin') ? 800 : 600 }}>🛡️ Moderador</span>
+                <span style={{ color: '#ffffff', fontWeight: isActive('/admin') ? 800 : 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <ShieldIcon size={15} />
+                  Moderador
+                </span>
               </NavLink>
             )}
             {user && (
@@ -523,6 +524,7 @@ export default function Navbar() {
           isInstalled={isInstalled}
           user={user}
           isAdmin={isAdmin}
+          isModerator={isModerator}
           unreadCount={unreadCount}
           onClose={() => setMenuOpen(false)}
           onInstallClick={handleInstallClick}

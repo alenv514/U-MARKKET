@@ -1,13 +1,14 @@
 'use client'
 
 import type { User } from '@supabase/supabase-js'
-import { MobileNavLink } from './NavLinks'
+import { MobileNavLink, LightbulbIcon, BriefcaseIcon, DownloadIcon, ShieldIcon } from './NavLinks'
 
 interface MobileNavMenuProps {
   isOpen: boolean
   isInstalled: boolean
   user: User | null
   isAdmin: boolean
+  isModerator: boolean
   unreadCount: number
   onClose: () => void
   onInstallClick: () => void
@@ -21,6 +22,7 @@ export default function MobileNavMenu({
   isInstalled,
   user,
   isAdmin,
+  isModerator,
   unreadCount,
   onClose,
   onInstallClick,
@@ -61,7 +63,8 @@ export default function MobileNavMenu({
             margin: '4px 0',
           }}
         >
-          📲 Descargar / Instalar App
+          <DownloadIcon size={16} />
+          <span>Descargar / Instalar App</span>
         </button>
       )}
 
@@ -77,7 +80,19 @@ export default function MobileNavMenu({
 
       {isAdmin && (
         <MobileNavLink href="/admin" onClick={onClose}>
-          <span style={{ color: '#ef4444', fontWeight: 600 }}>🛡️ Panel Admin</span>
+          <span style={{ color: '#ffffff', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <ShieldIcon size={16} />
+            <span>Panel Admin</span>
+          </span>
+        </MobileNavLink>
+      )}
+
+      {isModerator && (
+        <MobileNavLink href="/admin" onClick={onClose}>
+          <span style={{ color: '#ffffff', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <ShieldIcon size={16} />
+            <span>Panel Moderador</span>
+          </span>
         </MobileNavLink>
       )}
 
@@ -94,8 +109,8 @@ export default function MobileNavMenu({
             {unreadCount > 0 && (
               <span
                 style={{
-                  background: 'var(--accent-red, #ef4444)',
-                  color: 'white',
+                  background: 'var(--accent-red, #dc2626)',
+                  color: '#ffffff',
                   fontSize: '0.65rem',
                   fontWeight: 'bold',
                   padding: '2px 6px',
@@ -125,7 +140,7 @@ export default function MobileNavMenu({
           padding: '10px 12px',
           background: 'none',
           border: 'none',
-          color: '#fcd34d',
+          color: '#ffffff',
           cursor: 'pointer',
           fontWeight: 600,
           display: 'flex',
@@ -133,7 +148,8 @@ export default function MobileNavMenu({
           gap: 8,
         }}
       >
-        💡 Enviar recomendación
+        <LightbulbIcon size={16} />
+        <span>Enviar recomendación</span>
       </button>
 
       <button
@@ -146,7 +162,7 @@ export default function MobileNavMenu({
           padding: '10px 12px',
           background: 'none',
           border: 'none',
-          color: '#93c5fd',
+          color: '#ffffff',
           cursor: 'pointer',
           fontWeight: 600,
           display: 'flex',
@@ -154,7 +170,8 @@ export default function MobileNavMenu({
           gap: 8,
         }}
       >
-        💼 ¿Negocio externo? (Contactar)
+        <BriefcaseIcon size={16} />
+        <span>¿Negocio externo? (Contactar)</span>
       </button>
 
       {user ? (
@@ -165,7 +182,7 @@ export default function MobileNavMenu({
             padding: '10px 12px',
             background: 'none',
             border: 'none',
-            color: 'var(--accent-red)',
+            color: '#ffffff',
             cursor: 'pointer',
             fontWeight: 600,
           }}
