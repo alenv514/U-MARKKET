@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light only;
   /* Fondos limpios y luminosos */
   --bg-primary: #ffffff;
   --bg-secondary: #f8fafc;
@@ -36,6 +37,7 @@
 }
 
 html {
+  color-scheme: light only;
   scroll-behavior: smooth;
 }
 
