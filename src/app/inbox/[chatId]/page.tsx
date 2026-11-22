@@ -131,20 +131,8 @@ export default function ChatDetailPage() {
     if (error) {
       alert('Error enviando mensaje: ' + error.message)
     } else {
-      // Disparar notificacion por correo de forma asíncrona (sin await)
-      if (otherUser?.id) {
-        // Necesitamos el nombre de nuestro usuario (el sender)
-        const myName = isBuyer ? chat.buyer?.full_name : chat.seller?.full_name
-        
-        sendNotificationAction(
-          otherUser.id,
-          otherUser.full_name || 'Usuario',
-          myName || 'Alguien',
-          content,
-          chat.listings?.title || 'tu publicación',
-          `${window.location.origin}/inbox/${chatId}`
-        ).catch(console.error)
-      }
+      // Disparar notificación push de forma asíncrona (destinatario, nombre y URL se resuelven en servidor)
+      sendNotificationAction(chatId, content).catch(console.error)
     }
   }
 

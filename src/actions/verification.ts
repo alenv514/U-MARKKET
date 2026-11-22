@@ -1,13 +1,36 @@
 'use server'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { R2_PUBLIC_URL } from '@/lib/r2'
+
+const ALLOWED_FEATURE_FLAGS = new Set(['student_verification_enabled'])
+
+function isValidCredentialUrl(urlStr: string, userId: string): boolean {
+  if (!R2_PUBLIC_URL) return false
+  try {
+    const expectedBase = new URL(R2_PUBLIC_URL)
+    const parsed = new URL(urlStr)
+    if (parsed.protocol !== 'https:' || parsed.origin !== expectedBase.origin) {
+      return false
+    }
+    const basePath = expectedBase.pathname.replace(/\/$/, '')
+    const expectedPrefix = `${basePath}/credentials/${userId}/`
+    if (!parsed.pathname.startsWith(expectedPrefix) || parsed.pathname.includes('..')) {
+      return false
+    }
+    if (parsed.search || parsed.hash) return false
+    return /\.(jpg|jpeg|png|webp)$/i.test(parsed.pathname)
+  } catch {
+    return false
+  }
+}
 
 /**
  * El estudiante envía su credencial/carnet UTA para verificación
  */
 export async function submitVerificationAction(credentialUrl: string): Promise<{ success: boolean; error?: string }> {
   try {
-    if (!credentialUrl) {
+    if (!credentialUrl || typeof credentialUrl !== 'string') {
       return { success: false, error: 'Se requiere la imagen de la credencial' }
     }
 
@@ -15,12 +38,41 @@ export async function submitVerificationAction(credentialUrl: string): Promise<{
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { success: false, error: 'No autenticado' }
 
+    if (!isValidCredentialUrl(credentialUrl.trim(), user.id)) {
+      return { success: false, error: 'La URL de la credencial no es válida.' }
+    }
+
     const supabaseAdmin = createServiceClient()
+
+    // Verificar que el módulo de verificación esté habilitado
+    const { data: flag } = await supabaseAdmin
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'student_verification_enabled')
+      .maybeSingle()
+
+    if (!flag || flag.value !== true) {
+      return { success: false, error: 'La verificación estudiantil no está habilitada actualmente.' }
+    }
+
+    // Verificar cuenta activa y no verificada previamente
+    const { data: currentProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('is_active, is_verified')
+      .eq('id', user.id)
+      .single()
+
+    if (!currentProfile || currentProfile.is_active === false) {
+      return { success: false, error: 'Tu cuenta no está activa.' }
+    }
+    if (currentProfile.is_verified) {
+      return { success: false, error: 'Tu cuenta ya está verificada.' }
+    }
 
     const { error: updateErr } = await supabaseAdmin
       .from('profiles')
       .update({
-        credential_url: credentialUrl,
+        credential_url: credentialUrl.trim(),
         verification_status: 'pending',
         verification_rejected_reason: null,
         verification_submitted_at: new Date().toISOString(),
@@ -28,7 +80,7 @@ export async function submitVerificationAction(credentialUrl: string): Promise<{
       .eq('id', user.id)
 
     if (updateErr) {
-      return { success: false, error: updateErr.message }
+      return { success: false, error: 'No se pudo registrar la credencial.' }
     }
 
     return { success: true }
@@ -47,6 +99,10 @@ export async function reviewVerificationAction(
   reason?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    if (!targetUserId || typeof targetUserId !== 'string') {
+      return { success: false, error: 'Usuario objetivo inválido' }
+    }
+
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { success: false, error: 'No autenticado' }
@@ -65,6 +121,7 @@ export async function reviewVerificationAction(
     }
 
     const now = new Date().toISOString()
+    const cleanReason = reason?.trim().slice(0, 300) || null
     const updateData = approved
       ? {
           is_verified: true,
@@ -75,7 +132,7 @@ export async function reviewVerificationAction(
       : {
           is_verified: false,
           verification_status: 'rejected',
-          verification_rejected_reason: reason?.trim() || 'La credencial no es legible o no coincide con los datos del perfil.',
+          verification_rejected_reason: cleanReason || 'La credencial no es legible o no coincide con los datos del perfil.',
           verified_at: null,
         }
 
@@ -88,13 +145,17 @@ export async function reviewVerificationAction(
       return { success: false, error: updateErr.message }
     }
 
-    // Registrar en admin_actions para auditoría
-    await supabaseAdmin.from('admin_actions').insert({
+    // Registrar en admin_actions usando las columnas reales del esquema (action, target_id)
+    const { error: auditErr } = await supabaseAdmin.from('admin_actions').insert({
       admin_id: user.id,
-      action_type: approved ? 'approve_verification' : 'reject_verification',
-      target_user_id: targetUserId,
-      details: { reason: reason || null, timestamp: now },
+      action: approved ? 'approve_verification' : 'reject_verification',
+      target_id: targetUserId,
+      details: { reason: cleanReason, timestamp: now },
     })
+
+    if (auditErr) {
+      console.error('Error registrando auditoría de verificación:', auditErr.message)
+    }
 
     return { success: true }
   } catch (err: unknown) {
@@ -108,6 +169,10 @@ export async function reviewVerificationAction(
  */
 export async function getFeatureFlagAction(key: string): Promise<{ enabled: boolean }> {
   try {
+    if (!ALLOWED_FEATURE_FLAGS.has(key)) {
+      return { enabled: false }
+    }
+
     const supabaseAdmin = createServiceClient()
     const { data, error } = await supabaseAdmin
       .from('app_settings')
@@ -119,7 +184,7 @@ export async function getFeatureFlagAction(key: string): Promise<{ enabled: bool
       return { enabled: false }
     }
 
-    return { enabled: Boolean(data.value) }
+    return { enabled: data.value === true || data.value === 'true' }
   } catch {
     return { enabled: false }
   }
@@ -130,6 +195,10 @@ export async function getFeatureFlagAction(key: string): Promise<{ enabled: bool
  */
 export async function setFeatureFlagAction(key: string, enabled: boolean): Promise<{ success: boolean; error?: string }> {
   try {
+    if (!ALLOWED_FEATURE_FLAGS.has(key)) {
+      return { success: false, error: 'Configuración no permitida' }
+    }
+
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { success: false, error: 'No autenticado' }
@@ -150,7 +219,7 @@ export async function setFeatureFlagAction(key: string, enabled: boolean): Promi
       .from('app_settings')
       .upsert({
         key,
-        value: enabled,
+        value: Boolean(enabled),
         updated_at: new Date().toISOString(),
       })
 

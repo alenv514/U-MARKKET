@@ -50,16 +50,24 @@ export default function ApprovalsTab({
                   height: 56,
                   borderRadius: 10,
                   flexShrink: 0,
-                  background: listing.image_url
-                    ? `url(${listing.image_url}) center/cover`
-                    : 'linear-gradient(135deg, rgba(10,37,64,0.06), rgba(0,82,204,0.12))',
+                  overflow: 'hidden',
+                  background: 'linear-gradient(135deg, rgba(10,37,64,0.06), rgba(0,82,204,0.12))',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '1.5rem',
                 }}
               >
-                {!listing.image_url && '📦'}
+                {listing.image_url ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={listing.image_url}
+                    alt={listing.title}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  '📦'
+                )}
               </div>
 
               <div style={{ flex: 1, minWidth: 0 }}>

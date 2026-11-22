@@ -1,6 +1,7 @@
 'use client'
 
 interface AdminHeaderProps {
+  isAdmin: boolean
   onDownloadExcel: () => void
   onToggleFreeMode: () => void
   onToggleRequireApproval: () => void
@@ -9,6 +10,7 @@ interface AdminHeaderProps {
 }
 
 export default function AdminHeader({
+  isAdmin,
   onDownloadExcel,
   onToggleFreeMode,
   onToggleRequireApproval,
@@ -30,8 +32,12 @@ export default function AdminHeader({
       >
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-            <span className="badge badge-red">🛡️ Admin</span>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 900 }}>Panel de Administración</h1>
+            <span className={isAdmin ? 'badge badge-red' : 'badge badge-amber'}>
+              {isAdmin ? '🛡️ Admin' : '🛡️ Moderador'}
+            </span>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 900 }}>
+              {isAdmin ? 'Panel de Administración' : 'Panel de Moderación'}
+            </h1>
           </div>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
             Gestiona reportes, usuarios y suscripciones de U-Market
@@ -52,24 +58,28 @@ export default function AdminHeader({
           >
             📥 Descargar Reporte Excel
           </button>
-          <button
-            onClick={onToggleFreeMode}
-            className={freePublishingMode ? 'btn-danger' : 'btn-primary'}
-            style={{ fontWeight: 700, padding: '0.625rem 1.25rem' }}
-          >
-            {freePublishingMode ? '🔴 Desactivar Publicación Libre' : '🟢 Activar Publicación Libre'}
-          </button>
-          <button
-            onClick={onToggleRequireApproval}
-            className={requireApprovalMode ? 'btn-danger' : 'btn-primary'}
-            style={{
-              fontWeight: 700,
-              padding: '0.625rem 1.25rem',
-              background: requireApprovalMode ? undefined : 'linear-gradient(135deg, var(--accent-amber), #d97706)',
-            }}
-          >
-            {requireApprovalMode ? '🔴 Desactivar Aprobación' : '🛡️ Activar Aprobación'}
-          </button>
+          {isAdmin && (
+            <>
+              <button
+                onClick={onToggleFreeMode}
+                className={freePublishingMode ? 'btn-danger' : 'btn-primary'}
+                style={{ fontWeight: 700, padding: '0.625rem 1.25rem' }}
+              >
+                {freePublishingMode ? '🔴 Desactivar Publicación Libre' : '🟢 Activar Publicación Libre'}
+              </button>
+              <button
+                onClick={onToggleRequireApproval}
+                className={requireApprovalMode ? 'btn-danger' : 'btn-primary'}
+                style={{
+                  fontWeight: 700,
+                  padding: '0.625rem 1.25rem',
+                  background: requireApprovalMode ? undefined : 'linear-gradient(135deg, var(--accent-amber), #d97706)',
+                }}
+              >
+                {requireApprovalMode ? '🔴 Desactivar Aprobación' : '🛡️ Activar Aprobación'}
+              </button>
+            </>
+          )}
         </div>
       </div>
 

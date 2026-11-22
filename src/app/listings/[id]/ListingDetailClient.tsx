@@ -46,12 +46,8 @@ export default function ListingDetailClient({ id }: { id: string }) {
 
       if (data) {
         setListing(data as Listing)
-        // Incrementar vistas de forma atómica
-        supabase.rpc('increment_listing_views', { listing_id: id }).then((rpcRes) => {
-          if (rpcRes.error) {
-            supabase.from('listings').update({ views: (data.views ?? 0) + 1 }).eq('id', id).then(() => {})
-          }
-        })
+        // Incrementar vistas de forma atómica vía RPC segura en servidor
+        void supabase.rpc('increment_listing_views', { listing_id: id })
       }
       setLoading(false)
     }

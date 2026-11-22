@@ -13,6 +13,13 @@ export function createRateLimiter(limit: number, windowMs: number) {
 
   return function isLimited(key: string): boolean {
     const now = Date.now()
+
+    if (store.size > 500) {
+      for (const [k, v] of store.entries()) {
+        if (now > v.resetAt) store.delete(k)
+      }
+    }
+
     const entry = store.get(key)
 
     if (!entry || now > entry.resetAt) {

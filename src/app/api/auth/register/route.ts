@@ -39,14 +39,14 @@ export async function POST(request: NextRequest) {
     }
 
     const emailRegex = /^[^\s@]+@uta\.edu\.ec$/i
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(normalizedEmail)) {
       return NextResponse.json(
         { error: 'Solo se permiten correos @uta.edu.ec' },
         { status: 403 }
       )
     }
 
-    if (!password || password.length < 8 || password.length > 20) {
+    if (typeof password !== 'string' || password.length < 8 || password.length > 20) {
       return NextResponse.json(
         { error: 'La contraseña debe tener entre 8 y 20 caracteres' },
         { status: 400 }
@@ -54,11 +54,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Sanitizar inputs de texto
-    const safeFullName = fullName ? sanitize(fullName) : ''
-    const safePhone = phone ? sanitize(phone) : ''
-    const safeFaculty = faculty ? sanitize(faculty) : ''
-    const safeCareer = career ? sanitize(career) : ''
-    const safeSemesterOnly = semester ? sanitize(semester) : ''
+    const safeFullName = typeof fullName === 'string' ? sanitize(fullName).slice(0, 120) : ''
+    const safePhone = typeof phone === 'string' ? sanitize(phone).slice(0, 20) : ''
+    const safeFaculty = typeof faculty === 'string' ? sanitize(faculty).slice(0, 120) : ''
+    const safeCareer = typeof career === 'string' ? sanitize(career).slice(0, 120) : ''
+    const safeSemesterOnly = typeof semester === 'string' ? sanitize(semester).slice(0, 40) : ''
     const safeSemester = safeFaculty && safeCareer && safeSemesterOnly
       ? `${safeSemesterOnly} - ${safeCareer}`
       : safeSemesterOnly || null
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     // Crear usuario en Supabase Auth
     const { data, error } = await supabase.auth.signUp({
-      email: email.toLowerCase().trim(),
+      email: normalizedEmail,
       password,
       options: {
         data: {
@@ -103,18 +103,21 @@ export async function POST(request: NextRequest) {
     if (data.user) {
       try {
         const serviceClient = createServiceClient()
-        await serviceClient
+        const { error: profileErr } = await serviceClient
           .from('profiles')
           .upsert({
             id: data.user.id,
             full_name: safeFullName || '',
-            email: email.toLowerCase().trim(),
+            email: normalizedEmail,
             phone: safePhone || null,
             faculty: safeFaculty || null,
             semester: safeSemester || null,
             role: 'buyer',
             is_active: true,
           }, { onConflict: 'id' })
+        if (profileErr) {
+          console.error('Error persistiendo perfil con serviceClient:', profileErr.message)
+        }
       } catch (profileErr) {
         console.error('Error persistiendo perfil con serviceClient:', profileErr)
       }

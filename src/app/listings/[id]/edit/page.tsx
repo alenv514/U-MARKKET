@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar'
 import { createClient } from '@/lib/supabase/client'
 import { CATEGORIES } from '@/types'
 import type { Listing } from '@/types'
-import { sanitize, isValidPrice, isValidEcuadorPhone } from '@/lib/utils'
+import { sanitize, isValidPrice, isValidEcuadorPhone, checkBannedWords } from '@/lib/utils'
 import { useImageUpload } from '@/hooks/useImageUpload'
 
 const MAX_PHOTOS = 1
@@ -99,6 +99,16 @@ export default function EditListingPage() {
     if (!title.trim()) { setError('El título es obligatorio'); return }
     if (!isValidPrice(price)) {
       setError('Ingresa un precio válido (máx. $100.000)'); return
+    }
+    const titleCheck = checkBannedWords(title)
+    if (titleCheck.hasBanned) {
+      setError(`El título contiene vocabulario no permitido en la plataforma ("${titleCheck.word}").`)
+      return
+    }
+    const descCheck = checkBannedWords(description)
+    if (descCheck.hasBanned) {
+      setError(`La descripción contiene vocabulario no permitido en la plataforma ("${descCheck.word}").`)
+      return
     }
     if (whatsapp.trim() && !isValidEcuadorPhone(whatsapp)) {
       setError('Formato de WhatsApp inválido. Usa +593XXXXXXXXX o 09XXXXXXXX'); return

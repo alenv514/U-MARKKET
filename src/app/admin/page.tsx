@@ -53,6 +53,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<'reports' | 'users' | 'approvals' | 'verifications'>('reports')
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
+  const [isAuthorized, setIsAuthorized] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [storageUsedMB, setStorageUsedMB] = useState<number | null>(null)
   const router = useRouter()
@@ -66,6 +67,7 @@ export default function AdminPage() {
       .from('profiles').select('role').eq('id', user.id).single()
 
     if (profile?.role !== 'admin' && profile?.role !== 'moderator') { router.push('/dashboard'); return }
+    setIsAuthorized(true)
     setIsAdmin(profile?.role === 'admin')
 
     const [
@@ -218,14 +220,18 @@ export default function AdminPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    await supabase.from('listings').update({ status: 'removed' }).eq('id', listingId)
+    const { error: listErr } = await supabase.from('listings').update({ status: 'removed' }).eq('id', listingId)
+    if (listErr) { alert('Error al eliminar publicación: ' + listErr.message); return }
+
     await supabase.from('admin_actions').insert({
       admin_id: user.id,
       action: 'remove_listing_report',
       target_id: listingId,
       details: { reportId },
     })
-    await supabase.from('reports').update({ status: 'reviewed' }).eq('id', reportId)
+    const { error: repErr } = await supabase.from('reports').update({ status: 'reviewed' }).eq('id', reportId)
+    if (repErr) { alert('Error al actualizar reporte: ' + repErr.message); return }
+
     setReports((prev) => prev.filter((r) => r.id !== reportId))
   }
 
@@ -236,20 +242,24 @@ export default function AdminPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    await supabase.from('admin_actions').insert({
+    const { error: auditErr } = await supabase.from('admin_actions').insert({
       admin_id: user.id,
       action: 'warn_seller',
       target_id: sellerId,
-      details: { reason, reportId },
+      details: { reason: reason.trim().slice(0, 500), reportId },
     })
+    if (auditErr) { alert('Error al registrar advertencia: ' + auditErr.message); return }
 
-    await supabase.from('reports').update({ status: 'reviewed' }).eq('id', reportId)
+    const { error: repErr } = await supabase.from('reports').update({ status: 'reviewed' }).eq('id', reportId)
+    if (repErr) { alert('Error al actualizar reporte: ' + repErr.message); return }
+
     setReports((prev) => prev.filter((r) => r.id !== reportId))
     alert('⚠️ Advertencia registrada. El reporte ha sido marcado como revisado.')
   }
 
   const handleDismissReport = async (reportId: string) => {
-    await supabase.from('reports').update({ status: 'dismissed' }).eq('id', reportId)
+    const { error } = await supabase.from('reports').update({ status: 'dismissed' }).eq('id', reportId)
+    if (error) { alert('Error al descartar reporte: ' + error.message); return }
     setReports((prev) => prev.filter((r) => r.id !== reportId))
   }
 
@@ -520,7 +530,7 @@ export default function AdminPage() {
     await exportAdminReportToExcel(supabase, users, stats)
   }
 
-  if (!isAdmin) {
+  if (!isAuthorized) {
     return (
       <>
         <Navbar />
@@ -554,6 +564,7 @@ export default function AdminPage() {
       <main style={{ paddingTop: 64, minHeight: '100vh', paddingBottom: '4rem' }}>
         <div className="page-container" style={{ paddingTop: '2.5rem' }}>
           <AdminHeader
+            isAdmin={isAdmin}
             onDownloadExcel={handleDownloadExcel}
             onToggleFreeMode={handleToggleFreeMode}
             onToggleRequireApproval={handleToggleRequireApproval}

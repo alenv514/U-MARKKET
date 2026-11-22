@@ -18,14 +18,24 @@ self.addEventListener('push', function (event) {
 
 self.addEventListener('notificationclick', function (event) {
   event.notification.close()
-  const urlToOpen = event.notification.data.url
+  let urlToOpen = '/'
+  try {
+    const rawUrl = event.notification.data && event.notification.data.url
+    if (typeof rawUrl === 'string') {
+      const parsed = new URL(rawUrl, self.location.origin)
+      if (parsed.origin === self.location.origin) {
+        urlToOpen = parsed.pathname + parsed.search + parsed.hash
+      }
+    }
+  } catch {
+    urlToOpen = '/'
+  }
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
       for (let i = 0; i < clientList.length; i++) {
         const client = clientList[i]
-        // If app is already open, just focus it and navigate
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
+        if (client.url.startsWith(self.location.origin) && 'focus' in client) {
           client.navigate(urlToOpen)
           return client.focus()
         }

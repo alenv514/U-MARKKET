@@ -8,7 +8,9 @@ const AUTH_ROUTES = ['/login', '/register']
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  const isProtected = PROTECTED_ROUTES.some(r => pathname.startsWith(r))
+  const isProtected =
+    PROTECTED_ROUTES.some(r => pathname.startsWith(r)) ||
+    /^\/listings\/[^/]+\/edit(\/|$)/.test(pathname)
   const isAuth = AUTH_ROUTES.some(r => pathname === r)
   const isAdmin = pathname.startsWith('/admin')
 

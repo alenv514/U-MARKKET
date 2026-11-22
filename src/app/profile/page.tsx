@@ -127,12 +127,20 @@ export default function ProfilePage() {
     setVerificationSuccess('')
 
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const headers: Record<string, string> = {}
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
+      }
+
       const formData = new FormData()
       formData.append('file', credentialFile)
       formData.append('folder', 'credentials')
 
       const uploadRes = await fetch('/api/upload', {
         method: 'POST',
+        credentials: 'include',
+        headers,
         body: formData,
       })
 

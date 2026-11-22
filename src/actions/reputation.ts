@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 export async function bumpListingAction(listingId: string): Promise<{
   success: boolean
@@ -10,6 +10,10 @@ export async function bumpListingAction(listingId: string): Promise<{
   next_available?: string
 }> {
   try {
+    if (!listingId || typeof listingId !== 'string') {
+      return { success: false, error: 'Publicación inválida.' }
+    }
+
     const supabase = await createClient()
     const { data: { user }, error: authErr } = await supabase.auth.getUser()
 
@@ -17,7 +21,7 @@ export async function bumpListingAction(listingId: string): Promise<{
       return { success: false, error: 'Debes iniciar sesión para reactivar una publicación.' }
     }
 
-    // Intentar primero con la función RPC de Supabase si ya fue migrada
+    // Intentar primero con la función RPC de Supabase
     const { data: rpcData, error: rpcErr } = await supabase.rpc('bump_listing', {
       target_listing_id: listingId,
     })
@@ -35,8 +39,9 @@ export async function bumpListingAction(listingId: string): Promise<{
       }
     }
 
-    // Respaldo directo en caso de que la RPC no se haya ejecutado aún en la BD
-    const { data: listing, error: listErr } = await supabase
+    // Respaldo server-side con service_role tras validar dueño, cuenta activa, verificación y cooldown de 24h
+    const supabaseAdmin = createServiceClient()
+    const { data: listing, error: listErr } = await supabaseAdmin
       .from('listings')
       .select('id, seller_id, bumped_at, created_at, status')
       .eq('id', listingId)
@@ -50,12 +55,15 @@ export async function bumpListingAction(listingId: string): Promise<{
       return { success: false, error: 'No tienes permisos para modificar esta publicación.' }
     }
 
-    // Verificar si el estudiante está verificado
-    const { data: profile } = await supabase
+    const { data: profile } = await supabaseAdmin
       .from('profiles')
-      .select('is_verified')
+      .select('is_verified, is_active')
       .eq('id', user.id)
       .single()
+
+    if (profile?.is_active === false) {
+      return { success: false, error: 'Tu cuenta está suspendida.' }
+    }
 
     if (!profile?.is_verified) {
       return { success: false, error: 'Debes verificar tu carnet estudiantil para usar la función de subir al inicio.' }
@@ -75,13 +83,14 @@ export async function bumpListingAction(listingId: string): Promise<{
     }
 
     const nowIso = new Date().toISOString()
-    const { error: updateErr } = await supabase
+    const { error: updateErr } = await supabaseAdmin
       .from('listings')
       .update({
         bumped_at: nowIso,
         updated_at: nowIso,
       })
       .eq('id', listingId)
+      .eq('seller_id', user.id)
 
     if (updateErr) {
       return { success: false, error: 'Error al actualizar la publicación.' }
@@ -102,6 +111,10 @@ export async function toggleUrgentAction(listingId: string): Promise<{
   is_urgent?: boolean
 }> {
   try {
+    if (!listingId || typeof listingId !== 'string') {
+      return { success: false, error: 'Publicación inválida.' }
+    }
+
     const supabase = await createClient()
     const { data: { user }, error: authErr } = await supabase.auth.getUser()
 
@@ -111,7 +124,7 @@ export async function toggleUrgentAction(listingId: string): Promise<{
 
     const { data: listing, error: listErr } = await supabase
       .from('listings')
-      .select('id, seller_id, is_urgent')
+      .select('id, seller_id, status, is_urgent')
       .eq('id', listingId)
       .single()
 
@@ -123,12 +136,17 @@ export async function toggleUrgentAction(listingId: string): Promise<{
       return { success: false, error: 'No tienes permiso para modificar esta publicación.' }
     }
 
+    if (listing.status !== 'active') {
+      return { success: false, error: 'Solo puedes destacar publicaciones activas.' }
+    }
+
     const newUrgent = !listing.is_urgent
 
     const { error: updateErr } = await supabase
       .from('listings')
       .update({ is_urgent: newUrgent })
       .eq('id', listingId)
+      .eq('seller_id', user.id)
 
     if (updateErr) {
       return { success: false, error: 'Error al actualizar etiqueta de oferta.' }

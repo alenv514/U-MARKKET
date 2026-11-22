@@ -40,24 +40,27 @@ export async function approveSellerAction(userId: string) {
   const { supabase, user } = await getAdminSupabase()
 
   // 1. Cambiar rol a seller
-  await supabase.from('profiles').update({ role: 'seller' }).eq('id', userId)
+  const { error: profileErr } = await supabase.from('profiles').update({ role: 'seller' }).eq('id', userId)
+  if (profileErr) throw new Error(profileErr.message)
 
   // 2. Desactivar suscripciones anteriores
-  await supabase.from('subscriptions').update({ is_active: false }).eq('user_id', userId)
+  const { error: deactivateErr } = await supabase.from('subscriptions').update({ is_active: false }).eq('user_id', userId)
+  if (deactivateErr) throw new Error(deactivateErr.message)
 
   // 3. Insertar nueva suscripción de 30 días
   const endsAt = new Date()
   endsAt.setDate(endsAt.getDate() + 30) // +30 días
 
-  await supabase.from('subscriptions').insert({
+  const { error: subErr } = await supabase.from('subscriptions').insert({
     user_id: userId,
     plan: 'paid',
     is_active: true,
     starts_at: new Date().toISOString(),
     ends_at: endsAt.toISOString()
   })
+  if (subErr) throw new Error(subErr.message)
 
-  // 4. Registrar en auditoría (requerido por regla global)
+  // 4. Registrar en auditoría
   await supabase.from('admin_actions').insert({
     admin_id: user.id,
     action: 'approve_seller_manual',
@@ -72,10 +75,12 @@ export async function revokeSellerAction(userId: string) {
   const { supabase, user } = await getAdminSupabase()
 
   // 1. Cambiar rol a buyer
-  await supabase.from('profiles').update({ role: 'buyer' }).eq('id', userId)
+  const { error: profileErr } = await supabase.from('profiles').update({ role: 'buyer' }).eq('id', userId)
+  if (profileErr) throw new Error(profileErr.message)
 
   // 2. Desactivar suscripción
-  await supabase.from('subscriptions').update({ is_active: false }).eq('user_id', userId)
+  const { error: subErr } = await supabase.from('subscriptions').update({ is_active: false }).eq('user_id', userId)
+  if (subErr) throw new Error(subErr.message)
 
   // 3. Registrar en auditoría
   await supabase.from('admin_actions').insert({
@@ -90,18 +95,19 @@ export async function revokeSellerAction(userId: string) {
 export async function toggleFreePublishingAction(enabled: boolean) {
   const { supabase, user } = await getAdminSupabase()
 
-  await supabase.from('platform_settings').upsert({
+  const { error: settingsErr } = await supabase.from('platform_settings').upsert({
     key: 'free_publishing_mode',
-    value: enabled,
+    value: Boolean(enabled),
     updated_at: new Date().toISOString(),
     updated_by: user.id
   })
+  if (settingsErr) throw new Error(settingsErr.message)
 
   await supabase.from('admin_actions').insert({
     admin_id: user.id,
     action: 'toggle_free_publishing',
     target_id: 'global',
-    details: { enabled }
+    details: { enabled: Boolean(enabled) }
   })
 
   return { success: true }
@@ -110,27 +116,29 @@ export async function toggleFreePublishingAction(enabled: boolean) {
 export async function toggleListingApprovalAction(enabled: boolean) {
   const { supabase, user } = await getAdminSupabase()
 
-  await supabase.from('platform_settings').upsert({
+  const { error: settingsErr } = await supabase.from('platform_settings').upsert({
     key: 'listings_require_approval',
-    value: enabled,
+    value: Boolean(enabled),
     updated_at: new Date().toISOString(),
     updated_by: user.id
   })
+  if (settingsErr) throw new Error(settingsErr.message)
 
   await supabase.from('admin_actions').insert({
     admin_id: user.id,
     action: 'toggle_listings_require_approval',
     target_id: 'global',
-    details: { enabled }
+    details: { enabled: Boolean(enabled) }
   })
 
   return { success: true }
 }
 
 export async function approveListingAction(listingId: string) {
-  const { supabase, user } = await getAdminSupabase()
+  const { supabase, user } = await getModSupabase()
 
-  await supabase.from('listings').update({ status: 'active' }).eq('id', listingId)
+  const { error: updateErr } = await supabase.from('listings').update({ status: 'active' }).eq('id', listingId)
+  if (updateErr) throw new Error(updateErr.message)
 
   await supabase.from('admin_actions').insert({
     admin_id: user.id,
@@ -142,9 +150,10 @@ export async function approveListingAction(listingId: string) {
 }
 
 export async function rejectListingAction(listingId: string) {
-  const { supabase, user } = await getAdminSupabase()
+  const { supabase, user } = await getModSupabase()
 
-  await supabase.from('listings').update({ status: 'removed' }).eq('id', listingId)
+  const { error: updateErr } = await supabase.from('listings').update({ status: 'removed' }).eq('id', listingId)
+  if (updateErr) throw new Error(updateErr.message)
 
   await supabase.from('admin_actions').insert({
     admin_id: user.id,
@@ -157,9 +166,13 @@ export async function rejectListingAction(listingId: string) {
 
 export async function banUserAction(userId: string) {
   const { supabase, user } = await getAdminSupabase()
+  if (userId === user.id) throw new Error('No puedes suspender tu propia cuenta')
 
-  await supabase.from('profiles').update({ is_active: false }).eq('id', userId)
-  await supabase.from('listings').update({ status: 'removed' }).eq('seller_id', userId).eq('status', 'active')
+  const { error: profileErr } = await supabase.from('profiles').update({ is_active: false }).eq('id', userId)
+  if (profileErr) throw new Error(profileErr.message)
+
+  const { error: listingsErr } = await supabase.from('listings').update({ status: 'removed' }).eq('seller_id', userId).eq('status', 'active')
+  if (listingsErr) throw new Error(listingsErr.message)
 
   await supabase.from('admin_actions').insert({
     admin_id: user.id,
@@ -173,7 +186,8 @@ export async function banUserAction(userId: string) {
 export async function unbanUserAction(userId: string) {
   const { supabase, user } = await getAdminSupabase()
 
-  await supabase.from('profiles').update({ is_active: true }).eq('id', userId)
+  const { error: profileErr } = await supabase.from('profiles').update({ is_active: true }).eq('id', userId)
+  if (profileErr) throw new Error(profileErr.message)
 
   await supabase.from('admin_actions').insert({
     admin_id: user.id,
@@ -185,26 +199,33 @@ export async function unbanUserAction(userId: string) {
 }
 
 export async function deleteUserAction(userId: string) {
-  const { supabase, user } = await getAdminSupabase()
+  const { user } = await getAdminSupabase()
+  if (userId === user.id) throw new Error('No puedes eliminar tu propia cuenta desde el panel admin')
+
+  const adminClient = createServiceClient()
+
+  // Evitar eliminar cuentas administradoras accidentalmente o por escalación
+  const { data: targetProfile } = await adminClient
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle()
+
+  if (targetProfile?.role === 'admin') {
+    throw new Error('No se puede eliminar una cuenta con rol administrador')
+  }
 
   // Registrar auditoría antes de borrar
-  await supabase.from('admin_actions').insert({
+  await adminClient.from('admin_actions').insert({
     admin_id: user.id,
     action: 'delete_user',
     target_id: userId
   })
 
-  // Eliminar publicaciones y datos relacionados
-  await supabase.from('listings').delete().eq('seller_id', userId)
-  await supabase.from('subscriptions').delete().eq('user_id', userId)
-  await supabase.from('reports').delete().eq('reporter_id', userId)
-
-  // Eliminar perfil
-  await supabase.from('profiles').delete().eq('id', userId)
-
-  // Eliminar usuario de Supabase Auth usando service role key
-  const adminClient = createServiceClient()
+  // Purgar archivos del usuario en Supabase Storage y R2 (incluyendo credenciales)
   await purgeUserFiles(userId, adminClient)
+
+  // Eliminar usuario de Supabase Auth (ON DELETE CASCADE limpia profiles y tablas relacionadas)
   const { error } = await adminClient.auth.admin.deleteUser(userId)
   if (error) throw new Error(error.message)
 
@@ -216,7 +237,8 @@ export async function deleteUserAction(userId: string) {
 export async function assignModeratorAction(userId: string) {
   const { supabase, user } = await getAdminSupabase()
 
-  await supabase.from('profiles').update({ role: 'moderator' }).eq('id', userId)
+  const { error: profileErr } = await supabase.from('profiles').update({ role: 'moderator' }).eq('id', userId)
+  if (profileErr) throw new Error(profileErr.message)
 
   await supabase.from('admin_actions').insert({
     admin_id: user.id,
@@ -230,7 +252,8 @@ export async function assignModeratorAction(userId: string) {
 export async function revokeModeratorAction(userId: string) {
   const { supabase, user } = await getAdminSupabase()
 
-  await supabase.from('profiles').update({ role: 'buyer' }).eq('id', userId)
+  const { error: profileErr } = await supabase.from('profiles').update({ role: 'buyer' }).eq('id', userId)
+  if (profileErr) throw new Error(profileErr.message)
 
   await supabase.from('admin_actions').insert({
     admin_id: user.id,
@@ -245,13 +268,14 @@ export async function revokeModeratorAction(userId: string) {
 export async function deleteListingAction(listingId: string, reason: string) {
   const { supabase, user, role } = await getModSupabase()
 
-  await supabase.from('listings').update({ status: 'removed' }).eq('id', listingId)
+  const { error: updateErr } = await supabase.from('listings').update({ status: 'removed' }).eq('id', listingId)
+  if (updateErr) throw new Error(updateErr.message)
 
   await supabase.from('admin_actions').insert({
     admin_id: user.id,
     action: 'delete_listing_moderation',
     target_id: listingId,
-    details: { reason, by_role: role }
+    details: { reason: reason.trim().slice(0, 500), by_role: role }
   })
 
   return { success: true }
