@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import Icon from '@/components/Icon'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -99,7 +100,9 @@ export default function ForgotPasswordPage() {
         <div className="glass-card animate-fade-in-up delay-100" style={{ padding: '2rem' }}>
           {success ? (
             <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📨</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem', color: '#ffffff' }}>
+                <Icon name="mail" size={44} />
+              </div>
               <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.75rem', color: '#ffffff' }}>
                 ¡Correo enviado!
               </h3>
@@ -110,9 +113,9 @@ export default function ForgotPasswordPage() {
               {resendMessage && (
                 <div style={{
                   padding: '0.6rem 0.8rem', borderRadius: 8, marginBottom: '1rem', fontSize: '0.82rem',
-                  background: resendMessage.includes('Error') ? '#fef2f2' : '#ecfdf5',
-                  color: resendMessage.includes('Error') ? '#b91c1c' : '#047857',
-                  border: resendMessage.includes('Error') ? '1px solid #fecaca' : '1px solid #a7f3d0'
+                  background: resendMessage.includes('Error') ? '#fef2f2' : '#eff6ff',
+                  color: resendMessage.includes('Error') ? '#b91c1c' : '#00345e',
+                  border: resendMessage.includes('Error') ? '1px solid #fecaca' : '1px solid #bfdbfe'
                 }}>
                   {resendMessage}
                 </div>
@@ -126,14 +129,21 @@ export default function ForgotPasswordPage() {
                   style={{
                     width: '100%', padding: '0.75rem', fontSize: '0.88rem',
                     opacity: (resendTimer > 0 || resendLoading) ? 0.6 : 1,
-                    cursor: (resendTimer > 0 || resendLoading) ? 'not-allowed' : 'pointer'
+                    cursor: (resendTimer > 0 || resendLoading) ? 'not-allowed' : 'pointer',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                   }}
                 >
-                  {resendLoading
-                    ? 'Reenviando...'
-                    : resendTimer > 0
-                    ? `🔄 Reenviar correo en (${formatTimer(resendTimer)})`
-                    : '🔄 Reenviar correo de recuperación'}
+                  {resendLoading ? (
+                    'Reenviando...'
+                  ) : resendTimer > 0 ? (
+                    <>
+                      <Icon name="refresh" size={14} /> Reenviar correo en ({formatTimer(resendTimer)})
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="refresh" size={14} /> Reenviar correo de recuperación
+                    </>
+                  )}
                 </button>
 
                 <Link href="/login" style={{ width: '100%', textDecoration: 'none' }}>
@@ -165,7 +175,7 @@ export default function ForgotPasswordPage() {
                   borderRadius: 10, padding: '0.75rem 1rem',
                   fontSize: '0.85rem', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: 8,
                 }}>
-                  <span>⚠️</span> {error}
+                  <Icon name="alert" size={16} style={{ flexShrink: 0 }} /> {error}
                 </div>
               )}
 

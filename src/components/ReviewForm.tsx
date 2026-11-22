@@ -23,8 +23,8 @@ export default function ReviewForm({ revieweeId, currentUserId }: { revieweeId: 
 
   if (success) {
     return (
-      <div style={{ padding: '1.5rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: 12, textAlign: 'center', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-        <p style={{ color: '#34d399', fontWeight: 600 }}>¡Gracias por tu calificación!</p>
+      <div style={{ padding: '1.5rem', background: 'rgba(0, 52, 94, 0.06)', borderRadius: 12, textAlign: 'center', border: '1px solid rgba(0, 52, 94, 0.2)' }}>
+        <p style={{ color: '#00345e', fontWeight: 600 }}>¡Gracias por tu calificación!</p>
       </div>
     )
   }

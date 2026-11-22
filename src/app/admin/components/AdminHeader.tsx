@@ -1,5 +1,7 @@
 'use client'
 
+import Icon from '@/components/Icon'
+
 interface AdminHeaderProps {
   isAdmin: boolean
   onDownloadExcel: () => void
@@ -32,8 +34,12 @@ export default function AdminHeader({
       >
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-            <span className={isAdmin ? 'badge badge-red' : 'badge badge-amber'}>
-              {isAdmin ? '🛡️ Admin' : '🛡️ Moderador'}
+            <span
+              className={isAdmin ? 'badge badge-red' : 'badge badge-amber'}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+            >
+              <Icon name="shield" size={13} />
+              {isAdmin ? 'Admin' : 'Moderador'}
             </span>
             <h1 style={{ fontSize: '1.75rem', fontWeight: 900 }}>
               {isAdmin ? 'Panel de Administración' : 'Panel de Moderación'}
@@ -49,23 +55,34 @@ export default function AdminHeader({
             style={{
               fontWeight: 700,
               padding: '0.625rem 1.25rem',
-              background: 'linear-gradient(135deg, #10b981, #059669)',
+              background: 'linear-gradient(135deg, #00345e, #004b87)',
               color: 'white',
               border: 'none',
               borderRadius: 10,
               cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
             }}
           >
-            📥 Descargar Reporte Excel
+            <Icon name="download" size={15} /> Descargar Reporte Excel
           </button>
           {isAdmin && (
             <>
               <button
                 onClick={onToggleFreeMode}
                 className={freePublishingMode ? 'btn-danger' : 'btn-primary'}
-                style={{ fontWeight: 700, padding: '0.625rem 1.25rem' }}
+                style={{ fontWeight: 700, padding: '0.625rem 1.25rem', display: 'inline-flex', alignItems: 'center', gap: 6 }}
               >
-                {freePublishingMode ? '🔴 Desactivar Publicación Libre' : '🟢 Activar Publicación Libre'}
+                {freePublishingMode ? (
+                  <>
+                    <Icon name="xCircle" size={15} /> Desactivar Publicación Libre
+                  </>
+                ) : (
+                  <>
+                    <Icon name="checkCircle" size={15} /> Activar Publicación Libre
+                  </>
+                )}
               </button>
               <button
                 onClick={onToggleRequireApproval}
@@ -73,10 +90,21 @@ export default function AdminHeader({
                 style={{
                   fontWeight: 700,
                   padding: '0.625rem 1.25rem',
-                  background: requireApprovalMode ? undefined : 'linear-gradient(135deg, var(--accent-amber), #d97706)',
+                  background: requireApprovalMode ? undefined : '#004b87',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
                 }}
               >
-                {requireApprovalMode ? '🔴 Desactivar Aprobación' : '🛡️ Activar Aprobación'}
+                {requireApprovalMode ? (
+                  <>
+                    <Icon name="xCircle" size={15} /> Desactivar Aprobación
+                  </>
+                ) : (
+                  <>
+                    <Icon name="shield" size={15} /> Activar Aprobación
+                  </>
+                )}
               </button>
             </>
           )}
@@ -98,7 +126,7 @@ export default function AdminHeader({
             color: '#b91c1c',
           }}
         >
-          <span style={{ fontSize: '1.5rem' }}>⚠️</span>
+          <Icon name="alert" size={24} style={{ flexShrink: 0 }} />
           <div>
             <h3 style={{ fontWeight: 800, margin: 0, fontSize: '0.95rem' }}>Modo &quot;Publicación Libre&quot; Activado</h3>
             <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.9 }}>Todos los usuarios pueden publicar sin suscripción.</p>

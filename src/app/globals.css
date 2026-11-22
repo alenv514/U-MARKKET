@@ -131,7 +131,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-amber {
-  background: linear-gradient(135deg, #d97706, #b45309);
+  background: linear-gradient(135deg, #00345e, #004b87);
   color: white;
   padding: 0.625rem 1.5rem;
   border-radius: 10px;
@@ -142,7 +142,7 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.3s ease;
 }
 .btn-amber:hover {
-  box-shadow: 0 4px 18px rgba(217, 119, 6, 0.35);
+  box-shadow: 0 4px 18px rgba(0, 52, 94, 0.35);
   transform: translateY(-1px);
 }
 
@@ -203,14 +203,14 @@ select option {
   border: 1px solid rgba(0, 52, 94, 0.2);
 }
 .badge-amber {
-  background: rgba(217, 119, 6, 0.1);
-  color: #b45309;
-  border: 1px solid rgba(217, 119, 6, 0.25);
+  background: #f1f5f9;
+  color: #0a192f;
+  border: 1px solid #cbd5e1;
 }
 .badge-green {
-  background: rgba(5, 150, 105, 0.1);
-  color: #047857;
-  border: 1px solid rgba(5, 150, 105, 0.25);
+  background: rgba(0, 52, 94, 0.08);
+  color: #00345e;
+  border: 1px solid rgba(0, 52, 94, 0.22);
 }
 .badge-red {
   background: #fef2f2;
@@ -226,7 +226,7 @@ select option {
   background-clip: text;
 }
 .gradient-text-amber {
-  background: linear-gradient(135deg, #d97706, #f59e0b);
+  background: linear-gradient(135deg, #00345e, #004b87);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

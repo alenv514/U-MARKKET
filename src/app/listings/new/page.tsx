@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { CATEGORIES, UserRole } from '@/types'
 import { sanitize, isValidPrice, isValidEcuadorPhone, checkBannedWords } from '@/lib/utils'
 import { useImageUpload } from '@/hooks/useImageUpload'
+import Icon from '@/components/Icon'
 
 const MAX_PHOTOS = 1
 
@@ -186,7 +187,9 @@ export default function NewListingPage() {
         <Navbar />
         <main style={{ paddingTop: 64, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="page-container glass-card animate-fade-in-up" style={{ maxWidth: 500, padding: '3rem 2rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚫</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem', color: 'var(--accent-red)' }}>
+              <Icon name="ban" size={44} />
+            </div>
             <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--accent-red)', marginBottom: '1rem' }}>
               Cuenta Suspendida
             </h1>
@@ -225,13 +228,19 @@ export default function NewListingPage() {
                 $5.00 <span style={{ fontSize: '1rem', fontWeight: 400, color: 'var(--text-muted)' }}>/ mes</span>
               </div>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, textAlign: 'left', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <li>✅ Publicaciones ilimitadas</li>
-                <li>✅ Contacto directo por WhatsApp</li>
-                <li>✅ Soporte prioritario</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Icon name="checkCircle" size={16} style={{ color: '#00345e', flexShrink: 0 }} /> Publicaciones ilimitadas
+                </li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Icon name="checkCircle" size={16} style={{ color: '#00345e', flexShrink: 0 }} /> Contacto directo por WhatsApp
+                </li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Icon name="checkCircle" size={16} style={{ color: '#00345e', flexShrink: 0 }} /> Soporte prioritario
+                </li>
               </ul>
             </div>
 
-            <a href={waLink} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '1rem 2rem', fontSize: '1.1rem', textDecoration: 'none', background: '#25D366' }}>
+            <a href={waLink} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '1rem 2rem', fontSize: '1.1rem', textDecoration: 'none', background: '#00345e' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
               Solicitar por WhatsApp
             </a>
@@ -249,8 +258,9 @@ export default function NewListingPage() {
 
           {/* Header */}
           <div className="animate-fade-in-up" style={{ marginBottom: '2rem' }}>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: 4 }}>
-              Nueva publicación ✨
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>Nueva publicación</span>
+              <Icon name="sparkles" size={24} style={{ color: '#00345e' }} />
             </h1>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
               Completa los datos de tu producto o servicio
@@ -260,19 +270,19 @@ export default function NewListingPage() {
           {/* Banner perfil incompleto */}
           {!profileComplete && (
             <div style={{
-              background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.4)',
+              background: '#eff6ff', border: '1px solid #bfdbfe',
               borderRadius: 12, padding: '0.875rem 1.25rem', marginBottom: '1.5rem',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: '1.25rem' }}>⚠️</span>
+                <Icon name="alert" size={20} style={{ color: '#00345e', flexShrink: 0 }} />
                 <div>
-                  <strong style={{ display: 'block', color: '#fcd34d', fontSize: '0.88rem' }}>Completa tu perfil antes de publicar</strong>
-                  <span style={{ fontSize: '0.78rem', color: '#fde68a', opacity: 0.9 }}>Falta tu facultad y semestre en tu cuenta.</span>
+                  <strong style={{ display: 'block', color: '#0a192f', fontSize: '0.88rem' }}>Completa tu perfil antes de publicar</strong>
+                  <span style={{ fontSize: '0.78rem', color: '#334155' }}>Falta tu facultad y semestre en tu cuenta.</span>
                 </div>
               </div>
               <Link href="/profile" style={{
-                background: '#f59e0b', color: 'white', padding: '0.45rem 1rem',
+                background: '#00345e', color: 'white', padding: '0.45rem 1rem',
                 borderRadius: 8, fontWeight: 700, fontSize: '0.8rem', textDecoration: 'none', whiteSpace: 'nowrap'
               }}>Completar ahora →</Link>
             </div>
@@ -282,9 +292,10 @@ export default function NewListingPage() {
             {/* Multi-image upload */}
             <div className="glass-card animate-fade-in-up delay-100" style={{ padding: '1.5rem', marginBottom: '1.25rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                  📸 Fotos del producto
-                  <span style={{ marginLeft: 8, fontWeight: 400, color: 'var(--text-muted)' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Icon name="camera" size={16} />
+                  <span>Fotos del producto</span>
+                  <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>
                     ({newFiles.length}/{MAX_PHOTOS})
                   </span>
                 </label>
@@ -327,7 +338,7 @@ export default function NewListingPage() {
                           display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem',
                         }}
                       >
-                        ✕
+                        <Icon name="x" size={12} />
                       </button>
                     </div>
                   ))}
@@ -364,14 +375,16 @@ export default function NewListingPage() {
                   onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = '#00345e')}
                   onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--border)')}
                 >
-                  <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>📸</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8, color: '#00345e' }}>
+                    <Icon name="camera" size={36} />
+                  </div>
                   <div style={{ fontWeight: 600, marginBottom: 4 }}>Haz clic para subir fotos</div>
                   <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Hasta {MAX_PHOTOS} fotos · JPG, PNG, WEBP · máx. 5MB cada una</div>
                 </div>
               )}
 
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 6 }}>
-                💡 La primera foto será la portada y aparecerá primero en el carrusel
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <Icon name="lightbulb" size={14} style={{ flexShrink: 0 }} /> La primera foto será la portada y aparecerá primero en el carrusel
               </p>
 
               <input
@@ -483,8 +496,8 @@ export default function NewListingPage() {
               </div>
 
               <div style={{
-                background: '#fffbeb',
-                border: '1px solid #fed7aa',
+                background: '#f8fafc',
+                border: '1px solid #cbd5e1',
                 borderRadius: 12,
                 padding: '0.85rem 1rem',
                 display: 'flex',
@@ -493,18 +506,18 @@ export default function NewListingPage() {
                 gap: 12,
               }}>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#b45309', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span>⚡</span> Oferta Flash / Venta de Hoy
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#00345e', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Icon name="bolt" size={15} /> Oferta Flash / Venta de Hoy
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#92400e', marginTop: 2 }}>
-                    Destaca tu publicación con un distintivo ámbar para liquidar o vender hoy mismo en el campus.
+                  <div style={{ fontSize: '0.75rem', color: '#334155', marginTop: 2 }}>
+                    Destaca tu publicación para liquidar o vender hoy mismo en el campus.
                   </div>
                 </div>
                 <input
                   type="checkbox"
                   checked={isUrgent}
                   onChange={e => setIsUrgent(e.target.checked)}
-                  style={{ width: 19, height: 19, accentColor: '#d97706', cursor: 'pointer', flexShrink: 0 }}
+                  style={{ width: 19, height: 19, accentColor: '#00345e', cursor: 'pointer', flexShrink: 0 }}
                 />
               </div>
             </div>
@@ -516,7 +529,7 @@ export default function NewListingPage() {
                 fontSize: '0.85rem', color: '#b91c1c', marginBottom: '1rem',
                 display: 'flex', alignItems: 'center', gap: 8,
               }}>
-                <span>⚠️</span> {error || uploadError}
+                <Icon name="alert" size={16} style={{ flexShrink: 0 }} /> {error || uploadError}
               </div>
             )}
 
@@ -552,11 +565,15 @@ export default function NewListingPage() {
                     padding: '0.9rem',
                     cursor: !profileComplete ? 'not-allowed' : 'pointer',
                     opacity: !profileComplete ? 0.65 : 1,
-                    background: !profileComplete ? 'rgba(245, 158, 11, 0.2)' : undefined,
-                    color: !profileComplete ? '#fcd34d' : undefined,
+                    background: !profileComplete ? '#f1f5f9' : undefined,
+                    color: !profileComplete ? '#0a192f' : undefined,
                     borderWidth: !profileComplete ? 1 : 0,
                     borderStyle: 'solid',
-                    borderColor: !profileComplete ? 'rgba(245, 158, 11, 0.4)' : 'transparent',
+                    borderColor: !profileComplete ? '#cbd5e1' : 'transparent',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
                   }}
                   title={!profileComplete ? 'Debes completar tu facultad y semestre en tu perfil primero' : ''}
                 >
@@ -566,8 +583,15 @@ export default function NewListingPage() {
                       {uploading ? `Subiendo fotos... ${progress}%` : 'Publicando...'}
                     </span>
                   ) : !profileComplete ? (
-                    '🔒 Completa tu perfil para publicar'
-                  ) : `🚀 Publicar${newFiles.length > 0 ? ` con ${newFiles.length} foto${newFiles.length > 1 ? 's' : ''}` : ''}`}
+                    <>
+                      <Icon name="lock" size={15} /> Completa tu perfil para publicar
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="rocket" size={15} />{' '}
+                      {`Publicar${newFiles.length > 0 ? ` con ${newFiles.length} foto${newFiles.length > 1 ? 's' : ''}` : ''}`}
+                    </>
+                  )}
                 </button>
               </div>
             </div>

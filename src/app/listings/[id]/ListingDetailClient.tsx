@@ -10,6 +10,7 @@ import { computeReputation } from '@/lib/reputation'
 import { createClient } from '@/lib/supabase/client'
 import type { Listing } from '@/types'
 import Link from 'next/link'
+import Icon from '@/components/Icon'
 import { sanitize } from '@/lib/utils'
 import { getOrCreateChat } from '@/lib/chat'
 import { deleteListingAction } from '@/actions/admin'
@@ -84,7 +85,9 @@ export default function ListingDetailClient({ id }: { id: string }) {
         <Navbar />
         <main style={{ paddingTop: 64, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>😕</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem', color: 'var(--text-muted)' }}>
+              <Icon name="frown" size={44} />
+            </div>
             <h2 style={{ fontWeight: 700, marginBottom: 8 }}>Publicación no encontrada</h2>
             <Link href="/"><button className="btn-primary">Volver al inicio</button></Link>
           </div>
@@ -100,7 +103,7 @@ export default function ListingDetailClient({ id }: { id: string }) {
     }
 
     if (!profileComplete) {
-      alert('⚠️ Debes completar tu facultad y semestre en tu perfil antes de contactar a un vendedor.')
+      alert('Debes completar tu facultad y semestre en tu perfil antes de contactar a un vendedor.')
       router.push('/profile')
       return
     }
@@ -125,7 +128,7 @@ export default function ListingDetailClient({ id }: { id: string }) {
   const formatPrice = (p: number) => new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' }).format(p)
 
   const handleDeleteListing = async () => {
-    const reason = prompt('🛡️ Motivo de eliminación (será registrado en auditoría):')
+    const reason = prompt('Motivo de eliminación (será registrado en auditoría):')
     if (!reason) return
     if (!confirm(`¿Eliminar la publicación "${listing!.title}"? Esta acción no se puede deshacer.`)) return
     try {
@@ -159,22 +162,24 @@ export default function ListingDetailClient({ id }: { id: string }) {
           {/* Status banner */}
           {listing.status === 'pending_approval' && (
             <div style={{
-              background: editedPending ? 'rgba(34,197,94,0.1)' : 'rgba(99,102,241,0.1)',
-              border: editedPending ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(99,102,241,0.25)',
+              background: '#eff6ff',
+              border: '1px solid #bfdbfe',
               borderRadius: 12,
               padding: '1rem',
               marginBottom: '1.5rem',
               display: 'flex',
               alignItems: 'center',
               gap: 12,
-              color: editedPending ? '#86efac' : '#a5b4fc'
+              color: '#00345e'
             }}>
-              <span style={{ fontSize: '1.25rem' }}>{editedPending ? '✓' : '⏳'}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
+                {editedPending ? <Icon name="check" size={20} /> : <Icon name="clock" size={20} />}
+              </span>
               <div>
-                <strong style={{ display: 'block', color: 'white', fontSize: '0.9rem' }}>
+                <strong style={{ display: 'block', color: '#0a192f', fontSize: '0.9rem' }}>
                   {editedPending ? 'Cambios guardados correctamente' : 'Publicación en revisión'}
                 </strong>
-                <span style={{ fontSize: '0.8rem', opacity: 0.85 }}>
+                <span style={{ fontSize: '0.8rem', color: '#334155' }}>
                   {editedPending
                     ? 'Tu publicación fue actualizada y enviada a revisión nuevamente. Un moderador la aprobará pronto.'
                     : 'Esta publicación solo es visible para ti. Estará disponible públicamente una vez que el administrador la apruebe.'}
@@ -186,19 +191,19 @@ export default function ListingDetailClient({ id }: { id: string }) {
           {/* Banner perfil incompleto */}
           {userId && !profileComplete && (
             <div style={{
-              background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.4)',
+              background: '#eff6ff', border: '1px solid #bfdbfe',
               borderRadius: 12, padding: '0.875rem 1.25rem', marginBottom: '1.5rem',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: '1.25rem' }}>⚠️</span>
+                <Icon name="alert" size={20} style={{ color: '#00345e', flexShrink: 0 }} />
                 <div>
-                  <strong style={{ display: 'block', color: '#fcd34d', fontSize: '0.88rem' }}>Completa tu perfil para continuar</strong>
-                  <span style={{ fontSize: '0.78rem', color: '#fde68a', opacity: 0.9 }}>Falta tu facultad y semestre en tu cuenta.</span>
+                  <strong style={{ display: 'block', color: '#0a192f', fontSize: '0.88rem' }}>Completa tu perfil para continuar</strong>
+                  <span style={{ fontSize: '0.78rem', color: '#334155' }}>Falta tu facultad y semestre en tu cuenta.</span>
                 </div>
               </div>
               <Link href="/profile" style={{
-                background: '#f59e0b', color: 'white', padding: '0.45rem 1rem',
+                background: '#00345e', color: 'white', padding: '0.45rem 1rem',
                 borderRadius: 8, fontWeight: 700, fontSize: '0.8rem', textDecoration: 'none', whiteSpace: 'nowrap'
               }}>Completar ahora →</Link>
             </div>
@@ -218,15 +223,18 @@ export default function ListingDetailClient({ id }: { id: string }) {
                 <span className="badge badge-indigo">{listing.category}</span>
                 {listing.is_urgent && (
                   <span style={{
-                    background: 'linear-gradient(135deg, #d97706, #b45309)',
+                    background: 'linear-gradient(135deg, #00345e, #004b87)',
                     color: '#ffffff',
                     fontSize: '0.72rem',
                     fontWeight: 800,
                     padding: '3px 9px',
                     borderRadius: 99,
                     boxShadow: '0 2px 8px rgba(217, 119, 6, 0.35)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
                   }}>
-                    ⚡ Oferta Flash
+                    <Icon name="bolt" size={12} /> Oferta Flash
                   </span>
                 )}
               </div>
@@ -282,7 +290,11 @@ export default function ListingDetailClient({ id }: { id: string }) {
                               border: `1px solid ${rep.badgeColor}30`,
                               padding: '1px 7px',
                               borderRadius: 99,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4,
                             }}>
+                              <Icon name={rep.badgeIcon} size={11} />
                               {rep.badgeLabel}
                             </span>
                           )
@@ -324,16 +336,16 @@ export default function ListingDetailClient({ id }: { id: string }) {
                       fontFamily: 'inherit',
                       fontSize: '0.9rem',
                       opacity: !profileComplete ? 0.85 : 1,
-                      background: !profileComplete ? '#fffbeb' : undefined,
-                      color: !profileComplete ? '#b45309' : undefined,
-                      border: !profileComplete ? '1px solid #fcd34d' : 'none',
+                      background: !profileComplete ? '#f1f5f9' : undefined,
+                      color: !profileComplete ? '#0a192f' : undefined,
+                      border: !profileComplete ? '1px solid #cbd5e1' : 'none',
                       padding: '0.625rem 1.1rem',
                     }}
                     title={!profileComplete ? 'Debes completar tu facultad y semestre en tu perfil primero' : ''}
                   >
                     {contacting ? 'Conectando...' : !profileComplete ? (
                       <>
-                        <span>🔒</span>
+                        <Icon name="lock" size={16} style={{ flexShrink: 0 }} />
                         <span>Completa tu perfil para contactar</span>
                       </>
                     ) : (
@@ -349,7 +361,19 @@ export default function ListingDetailClient({ id }: { id: string }) {
 
                 {isSeller && (
                   <Link href={`/listings/${listing.id}/edit`} style={{ flex: '1 1 180px' }}>
-                    <button className="btn-secondary" style={{ width: '100%', minHeight: 44 }}>✏️ Editar publicación</button>
+                    <button
+                      className="btn-secondary"
+                      style={{
+                        width: '100%',
+                        minHeight: 44,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6,
+                      }}
+                    >
+                      <Icon name="edit" size={15} /> Editar publicación
+                    </button>
                   </Link>
                 )}
 
@@ -391,7 +415,7 @@ export default function ListingDetailClient({ id }: { id: string }) {
                       width: '100%',
                     }}
                   >
-                    🗑️ Eliminar publicación (Moderación)
+                    <Icon name="trash" size={16} style={{ flexShrink: 0 }} /> Eliminar publicación (Moderación)
                   </button>
                 )}
               </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { createPortal } from 'react-dom'
+import Icon from '@/components/Icon'
 
 interface BusinessModalProps {
   isOpen: boolean
@@ -48,6 +49,7 @@ export default function BusinessModal({ isOpen, onClose }: BusinessModalProps) {
       >
         <button
           onClick={onClose}
+          aria-label="Cerrar"
           style={{
             position: 'absolute',
             top: 16,
@@ -59,16 +61,17 @@ export default function BusinessModal({ isOpen, onClose }: BusinessModalProps) {
             width: 32,
             height: 32,
             cursor: 'pointer',
-            fontSize: '1rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          ✕
+          <Icon name="x" size={16} />
         </button>
 
-        <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>💼</div>
+        <div style={{ marginBottom: '0.85rem', color: '#00345e', display: 'flex', justifyContent: 'center' }}>
+          <Icon name="briefcase" size={44} strokeWidth={1.6} />
+        </div>
 
         <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.75rem', color: '#0a192f' }}>
           ¿Tienes un negocio o marca externa?
@@ -106,7 +109,7 @@ export default function BusinessModal({ isOpen, onClose }: BusinessModalProps) {
             width: '100%',
           }}
         >
-          <span style={{ fontSize: '1.25rem' }}>💬</span>
+          <Icon name="message" size={18} />
           Contactar por WhatsApp
         </a>
       </div>

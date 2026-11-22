@@ -205,11 +205,13 @@ export interface Message {
   sender?: Profile
 }
 
+import type { IconName } from '@/components/Icon'
+
 export type ReputationTier = 1 | 2 | 3 | 4
 
 export interface AchievementBadge {
   id: string
-  icon: string
+  icon: IconName
   title: string
   description: string
   unlocked: boolean
@@ -219,9 +221,11 @@ export interface ReputationInfo {
   level: ReputationTier
   levelName: string
   badgeLabel: string
+  badgeIcon: IconName
   badgeColor: string
   badges: AchievementBadge[]
   canBump: boolean
   progressPercent: number
   nextLevelName: string | null
+  nextLevelIcon: IconName | null
 }

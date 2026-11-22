@@ -1,5 +1,7 @@
 'use client'
 
+import Icon from '@/components/Icon'
+
 interface ZoomModalProps {
   imageUrl: string | null
   onClose: () => void
@@ -57,9 +59,9 @@ export default function ZoomModal({ imageUrl, onClose }: ZoomModalProps) {
         <button
           onClick={onClose}
           className="btn-secondary"
-          style={{ marginTop: '0.75rem', padding: '0.4rem 1.25rem', fontSize: '0.85rem' }}
+          style={{ marginTop: '0.75rem', padding: '0.4rem 1.25rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: 6 }}
         >
-          Cerrar vista previa ✕
+          Cerrar vista previa <Icon name="x" size={14} />
         </button>
       </div>
     </div>

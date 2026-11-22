@@ -1,6 +1,7 @@
 'use client'
 
 import { createPortal } from 'react-dom'
+import Icon from '@/components/Icon'
 
 interface PWAInstallModalProps {
   isOpen: boolean
@@ -49,6 +50,7 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
       >
         <button
           onClick={onClose}
+          aria-label="Cerrar"
           style={{
             position: 'absolute',
             top: 16,
@@ -66,7 +68,7 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
             justifyContent: 'center',
           }}
         >
-          ✕
+          <Icon name="x" size={16} />
         </button>
 
         <div
@@ -117,7 +119,7 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
                 fontSize: '0.9rem',
               }}
             >
-              <span>🍎</span> Instrucciones para iPhone / iPad (Safari):
+              <Icon name="smartphone" size={16} /> Instrucciones para iPhone / iPad (Safari):
             </div>
             <div
               style={{
@@ -148,8 +150,11 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
                   1
                 </span>
                 <span>
-                  Toca el botón <strong>Compartir</strong> <span style={{ fontSize: '1rem' }}>📤</span> en la barra
-                  inferior de Safari.
+                  Toca el botón <strong>Compartir</strong>{' '}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle' }}>
+                    <Icon name="arrowUpRight" size={15} />
+                  </span>{' '}
+                  en la barra inferior de Safari.
                 </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
@@ -171,7 +176,11 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
                   2
                 </span>
                 <span>
-                  Desliza hacia abajo y selecciona <strong>«Agregar a pantalla de inicio»</strong> ➕.
+                  Desliza hacia abajo y selecciona <strong>«Agregar a pantalla de inicio»</strong>{' '}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle' }}>
+                    <Icon name="plus" size={14} />
+                  </span>
+                  .
                 </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
@@ -220,7 +229,7 @@ export default function PWAInstallModal({ isOpen, isIOS, onClose }: PWAInstallMo
                 fontSize: '0.9rem',
               }}
             >
-              <span>📱</span> Pasos para instalar en tu navegador:
+              <Icon name="smartphone" size={16} /> Pasos para instalar en tu navegador:
             </div>
             <div
               style={{

@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { sendNotificationAction } from '@/actions/notifications'
 import { computeReputation } from '@/lib/reputation'
 import VerifiedBadge from '@/components/VerifiedBadge'
+import Icon from '@/components/Icon'
 
 export default function ChatDetailPage() {
   const { chatId } = useParams<{ chatId: string }>()
@@ -205,15 +206,22 @@ export default function ChatDetailPage() {
                       border: `1px solid ${rep.badgeColor}30`,
                       padding: '1px 6px',
                       borderRadius: 99,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 3,
                     }}>
+                      <Icon name={rep.badgeIcon} size={11} />
                       {rep.badgeLabel}
                     </span>
                   )
                 })()}
               </div>
               <Link href={`/listings/${chat.listing_id}`} style={{ textDecoration: 'none' }}>
-                <div style={{ fontSize: '0.8rem', color: '#00345e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>
-                  📦 {chat.listings?.title}
+                <div style={{ fontSize: '0.8rem', color: '#00345e', display: 'flex', alignItems: 'center', gap: 5, marginTop: 2, minWidth: 0 }}>
+                  <Icon name="package" size={13} style={{ flexShrink: 0 }} />
+                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {chat.listings?.title}
+                  </span>
                 </div>
               </Link>
             </div>

@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, type ReactNode } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
+import Icon from '@/components/Icon'
 import { createClient } from '@/lib/supabase/client'
 import type { Listing, Profile } from '@/types'
 import { computeReputation } from '@/lib/reputation'
@@ -145,7 +146,9 @@ export default function DashboardPage() {
         <Navbar />
         <main style={{ paddingTop: 64, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="page-container glass-card animate-fade-in-up" style={{ maxWidth: 500, padding: '3rem 2rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚫</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem', color: 'var(--accent-red)' }}>
+              <Icon name="ban" size={44} />
+            </div>
             <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--accent-red)', marginBottom: '1rem' }}>
               Acceso Restringido
             </h1>
@@ -169,8 +172,9 @@ export default function DashboardPage() {
           {/* Header */}
           <div className="animate-fade-in-up" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
             <div>
-              <h1 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: 4 }}>
-                Hola, {profile?.full_name?.split(' ')[0] ?? 'Vendedor'} 👋
+              <h1 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span>Hola, {profile?.full_name?.split(' ')[0] ?? 'Vendedor'}</span>
+                <Icon name="wave" size={24} style={{ color: '#00345e' }} />
               </h1>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Gestiona tus publicaciones desde aquí</p>
             </div>
@@ -206,7 +210,11 @@ export default function DashboardPage() {
                         padding: '2px 8px',
                         borderRadius: 99,
                         border: `1px solid ${rep.badgeColor}30`,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
                       }}>
+                        <Icon name={rep.badgeIcon} size={13} />
                         {rep.badgeLabel}
                       </span>
                     </div>
@@ -224,7 +232,13 @@ export default function DashboardPage() {
                 <div style={{ marginTop: '0.85rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>
                     <span>Progreso de confianza: <strong>{rep.progressPercent}%</strong></span>
-                    {rep.nextLevelName && <span>Siguiente: <strong>{rep.nextLevelName}</strong></span>}
+                    {rep.nextLevelName && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        Siguiente:{' '}
+                        {rep.nextLevelIcon && <Icon name={rep.nextLevelIcon} size={12} />}
+                        <strong>{rep.nextLevelName}</strong>
+                      </span>
+                    )}
                   </div>
                   <div style={{ width: '100%', height: 6, background: '#f1f5f9', borderRadius: 999, overflow: 'hidden' }}>
                     <div style={{ width: `${rep.progressPercent}%`, height: '100%', background: `linear-gradient(90deg, #00345e, ${rep.badgeColor})`, borderRadius: 999, transition: 'width 0.4s ease' }} />
@@ -233,13 +247,13 @@ export default function DashboardPage() {
 
                 <div style={{ display: 'flex', gap: 16, marginTop: '0.85rem', flexWrap: 'wrap', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                    {profile.is_verified ? '✅' : '🔒'} Bump diario ({profile.is_verified ? 'Desbloqueado' : 'Requiere verificar carnet'})
+                    {profile.is_verified ? <Icon name="checkCircle" size={14} style={{ color: '#00345e' }} /> : <Icon name="lock" size={14} />} Bump diario ({profile.is_verified ? 'Desbloqueado' : 'Requiere verificar carnet'})
                   </span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                    ⭐ {profile.review_count ?? 0} {profile.review_count === 1 ? 'opinión' : 'opiniones'}
+                    <Icon name="star" size={14} /> {profile.review_count ?? 0} {profile.review_count === 1 ? 'opinión' : 'opiniones'}
                   </span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                    📦 Publicaciones gratuitas ilimitadas
+                    <Icon name="package" size={14} /> Publicaciones gratuitas ilimitadas
                   </span>
                 </div>
               </div>
@@ -248,10 +262,10 @@ export default function DashboardPage() {
 
           {/* Stats */}
           <div className="animate-fade-in-up delay-100" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-            <StatCard icon="📦" label="Total publicaciones" value={listings.length} color="#00345e" />
-            <StatCard icon="✅" label="Activas" value={activeListings} color="#10b981" />
-            <StatCard icon="⏸️" label="Pausadas" value={listings.filter(l => l.status === 'paused').length} color="#f59e0b" />
-            <StatCard icon="👁️" label="Vistas totales" value={listings.reduce((s, l) => s + l.views, 0)} color="#004b87" />
+            <StatCard icon={<Icon name="package" size={18} />} label="Total publicaciones" value={listings.length} color="#00345e" />
+            <StatCard icon={<Icon name="checkCircle" size={18} />} label="Activas" value={activeListings} color="#004b87" />
+            <StatCard icon={<Icon name="pause" size={18} />} label="Pausadas" value={listings.filter(l => l.status === 'paused').length} color="#0a192f" />
+            <StatCard icon={<Icon name="eye" size={18} />} label="Vistas totales" value={listings.reduce((s, l) => s + l.views, 0)} color="#00345e" />
           </div>
 
           {/* Listings */}
@@ -262,7 +276,9 @@ export default function DashboardPage() {
 
             {listings.length === 0 ? (
               <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📭</div>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem', color: 'var(--text-muted)' }}>
+                  <Icon name="inbox" size={44} />
+                </div>
                 <h3 style={{ fontWeight: 700, marginBottom: 8 }}>Aún no tienes publicaciones</h3>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
                   Crea tu primera publicación y empieza a vender
@@ -279,13 +295,13 @@ export default function DashboardPage() {
                     <div style={{
                       width: 56, height: 56, borderRadius: 10, flexShrink: 0, overflow: 'hidden',
                       background: 'linear-gradient(135deg, rgba(0,52,94,0.1), rgba(0,75,135,0.1))',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00345e',
                     }}>
                       {listing.image_url ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img src={listing.image_url} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        '📦'
+                        <Icon name="package" size={22} />
                       )}
                     </div>
 
@@ -294,7 +310,7 @@ export default function DashboardPage() {
                         {listing.title}
                       </div>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <span style={{ color: 'var(--accent-amber)', fontWeight: 800, fontSize: '0.9rem' }}>
+                        <span style={{ color: '#00345e', fontWeight: 800, fontSize: '0.9rem' }}>
                           ${listing.price}
                         </span>
                         <span className={`badge ${listing.status === 'active' ? 'badge-green' : listing.status === 'pending_approval' ? 'badge-indigo' : 'badge-amber'}`}>
@@ -330,7 +346,15 @@ export default function DashboardPage() {
                               }}
                               title={canBumpNow ? 'Subir al inicio del catálogo (gratis cada 24h)' : `Próximo bump disponible en ${hoursLeft} horas`}
                             >
-                              {bumpingId === listing.id ? 'Subiendo...' : canBumpNow ? '🚀 Subir al inicio' : `Reactivado (${hoursLeft}h)`}
+                              {bumpingId === listing.id ? (
+                                'Subiendo...'
+                              ) : canBumpNow ? (
+                                <>
+                                  <Icon name="rocket" size={14} /> Subir al inicio
+                                </>
+                              ) : (
+                                `Reactivado (${hoursLeft}h)`
+                              )}
                             </button>
 
                             <button
@@ -342,14 +366,18 @@ export default function DashboardPage() {
                                 fontWeight: 700,
                                 borderRadius: 8,
                                 cursor: 'pointer',
-                                border: listing.is_urgent ? '1px solid #d97706' : '1px solid var(--border)',
-                                background: listing.is_urgent ? '#fffbeb' : '#ffffff',
-                                color: listing.is_urgent ? '#b45309' : 'var(--text-secondary)',
+                                border: listing.is_urgent ? '1px solid #00345e' : '1px solid var(--border)',
+                                background: listing.is_urgent ? 'rgba(0, 52, 94, 0.08)' : '#ffffff',
+                                color: listing.is_urgent ? '#00345e' : 'var(--text-secondary)',
                                 transition: 'all 0.2s',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
                               }}
                               title="Destacar como oferta rápida del día"
                             >
-                              {listing.is_urgent ? '⚡ Oferta activa' : '⚡ Oferta hoy'}
+                              <Icon name="bolt" size={13} />
+                              {listing.is_urgent ? 'Oferta activa' : 'Oferta hoy'}
                             </button>
                           </>
                         )
@@ -401,14 +429,15 @@ export default function DashboardPage() {
   )
 }
 
-function StatCard({ icon, label, value, color }: { icon: string; label: string; value: number; color: string }) {
+function StatCard({ icon, label, value, color }: { icon: ReactNode; label: string; value: number; color: string }) {
   return (
     <div className="glass-card" style={{ padding: '1.25rem', cursor: 'default' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
         <div style={{
           width: 36, height: 36, borderRadius: 10,
           background: `${color}20`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem',
+          color,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>{icon}</div>
         <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</span>
       </div>

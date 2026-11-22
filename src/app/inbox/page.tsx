@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
+import Icon from '@/components/Icon'
 import { createClient } from '@/lib/supabase/client'
 import type { Chat } from '@/types'
 
@@ -99,8 +100,9 @@ export default function InboxPage() {
         <div className="page-container" style={{ paddingTop: '2.5rem', maxWidth: 800 }}>
 
           <div className="animate-fade-in-up" style={{ marginBottom: '2rem' }}>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: 4 }}>
-              Mensajes 💬
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span>Mensajes</span>
+              <Icon name="message" size={24} style={{ color: '#00345e' }} />
             </h1>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
               Tus conversaciones con otros estudiantes
@@ -110,7 +112,9 @@ export default function InboxPage() {
           <div className="animate-fade-in-up delay-100" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {chats.length === 0 ? (
               <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📭</div>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem', color: 'var(--text-muted)' }}>
+                  <Icon name="inbox" size={44} />
+                </div>
                 <h3 style={{ fontWeight: 700, marginBottom: 8 }}>Bandeja vacía</h3>
                 <p style={{ color: 'var(--text-secondary)' }}>Aún no tienes mensajes</p>
               </div>
@@ -163,8 +167,11 @@ export default function InboxPage() {
                               {lastMessage ? new Date(lastMessage.created_at).toLocaleDateString() : ''}
                             </span>
                           </div>
-                          <div style={{ fontSize: '0.8rem', color: '#00345e', fontWeight: 600, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            📦 {chat.listings?.title}
+                          <div style={{ fontSize: '0.8rem', color: '#00345e', fontWeight: 600, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
+                            <Icon name="package" size={14} style={{ flexShrink: 0 }} />
+                            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {chat.listings?.title}
+                            </span>
                           </div>
                           <div style={{
                             fontSize: '0.85rem',
@@ -225,7 +232,7 @@ export default function InboxPage() {
                         ;(e.currentTarget as HTMLButtonElement).style.borderColor = '#fecaca'
                       }}
                     >
-                      {isDeleting ? '⏳' : '🗑️'}
+                      {isDeleting ? <Icon name="clock" size={16} /> : <Icon name="trash" size={16} />}
                     </button>
                   </div>
                 )

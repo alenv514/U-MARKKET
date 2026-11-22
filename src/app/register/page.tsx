@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { UTA_FACULTY_CAREERS, SEMESTERS } from '@/types'
+import Icon from '@/components/Icon'
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('')
@@ -165,7 +166,9 @@ export default function RegisterPage() {
     return (
       <div className="auth-container">
         <div className="glass-card animate-fade-in" style={{ maxWidth: 440, width: '100%', padding: '2.5rem 1.5rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🔢</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem', color: 'var(--accent-primary)' }}>
+            <Icon name="hash" size={42} />
+          </div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Ingresa tu código</h2>
           <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5, fontSize: '0.9rem', marginBottom: '1.5rem' }}>
             Enviamos el código a <strong style={{ color: 'var(--text-primary)' }}>{email}</strong>.
@@ -233,9 +236,9 @@ export default function RegisterPage() {
           {resendMessage && (
             <div style={{
               padding: '0.6rem 0.8rem', borderRadius: 8, marginBottom: '1rem', fontSize: '0.82rem',
-              background: resendMessage.includes('Error') ? '#fef2f2' : '#ecfdf5',
-              color: resendMessage.includes('Error') ? '#b91c1c' : '#047857',
-              border: resendMessage.includes('Error') ? '1px solid #fecaca' : '1px solid #a7f3d0'
+              background: resendMessage.includes('Error') ? '#fef2f2' : '#eff6ff',
+              color: resendMessage.includes('Error') ? '#b91c1c' : '#00345e',
+              border: resendMessage.includes('Error') ? '1px solid #fecaca' : '1px solid #bfdbfe'
             }}>
               {resendMessage}
             </div>
@@ -250,14 +253,21 @@ export default function RegisterPage() {
               style={{
                 width: '100%', padding: '0.7rem', fontSize: '0.85rem',
                 opacity: (resendTimer > 0 || resendLoading) ? 0.6 : 1,
-                cursor: (resendTimer > 0 || resendLoading) ? 'not-allowed' : 'pointer'
+                cursor: (resendTimer > 0 || resendLoading) ? 'not-allowed' : 'pointer',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               }}
             >
-              {resendLoading
-                ? 'Reenviando...'
-                : resendTimer > 0
-                ? `🔄 Reenviar código en (${formatTimer(resendTimer)})`
-                : '🔄 Reenviar nuevo código'}
+              {resendLoading ? (
+                'Reenviando...'
+              ) : resendTimer > 0 ? (
+                <>
+                  <Icon name="refresh" size={14} /> Reenviar código en ({formatTimer(resendTimer)})
+                </>
+              ) : (
+                <>
+                  <Icon name="refresh" size={14} /> Reenviar nuevo código
+                </>
+              )}
             </button>
 
             <Link href="/login" style={{ width: '100%', textDecoration: 'none' }}>
@@ -272,8 +282,8 @@ export default function RegisterPage() {
             marginTop: '1.5rem',
             padding: '0.85rem 1rem',
             borderRadius: 12,
-            background: 'rgba(37,211,102,0.07)',
-            border: '1px solid rgba(37,211,102,0.2)',
+            background: 'rgba(0, 52, 94, 0.05)',
+            border: '1px solid rgba(0, 52, 94, 0.18)',
             fontSize: '0.8rem',
             color: 'var(--text-secondary)',
             lineHeight: 1.6,
@@ -285,7 +295,7 @@ export default function RegisterPage() {
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                color: '#25d366',
+                color: '#00345e',
                 fontWeight: 700,
                 textDecoration: 'none',
                 display: 'inline-flex',
@@ -293,7 +303,7 @@ export default function RegisterPage() {
                 gap: 4,
               }}
             >
-              💬 Contáctanos por WhatsApp
+              <Icon name="message" size={14} /> Contáctanos por WhatsApp
             </a>
             {' '}y te ayudamos al instante.
           </div>
@@ -354,8 +364,8 @@ export default function RegisterPage() {
                 className="input-field"
                 required
               />
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                ⚠️ Solo se aceptan correos @uta.edu.ec
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <Icon name="alert" size={13} style={{ flexShrink: 0 }} /> Solo se aceptan correos @uta.edu.ec
               </p>
             </div>
 
@@ -471,7 +481,7 @@ export default function RegisterPage() {
                   }}
                   title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? <Icon name="eyeOff" size={18} /> : <Icon name="eye" size={18} />}
                 </button>
               </div>
             </div>
@@ -512,7 +522,7 @@ export default function RegisterPage() {
                   }}
                   title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? <Icon name="eyeOff" size={18} /> : <Icon name="eye" size={18} />}
                 </button>
               </div>
             </div>
@@ -562,7 +572,7 @@ export default function RegisterPage() {
                 borderRadius: 10, padding: '0.75rem 1rem',
                 fontSize: '0.85rem', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: 8,
               }}>
-                <span>⚠️</span> {error}
+                <Icon name="alert" size={16} style={{ flexShrink: 0 }} /> {error}
               </div>
             )}
 
@@ -627,6 +637,7 @@ export default function RegisterPage() {
             onClick={e => e.stopPropagation()}
           >
             <button 
+              aria-label="Cerrar"
               onClick={() => setShowAlreadyRegisteredModal(false)}
               style={{
                 position: 'absolute', top: 16, right: 16,
@@ -637,10 +648,12 @@ export default function RegisterPage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}
             >
-              ✕
+              <Icon name="x" size={16} />
             </button>
 
-            <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>⚠️</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem', color: '#ef4444' }}>
+              <Icon name="alert" size={44} />
+            </div>
 
             <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.75rem', color: '#ffffff' }}>
               Esta cuenta ya existe

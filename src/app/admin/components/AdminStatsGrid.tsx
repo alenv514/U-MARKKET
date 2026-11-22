@@ -2,6 +2,7 @@
 
 import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts'
 import type { AdminStats, WeeklyStatItem } from '../types'
+import Icon from '@/components/Icon'
 
 interface AdminStatsGridProps {
   stats: AdminStats
@@ -32,11 +33,11 @@ export default function AdminStatsGrid({
         }}
       >
         <div className="glass-card" style={{ padding: '1rem 1.5rem', cursor: 'default' }}>
-          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#3b82f6' }}>{stats.listings.total}</div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#00345e' }}>{stats.listings.total}</div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Publicaciones Totales</div>
           <div style={{ fontSize: '0.7rem', marginTop: 4, color: 'var(--text-secondary)' }}>
-            <span style={{ color: '#10b981' }}>{stats.listings.active} activas</span> •{' '}
-            <span style={{ color: '#f59e0b' }}>{stats.listings.paused} pausadas</span>
+            <span style={{ color: '#004b87', fontWeight: 600 }}>{stats.listings.active} activas</span> •{' '}
+            <span style={{ color: '#0a192f', fontWeight: 600 }}>{stats.listings.paused} pausadas</span>
           </div>
         </div>
 
@@ -46,12 +47,12 @@ export default function AdminStatsGrid({
           <div style={{ fontSize: '0.7rem', marginTop: 4, color: 'var(--text-secondary)' }}>
             <span style={{ color: '#004b87' }}>{stats.users.sellers} vendedores</span> •{' '}
             <span>{stats.users.buyers} compradores</span> •{' '}
-            <span style={{ color: '#dc2626' }}>{stats.users.admins} admins</span>
+            <span style={{ color: '#0a192f', fontWeight: 600 }}>{stats.users.admins} admins</span>
           </div>
         </div>
 
         <div className="glass-card" style={{ padding: '1rem 1.5rem', cursor: 'default' }}>
-          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#10b981' }}>{stats.activeSubs}</div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#004b87' }}>{stats.activeSubs}</div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Suscripciones Activas</div>
         </div>
 
@@ -61,7 +62,7 @@ export default function AdminStatsGrid({
         </div>
 
         <div className="glass-card" style={{ padding: '1rem 1.5rem', cursor: 'default' }}>
-          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#f59e0b' }}>{stats.listings.pending}</div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#0a192f' }}>{stats.listings.pending}</div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Publicaciones por Aprobar</div>
         </div>
 
@@ -80,7 +81,7 @@ export default function AdminStatsGrid({
               storageUsedMB !== null && storageUsedMB > 800
                 ? 'rgba(220,38,38,0.45)'
                 : storageUsedMB !== null && storageUsedMB > 600
-                ? 'rgba(245,158,11,0.4)'
+                ? 'rgba(0,52,94,0.35)'
                 : undefined,
           }}
         >
@@ -92,15 +93,15 @@ export default function AdminStatsGrid({
                 storageUsedMB !== null && storageUsedMB > 800
                   ? '#dc2626'
                   : storageUsedMB !== null && storageUsedMB > 600
-                  ? '#f59e0b'
-                  : '#06b6d4',
+                  ? '#0a192f'
+                  : '#00345e',
             }}
           >
             {storageUsedMB !== null ? `${storageUsedMB} MB` : '...'}
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Almacenamiento Usado</div>
           <div style={{ marginTop: 6 }}>
-            <div style={{ height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+            <div style={{ height: 4, borderRadius: 4, background: '#e2e8f0', overflow: 'hidden' }}>
               <div
                 style={{
                   height: '100%',
@@ -110,8 +111,8 @@ export default function AdminStatsGrid({
                     storageUsedMB !== null && storageUsedMB > 800
                       ? '#dc2626'
                       : storageUsedMB !== null && storageUsedMB > 600
-                      ? '#f59e0b'
-                      : '#06b6d4',
+                      ? '#0a192f'
+                      : '#00345e',
                   transition: 'width 0.5s ease',
                 }}
               />
@@ -139,7 +140,7 @@ export default function AdminStatsGrid({
                 textAlign: 'center',
               }}
             >
-              <span style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⚠️</span>
+              <Icon name="alert" size={32} style={{ marginBottom: '0.5rem' }} />
               <strong>Falta la función en la base de datos</strong>
               <p style={{ fontSize: '0.85rem', maxWidth: 400, marginTop: '0.5rem' }}>
                 Asegúrate de ejecutar la consulta SQL de `get_weekly_stats` en el SQL Editor de Supabase.<br />
@@ -177,10 +178,10 @@ export default function AdminStatsGrid({
                   type="monotone"
                   name="Nuevos Usuarios"
                   dataKey="new_users"
-                  stroke="#059669"
+                  stroke="#0a192f"
                   strokeWidth={4}
                   dot={{ r: 4, strokeWidth: 2, fill: '#ffffff' }}
-                  activeDot={{ r: 6, fill: '#059669' }}
+                  activeDot={{ r: 6, fill: '#0a192f' }}
                 />
               </LineChart>
             </ResponsiveContainer>

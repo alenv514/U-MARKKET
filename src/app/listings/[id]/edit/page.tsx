@@ -8,6 +8,7 @@ import { CATEGORIES } from '@/types'
 import type { Listing } from '@/types'
 import { sanitize, isValidPrice, isValidEcuadorPhone, checkBannedWords } from '@/lib/utils'
 import { useImageUpload } from '@/hooks/useImageUpload'
+import Icon from '@/components/Icon'
 
 const MAX_PHOTOS = 1
 
@@ -189,7 +190,9 @@ export default function EditListingPage() {
         <Navbar />
         <main style={{ paddingTop: 64, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔒</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem', color: 'var(--text-muted)' }}>
+              <Icon name="lock" size={44} />
+            </div>
             <h2 style={{ fontWeight: 700, marginBottom: 8 }}>No tienes permiso para editar esta publicación</h2>
             <button onClick={() => router.push('/dashboard')} className="btn-primary" style={{ marginTop: '1rem' }}>
               Volver al dashboard
@@ -208,8 +211,9 @@ export default function EditListingPage() {
 
           {/* Header */}
           <div className="animate-fade-in-up" style={{ marginBottom: '2rem' }}>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: 4 }}>
-              Editar publicación ✏️
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>Editar publicación</span>
+              <Icon name="edit" size={22} style={{ color: '#00345e' }} />
             </h1>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
               Actualiza los datos de tu producto o servicio
@@ -218,11 +222,11 @@ export default function EditListingPage() {
               <div style={{
                 marginTop: '0.75rem',
                 padding: '0.75rem 1rem',
-                background: 'rgba(245, 158, 11, 0.1)',
-                border: '1px solid rgba(245, 158, 11, 0.3)',
+                background: '#eff6ff',
+                border: '1px solid #bfdbfe',
                 borderRadius: 12,
                 fontSize: '0.82rem',
-                color: '#fcd34d',
+                color: '#00345e',
                 lineHeight: 1.5,
               }}>
                 Al guardar los cambios, tu publicación pasará a revisión nuevamente antes de ser visible.
@@ -235,9 +239,10 @@ export default function EditListingPage() {
             {/* ── Gestión de fotos ── */}
             <div className="glass-card animate-fade-in-up delay-100" style={{ padding: '1.5rem', marginBottom: '1.25rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                  📸 Fotos
-                  <span style={{ marginLeft: 8, fontWeight: 400, color: 'var(--text-muted)' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Icon name="camera" size={16} />
+                  <span>Fotos</span>
+                  <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>
                     ({totalPhotos}/{MAX_PHOTOS})
                   </span>
                 </label>
@@ -264,7 +269,9 @@ export default function EditListingPage() {
                   onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = '#00345e')}
                   onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--border)')}
                 >
-                  <div style={{ fontSize: '2rem', marginBottom: 6 }}>📸</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6, color: '#00345e' }}>
+                    <Icon name="camera" size={32} />
+                  </div>
                   <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Subir fotos</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Hasta {MAX_PHOTOS} fotos · máx. 5MB cada una</div>
                 </div>
@@ -296,7 +303,9 @@ export default function EditListingPage() {
                           width: 22, height: 22, cursor: 'pointer', color: 'white',
                           display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem',
                         }}
-                      >✕</button>
+                      >
+                        <Icon name="x" size={12} />
+                      </button>
                     </div>
                   ))}
 
@@ -320,7 +329,9 @@ export default function EditListingPage() {
                           width: 22, height: 22, cursor: 'pointer', color: 'white',
                           display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem',
                         }}
-                      >✕</button>
+                      >
+                        <Icon name="x" size={12} />
+                      </button>
                     </div>
                   ))}
 
@@ -444,8 +455,8 @@ export default function EditListingPage() {
               </div>
 
               <div style={{
-                background: '#fffbeb',
-                border: '1px solid #fed7aa',
+                background: '#f8fafc',
+                border: '1px solid #cbd5e1',
                 borderRadius: 12,
                 padding: '0.85rem 1rem',
                 display: 'flex',
@@ -454,18 +465,18 @@ export default function EditListingPage() {
                 gap: 12,
               }}>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#b45309', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span>⚡</span> Oferta Flash / Venta de Hoy
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#00345e', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Icon name="bolt" size={15} /> Oferta Flash / Venta de Hoy
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#92400e', marginTop: 2 }}>
-                    Destaca tu publicación con un distintivo ámbar para liquidar o vender hoy mismo en el campus.
+                  <div style={{ fontSize: '0.75rem', color: '#334155', marginTop: 2 }}>
+                    Destaca tu publicación para liquidar o vender hoy mismo en el campus.
                   </div>
                 </div>
                 <input
                   type="checkbox"
                   checked={isUrgent}
                   onChange={e => setIsUrgent(e.target.checked)}
-                  style={{ width: 19, height: 19, accentColor: '#d97706', cursor: 'pointer', flexShrink: 0 }}
+                  style={{ width: 19, height: 19, accentColor: '#00345e', cursor: 'pointer', flexShrink: 0 }}
                 />
               </div>
             </div>
@@ -478,7 +489,7 @@ export default function EditListingPage() {
                 color: '#b91c1c', marginBottom: '1rem',
                 display: 'flex', alignItems: 'center', gap: 8,
               }}>
-                <span>⚠️</span> {error || uploadError}
+                <Icon name="alert" size={16} style={{ flexShrink: 0 }} /> {error || uploadError}
               </div>
             )}
 
@@ -508,14 +519,18 @@ export default function EditListingPage() {
                   type="submit"
                   className="btn-primary"
                   disabled={saving || uploading}
-                  style={{ flex: 2, padding: '0.9rem' }}
+                  style={{ flex: 2, padding: '0.9rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                 >
                   {(saving || uploading) ? (
                     <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                       <span className="animate-spin" style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', display: 'inline-block' }} />
                       {uploading ? `Subiendo... ${progress}%` : 'Guardando...'}
                     </span>
-                  ) : '💾 Guardar cambios'}
+                  ) : (
+                    <>
+                      <Icon name="save" size={16} /> Guardar cambios
+                    </>
+                  )}
                 </button>
               </div>
             </div>

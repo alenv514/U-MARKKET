@@ -29,11 +29,11 @@ export default function TerminosPage() {
                 fontWeight: 700,
                 letterSpacing: 1.5,
                 textTransform: 'uppercase',
-                color: 'rgba(99, 102, 241, 0.7)',
-                background: 'rgba(99, 102, 241, 0.08)',
+                color: '#ffffff',
+                background: 'rgba(255, 255, 255, 0.08)',
                 padding: '4px 10px',
                 borderRadius: 20,
-                border: '1px solid rgba(99, 102, 241, 0.15)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
                 display: 'inline-block',
                 marginBottom: 12
               }}>
@@ -55,12 +55,12 @@ export default function TerminosPage() {
 
               {/* Cláusula de Propiedad Intelectual - Estilo discreto pero firme */}
               <div style={{
-                background: 'rgba(99, 102, 241, 0.03)',
-                border: '1px solid rgba(99, 102, 241, 0.12)',
+                background: 'rgba(0, 75, 135, 0.14)',
+                border: '1px solid rgba(147, 197, 253, 0.2)',
                 padding: '1.25rem 1.5rem',
                 borderRadius: 16
               }}>
-                <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'rgba(165, 180, 252, 0.85)', marginBottom: '0.6rem' }}>
+                <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.6rem' }}>
                   1. Titularidad Exclusiva y Derechos de Autor
                 </h2>
                 <p style={{ marginBottom: '0.6rem', color: 'rgba(255, 255, 255, 0.6)' }}>
@@ -76,12 +76,12 @@ export default function TerminosPage() {
 
               {/* 2. Autorización Expresa y Tratamiento de Datos (LOPDP) */}
               <div style={{
-                background: 'rgba(99, 102, 241, 0.04)',
-                border: '1px solid rgba(99, 102, 241, 0.15)',
+                background: 'rgba(0, 75, 135, 0.16)',
+                border: '1px solid rgba(147, 197, 253, 0.25)',
                 padding: '1.25rem 1.5rem',
                 borderRadius: 16
               }}>
-                <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'rgba(165, 180, 252, 0.9)', marginBottom: '0.6rem' }}>
+                <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.6rem' }}>
                   2. Consentimiento Expreso para el Manejo y Uso de Datos Personales
                 </h2>
                 <p style={{ marginBottom: '0.6rem', color: 'rgba(255, 255, 255, 0.65)' }}>
@@ -104,7 +104,7 @@ export default function TerminosPage() {
                   3. Cuentas y Verificación Estudiantil
                 </h2>
                 <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                  El servicio está destinado a la comunidad de la Universidad Técnica de Ambato (UTA). Requiere registro mediante un correo institucional activo (<code style={{ color: 'rgba(165, 180, 252, 0.8)' }}>@uta.edu.ec</code>). El usuario es responsable de mantener la confidencialidad de sus credenciales y de la veracidad de los datos académicos ingresados.
+                  El servicio está destinado a la comunidad de la Universidad Técnica de Ambato (UTA). Requiere registro mediante un correo institucional activo (<code style={{ color: '#93c5fd' }}>@uta.edu.ec</code>). El usuario es responsable de mantener la confidencialidad de sus credenciales y de la veracidad de los datos académicos ingresados.
                 </p>
               </div>
 
@@ -162,7 +162,7 @@ export default function TerminosPage() {
                   © 2026 U-Market · Propiedad de Alen Lenin Villamarín Velasco. Todos los derechos reservados.
                 </div>
                 <Link href="/" style={{ textDecoration: 'none' }}>
-                  <button className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <button className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', background: 'rgba(255,255,255,0.06)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.18)' }}>
                     ← Volver
                   </button>
                 </Link>

@@ -61,7 +61,7 @@ export default function StarRating({
                 viewBox="0 0 24 24" 
                 width={size} 
                 height={size}
-                fill="#f59e0b" /* ámbar/dorado */
+                fill="#00345e"
                 style={{ 
                   position: 'absolute', 
                   top: 0, 

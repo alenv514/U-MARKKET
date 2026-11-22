@@ -29,13 +29,13 @@ export default function VerifiedBadge({
         padding: showText ? padding : '2px',
         fontSize: font,
         borderRadius: 20,
-        background: showText ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.2))' : 'transparent',
-        border: showText ? '1px solid rgba(99, 102, 241, 0.35)' : 'none',
-        color: '#60a5fa',
+        background: showText ? 'rgba(0, 52, 94, 0.08)' : 'transparent',
+        border: showText ? '1px solid rgba(0, 52, 94, 0.25)' : 'none',
+        color: '#00345e',
         verticalAlign: 'middle',
         cursor: 'help',
       }}
-      title="🎓 Estudiante Oficial Verificado UTA (Credencial institucional comprobada)"
+      title="Estudiante Oficial Verificado UTA (Credencial institucional comprobada)"
     >
       <svg
         width={icon}

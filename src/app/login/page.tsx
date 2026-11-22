@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Icon from '@/components/Icon'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -152,7 +153,7 @@ export default function LoginPage() {
                   }}
                   title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? <Icon name="eyeOff" size={18} /> : <Icon name="eye" size={18} />}
                 </button>
               </div>
             </div>
@@ -163,7 +164,7 @@ export default function LoginPage() {
                 borderRadius: 10, padding: '0.75rem 1rem',
                 fontSize: '0.85rem', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: 8,
               }}>
-                <span>⚠️</span> {error}
+                <Icon name="alert" size={16} style={{ flexShrink: 0 }} /> {error}
               </div>
             )}
 

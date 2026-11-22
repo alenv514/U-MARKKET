@@ -17,6 +17,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getOrCreateChat } from '@/lib/chat'
 
 import VerifiedBadge from './VerifiedBadge'
+import Icon from './Icon'
 import { computeReputation } from '@/lib/reputation'
 
 function computeTimeAgo(dateStr?: string | null) {
@@ -93,15 +94,19 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
           </span>
           {listing.is_urgent && (
             <span style={{
-              background: 'linear-gradient(135deg, #d97706, #b45309)',
+              background: 'linear-gradient(135deg, #00345e, #004b87)',
               color: '#ffffff',
               fontSize: '0.68rem',
               fontWeight: 800,
               padding: '2px 8px',
               borderRadius: 6,
               boxShadow: '0 2px 8px rgba(217, 119, 6, 0.35)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
             }}>
-              ⚡ Oferta Flash
+              <Icon name="bolt" size={11} />
+              <span>Oferta Flash</span>
             </span>
           )}
         </div>
@@ -188,16 +193,21 @@ export default function ListingCard({ listing, currentUserId, onReport }: Listin
                     fontWeight: 700,
                     color: rep.badgeColor,
                     background: `${rep.badgeColor}15`,
-                    padding: '0px 5px',
+                    padding: '1px 6px',
                     borderRadius: 99,
                     border: `1px solid ${rep.badgeColor}25`,
                     whiteSpace: 'nowrap',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 3,
                   }}>
-                    {rep.badgeLabel}
+                    <Icon name={rep.badgeIcon} size={10} />
+                    <span>{rep.badgeLabel}</span>
                   </span>
                   {Boolean(listing.profiles.rating_avg && Number(listing.profiles.rating_avg) > 0) && (
-                    <span style={{ fontSize: '0.66rem', fontWeight: 700, color: '#d97706', display: 'inline-flex', alignItems: 'center', gap: 1 }}>
-                      ★ {Number(listing.profiles.rating_avg).toFixed(1)}
+                    <span style={{ fontSize: '0.66rem', fontWeight: 700, color: '#00345e', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                      <Icon name="star" size={11} />
+                      <span>{Number(listing.profiles.rating_avg).toFixed(1)}</span>
                     </span>
                   )}
                 </div>

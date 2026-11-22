@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
+import Icon from '@/components/Icon'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types'
 import {
@@ -254,7 +255,7 @@ export default function AdminPage() {
     if (repErr) { alert('Error al actualizar reporte: ' + repErr.message); return }
 
     setReports((prev) => prev.filter((r) => r.id !== reportId))
-    alert('⚠️ Advertencia registrada. El reporte ha sido marcado como revisado.')
+    alert('Advertencia registrada. El reporte ha sido marcado como revisado.')
   }
 
   const handleDismissReport = async (reportId: string) => {
@@ -410,7 +411,7 @@ export default function AdminPage() {
 
   const handleDeleteUser = async (userId: string, userName: string) => {
     const confirmed = confirm(
-      `⚠️ ELIMINAR USUARIO PERMANENTEMENTE\n\n¿Estás seguro de que deseas eliminar a "${userName}"?\n\nEsto eliminará:\n• Su cuenta de acceso\n• Su perfil\n• Todas sus publicaciones\n• Sus suscripciones\n\nEsta acción NO SE PUEDE DESHACER.`
+      `ELIMINAR USUARIO PERMANENTEMENTE\n\n¿Estás seguro de que deseas eliminar a "${userName}"?\n\nEsto eliminará:\n• Su cuenta de acceso\n• Su perfil\n• Todas sus publicaciones\n• Sus suscripciones\n\nEsta acción NO SE PUEDE DESHACER.`
     )
     if (!confirmed) return
     try {
@@ -429,7 +430,7 @@ export default function AdminPage() {
       const res = await assignModeratorAction(userId)
       if (res.success) {
         setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: 'moderator' } : u)))
-        alert('🛡️ Usuario designado como Moderador exitosamente.')
+        alert('Usuario designado como Moderador exitosamente.')
       }
     } catch (error: unknown) {
       const e = error as Error
@@ -461,7 +462,7 @@ export default function AdminPage() {
         setUsers((prev) =>
           prev.map((u) => (u.id === userId ? { ...u, is_verified: true, verification_status: 'approved' } : u))
         )
-        alert('🎓 Estudiante verificado exitosamente.')
+        alert('Estudiante verificado exitosamente.')
       } else {
         alert(res.error || 'Error al aprobar')
       }
@@ -620,9 +621,13 @@ export default function AdminPage() {
                   ? `Reportes (${reports.length})`
                   : t === 'users'
                   ? `Usuarios (${filteredUsers.length})`
-                  : t === 'approvals'
-                  ? `Aprobaciones (${pendingListings.length})`
-                  : `🎓 Verificaciones (${verifications.length})`}
+                  : t === 'approvals' ? (
+                      `Aprobaciones (${pendingListings.length})`
+                    ) : (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                        <Icon name="graduation" size={14} /> Verificaciones ({verifications.length})
+                      </span>
+                    )}
               </button>
             ))}
           </div>

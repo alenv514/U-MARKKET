@@ -1,6 +1,7 @@
 'use client'
 
 import VerifiedBadge from '@/components/VerifiedBadge'
+import Icon from '@/components/Icon'
 import type { UserWithSub } from '../types'
 
 interface UsersTabProps {
@@ -124,15 +125,19 @@ export default function UsersTab({
                         color: 'var(--text-secondary)',
                         marginBottom: 6,
                         wordBreak: 'break-all',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 5,
                       }}
                     >
-                      📧 {user.email}
+                      <Icon name="mail" size={13} style={{ flexShrink: 0 }} />
+                      <span>{user.email}</span>
                     </div>
                   )}
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {user.is_active === false && (
-                      <span className="badge badge-red" style={{ fontSize: '0.72rem' }}>
-                        🚫 Suspendido
+                      <span className="badge badge-red" style={{ fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <Icon name="ban" size={12} /> Suspendido
                       </span>
                     )}
                     <span
@@ -145,15 +150,29 @@ export default function UsersTab({
                           ? 'badge-indigo'
                           : 'badge-amber'
                       }`}
-                      style={{ fontSize: '0.72rem' }}
+                      style={{ fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: 4 }}
                     >
-                      {user.role === 'moderator' ? '🛡️ moderador' : user.role}
+                      {user.role === 'moderator' ? (
+                        <>
+                          <Icon name="shield" size={12} /> moderador
+                        </>
+                      ) : (
+                        user.role
+                      )}
                     </span>
                     <span
                       className={`badge ${subActive ? 'badge-green' : 'badge-amber'}`}
-                      style={{ fontSize: '0.72rem' }}
+                      style={{ fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: 4 }}
                     >
-                      {subActive ? `✅ ${sub?.plan ?? 'free'}` : '⏱ sin sub'}
+                      {subActive ? (
+                        <>
+                          <Icon name="checkCircle" size={12} /> {sub?.plan ?? 'free'}
+                        </>
+                      ) : (
+                        <>
+                          <Icon name="clock" size={12} /> sin sub
+                        </>
+                      )}
                     </span>
                   </div>
                 </div>
@@ -180,12 +199,16 @@ export default function UsersTab({
                           style={{
                             padding: '6px 12px',
                             fontSize: '0.75rem',
-                            background: '#10b981',
+                            background: '#00345e',
                             flex: '1 1 auto',
                             minHeight: 32,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 5,
                           }}
                         >
-                          🟢 Activar Cuenta
+                          <Icon name="checkCircle" size={13} /> Activar Cuenta
                         </button>
                       ) : (
                         <>
@@ -193,10 +216,10 @@ export default function UsersTab({
                             <button
                               onClick={() => onRevokeModerator(user.id)}
                               className="btn-secondary"
-                              style={{ padding: '6px 12px', fontSize: '0.75rem', flex: '1 1 auto', minHeight: 32 }}
+                              style={{ padding: '6px 12px', fontSize: '0.75rem', flex: '1 1 auto', minHeight: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                               title="Quitar rol de moderador"
                             >
-                              ↩️ Quitar Moderador
+                              <Icon name="rotateCcw" size={13} /> Quitar Moderador
                             </button>
                           ) : (
                             <>
@@ -207,20 +230,24 @@ export default function UsersTab({
                                   style={{
                                     padding: '6px 12px',
                                     fontSize: '0.75rem',
-                                    background: '#10b981',
+                                    background: '#00345e',
                                     flex: '1 1 auto',
                                     minHeight: 32,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 5,
                                   }}
                                 >
-                                  ✅ Vendedor (30d)
+                                  <Icon name="checkCircle" size={13} /> Vendedor (30d)
                                 </button>
                               ) : (
                                 <button
                                   onClick={() => onRevokeSeller(user.id)}
                                   className="btn-danger"
-                                  style={{ padding: '6px 12px', fontSize: '0.75rem', flex: '1 1 auto', minHeight: 32 }}
+                                  style={{ padding: '6px 12px', fontSize: '0.75rem', flex: '1 1 auto', minHeight: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                                 >
-                                  ❌ Revocar Vendedor
+                                  <Icon name="xCircle" size={13} /> Revocar Vendedor
                                 </button>
                               )}
                               <button
@@ -229,14 +256,18 @@ export default function UsersTab({
                                 style={{
                                   padding: '6px 12px',
                                   fontSize: '0.75rem',
-                                  color: '#f59e0b',
-                                  borderColor: 'rgba(245,158,11,0.4)',
+                                  color: '#00345e',
+                                  borderColor: 'rgba(0,52,94,0.3)',
                                   flex: '1 1 auto',
                                   minHeight: 32,
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: 5,
                                 }}
                                 title="Designar como Moderador"
                               >
-                                🛡️ Moderador
+                                <Icon name="shield" size={13} /> Moderador
                               </button>
                               <button
                                 onClick={() => onBanUser(user.id)}
@@ -246,9 +277,13 @@ export default function UsersTab({
                                   fontSize: '0.75rem',
                                   flex: '1 1 auto',
                                   minHeight: 32,
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: 5,
                                 }}
                               >
-                                🚫 Banear
+                                <Icon name="ban" size={13} /> Banear
                               </button>
                             </>
                           )}
@@ -267,7 +302,7 @@ export default function UsersTab({
                         }}
                         title="Eliminar usuario permanentemente"
                       >
-                        🗑️
+                        <Icon name="trash" size={14} />
                       </button>
                     </>
                   )}

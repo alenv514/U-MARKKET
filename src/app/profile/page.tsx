@@ -11,6 +11,7 @@ import { detectFace } from '@/lib/utils'
 import { deleteOwnAccountAction } from '@/actions/account'
 import { submitVerificationAction, getFeatureFlagAction } from '@/actions/verification'
 import VerifiedBadge from '@/components/VerifiedBadge'
+import Icon from '@/components/Icon'
 import { computeReputation } from '@/lib/reputation'
 
 export default function ProfilePage() {
@@ -183,7 +184,7 @@ export default function ProfilePage() {
       const { hasFace, supported } = await detectFace(file)
 
       if (supported && !hasFace) {
-        setError('⚠️ No se detectó un rostro humano en la imagen. Por favor, sube una foto tuya con el rostro visible y buena iluminación.')
+        setError('No se detectó un rostro humano en la imagen. Por favor, sube una foto tuya con el rostro visible y buena iluminación.')
         setFaceChecking(false)
         if (fileInputRef.current) fileInputRef.current.value = ''
         return
@@ -255,7 +256,7 @@ export default function ProfilePage() {
   }
 
   const handleDeleteAccount = async () => {
-    if (!confirm('⚠️ ¿Estás completamente seguro de querer ELIMINAR tu cuenta?\n\nEsta acción borrará irreversiblemente todos tus datos, publicaciones e imágenes. No se puede deshacer.')) return
+    if (!confirm('¿Estás completamente seguro de querer ELIMINAR tu cuenta?\n\nEsta acción borrará irreversiblemente todos tus datos, publicaciones e imágenes. No se puede deshacer.')) return
     
     setSaving(true)
     setError('')
@@ -500,17 +501,17 @@ export default function ProfilePage() {
                   borderRadius: 10, padding: '0.75rem 1rem', fontSize: '0.85rem',
                   color: '#b91c1c', display: 'flex', alignItems: 'center', gap: 8,
                 }}>
-                  <span>⚠️</span> {error || uploadError}
+                  <Icon name="alert" size={16} style={{ flexShrink: 0 }} /> {error || uploadError}
                 </div>
               )}
 
               {success && (
                 <div className="animate-fade-in" style={{
-                  background: '#ecfdf5', border: '1px solid #a7f3d0',
+                  background: '#eff6ff', border: '1px solid #bfdbfe',
                   borderRadius: 10, padding: '0.75rem 1rem', fontSize: '0.85rem',
-                  color: '#047857', display: 'flex', alignItems: 'center', gap: 8,
+                  color: '#00345e', display: 'flex', alignItems: 'center', gap: 8,
                 }}>
-                  <span>✅</span> {success}
+                  <Icon name="checkCircle" size={16} style={{ flexShrink: 0 }} /> {success}
                 </div>
               )}
 
@@ -534,16 +535,22 @@ export default function ProfilePage() {
               <div style={{ marginTop: '2.5rem', paddingTop: '1.75rem', borderTop: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: 8 }}>
                   <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span>🎓</span> Verificación de Identidad UTA
+                    <Icon name="graduation" size={20} style={{ color: '#00345e' }} /> Verificación de Identidad UTA
                   </h3>
                   {profile?.is_verified ? (
                     <VerifiedBadge size="md" showText />
                   ) : profile?.verification_status === 'pending' ? (
-                    <span className="badge badge-amber" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>⏳ En Revisión</span>
+                    <span className="badge badge-amber" style={{ padding: '4px 10px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <Icon name="clock" size={13} /> En Revisión
+                    </span>
                   ) : profile?.verification_status === 'rejected' ? (
-                    <span className="badge badge-red" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>❌ Rechazado</span>
+                    <span className="badge badge-red" style={{ padding: '4px 10px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <Icon name="xCircle" size={13} /> Rechazado
+                    </span>
                   ) : (
-                    <span className="badge" style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>⚪ No verificado</span>
+                    <span className="badge" style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <Icon name="circleDot" size={13} /> No verificado
+                    </span>
                   )}
                 </div>
 
@@ -566,13 +573,13 @@ export default function ProfilePage() {
                       height: 44,
                       borderRadius: '50%',
                       background: 'linear-gradient(135deg, #00345e, #004b87)',
+                      color: 'white',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '1.25rem',
                       flexShrink: 0,
                     }}>
-                      🎓
+                      <Icon name="graduation" size={22} />
                     </div>
                     <div>
                       <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#00345e', margin: 0 }}>
@@ -585,8 +592,8 @@ export default function ProfilePage() {
                   </div>
                 ) : profile?.verification_status === 'pending' ? (
                   <div style={{
-                    background: '#fffbeb',
-                    border: '1px solid #fde68a',
+                    background: '#f8fafc',
+                    border: '1px solid #cbd5e1',
                     borderRadius: 16,
                     padding: '1.25rem',
                     display: 'flex',
@@ -594,16 +601,16 @@ export default function ProfilePage() {
                     gap: 10,
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: '1.25rem' }}>⏳</span>
-                      <strong style={{ color: '#92400e', fontSize: '0.9rem' }}>Credencial en proceso de revisión</strong>
+                      <Icon name="clock" size={20} style={{ color: '#0a192f', flexShrink: 0 }} />
+                      <strong style={{ color: '#0a192f', fontSize: '0.9rem' }}>Credencial en proceso de revisión</strong>
                     </div>
-                    <p style={{ fontSize: '0.8rem', color: '#78350f', margin: 0, lineHeight: 1.5 }}>
+                    <p style={{ fontSize: '0.8rem', color: '#334155', margin: 0, lineHeight: 1.5 }}>
                       Hemos recibido la imagen de tu credencial UTA. El equipo de moderación verificará que los datos coincidan y activará tu insignia pronto.
                     </p>
                     {profile.credential_url && (
                       <div style={{ marginTop: 6 }}>
-                        <a href={profile.credential_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.78rem', color: '#00345e', fontWeight: 600, textDecoration: 'underline' }}>
-                          Ver credencial enviada ↗
+                        <a href={profile.credential_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.78rem', color: '#00345e', fontWeight: 600, textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          Ver credencial enviada <Icon name="arrowUpRight" size={14} />
                         </a>
                       </div>
                     )}
@@ -670,7 +677,7 @@ export default function ProfilePage() {
                             onClick={handleSendVerification}
                             disabled={submittingVerification}
                             className="btn-primary"
-                            style={{ padding: '0.5rem 1.25rem', fontSize: '0.8rem' }}
+                            style={{ padding: '0.5rem 1.25rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: 6 }}
                           >
                             {submittingVerification ? (
                               <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -678,7 +685,9 @@ export default function ProfilePage() {
                                 Enviando...
                               </span>
                             ) : (
-                              '📤 Enviar credencial para verificación'
+                              <>
+                                <Icon name="send" size={14} /> Enviar credencial para verificación
+                              </>
                             )}
                           </button>
                         </div>
@@ -705,7 +714,7 @@ export default function ProfilePage() {
                         onMouseEnter={e => { e.currentTarget.style.borderColor = '#00345e'; e.currentTarget.style.background = 'rgba(0, 52, 94, 0.08)' }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0, 52, 94, 0.25)'; e.currentTarget.style.background = 'rgba(0, 52, 94, 0.04)' }}
                       >
-                        <span style={{ fontSize: '2rem' }}>🪪</span>
+                        <Icon name="idCard" size={32} style={{ color: '#00345e' }} />
                         <strong style={{ color: '#00345e', fontSize: '0.9rem' }}>Subir captura de Credencial Digital UTA</strong>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Formatos JPG, PNG o WEBP (máx. 8MB)</span>
                       </button>
@@ -715,17 +724,19 @@ export default function ProfilePage() {
                       <div className="animate-fade-in" style={{
                         background: '#fef2f2', border: '1px solid #fecaca',
                         borderRadius: 10, padding: '0.6rem 0.9rem', fontSize: '0.8rem', color: '#b91c1c',
+                        display: 'flex', alignItems: 'center', gap: 8,
                       }}>
-                        ⚠️ {verificationError}
+                        <Icon name="alert" size={15} style={{ flexShrink: 0 }} /> {verificationError}
                       </div>
                     )}
 
                     {verificationSuccess && (
                       <div className="animate-fade-in" style={{
-                        background: '#ecfdf5', border: '1px solid #a7f3d0',
-                        borderRadius: 10, padding: '0.6rem 0.9rem', fontSize: '0.8rem', color: '#047857',
+                        background: '#eff6ff', border: '1px solid #bfdbfe',
+                        borderRadius: 10, padding: '0.6rem 0.9rem', fontSize: '0.8rem', color: '#00345e',
+                        display: 'flex', alignItems: 'center', gap: 8,
                       }}>
-                        ✅ {verificationSuccess}
+                        <Icon name="checkCircle" size={15} style={{ flexShrink: 0 }} /> {verificationSuccess}
                       </div>
                     )}
                   </div>
@@ -740,7 +751,7 @@ export default function ProfilePage() {
                 <div style={{ marginTop: '2.5rem', paddingTop: '1.75rem', borderTop: '1px solid var(--border)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: 8 }}>
                     <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span>🏆</span> Tu Nivel de Confianza y Logros
+                      <Icon name="trophy" size={20} style={{ color: '#00345e' }} /> Tu Nivel de Confianza y Logros
                     </h3>
                     <span style={{
                       fontSize: '0.75rem',
@@ -750,7 +761,11 @@ export default function ProfilePage() {
                       border: `1px solid ${rep.badgeColor}30`,
                       padding: '3px 10px',
                       borderRadius: 99,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
                     }}>
+                      <Icon name={rep.badgeIcon} size={13} />
                       {rep.badgeLabel}
                     </span>
                   </div>
@@ -768,8 +783,10 @@ export default function ProfilePage() {
                       <div style={{ width: `${rep.progressPercent}%`, height: '100%', background: `linear-gradient(90deg, #00345e, ${rep.badgeColor})`, borderRadius: 999, transition: 'width 0.4s' }} />
                     </div>
                     {rep.nextLevelName && (
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 8, margin: '8px 0 0 0' }}>
-                        Próximo nivel: <strong>{rep.nextLevelName}</strong>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 8, margin: '8px 0 0 0', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span>Próximo nivel:</span>
+                        {rep.nextLevelIcon && <Icon name={rep.nextLevelIcon} size={13} />}
+                        <strong>{rep.nextLevelName}</strong>
                       </p>
                     )}
                   </div>
@@ -793,12 +810,22 @@ export default function ProfilePage() {
                         }}
                         title={b.description}
                       >
-                        <div style={{ fontSize: '1.6rem', marginBottom: 4 }}>{b.icon}</div>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6, color: b.unlocked ? rep.badgeColor : 'var(--text-muted)' }}>
+                          <Icon name={b.icon} size={24} />
+                        </div>
                         <div style={{ fontSize: '0.75rem', fontWeight: 700, color: b.unlocked ? 'var(--text-primary)' : 'var(--text-muted)' }}>
                           {b.title}
                         </div>
-                        <div style={{ fontSize: '0.65rem', color: b.unlocked ? rep.badgeColor : 'var(--text-muted)', marginTop: 4, fontWeight: 600 }}>
-                          {b.unlocked ? '✅ Desbloqueado' : '🔒 Pendiente'}
+                        <div style={{ fontSize: '0.65rem', color: b.unlocked ? rep.badgeColor : 'var(--text-muted)', marginTop: 4, fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                          {b.unlocked ? (
+                            <>
+                              <Icon name="checkCircle" size={11} /> Desbloqueado
+                            </>
+                          ) : (
+                            <>
+                              <Icon name="lock" size={11} /> Pendiente
+                            </>
+                          )}
                         </div>
                       </div>
                     ))}

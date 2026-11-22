@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReportWithListing } from '../types'
+import Icon from '@/components/Icon'
 
 interface ReportsTabProps {
   reports: ReportWithListing[]
@@ -27,7 +28,9 @@ export default function ReportsTab({
         </div>
       ) : reports.length === 0 ? (
         <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>✅</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem', color: '#00345e' }}>
+            <Icon name="checkCircle" size={40} />
+          </div>
           <h3 style={{ fontWeight: 700, marginBottom: 8 }}>Sin reportes pendientes</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>¡La plataforma está limpia!</p>
         </div>
@@ -78,7 +81,7 @@ export default function ReportsTab({
                     style={{
                       padding: '6px 12px',
                       fontSize: '0.78rem',
-                      background: '#f59e0b',
+                      background: '#004b87',
                       flex: '1 1 auto',
                     }}
                   >

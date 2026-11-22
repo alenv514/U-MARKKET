@@ -6,7 +6,7 @@ const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY
 
 if (!accountId || !accessKeyId || !secretAccessKey) {
   // En desarrollo o build, si faltan variables no romper la compilación a menos que se intente usar
-  console.warn('⚠️ Variables de Cloudflare R2 faltantes en las variables de entorno.')
+  console.warn('Variables de Cloudflare R2 faltantes en las variables de entorno.')
 }
 
 export const r2 = new S3Client({

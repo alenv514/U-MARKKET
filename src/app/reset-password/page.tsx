@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import Icon from '@/components/Icon'
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
@@ -77,7 +78,9 @@ export default function ResetPasswordPage() {
         <div className="glass-card animate-fade-in-up delay-100" style={{ padding: '2rem' }}>
           {success ? (
             <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎉</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem', color: '#ffffff' }}>
+                <Icon name="sparkles" size={44} />
+              </div>
               <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.75rem', color: '#ffffff' }}>
                 ¡Contraseña actualizada!
               </h3>
@@ -129,7 +132,7 @@ export default function ResetPasswordPage() {
                     }}
                     title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   >
-                    {showPassword ? '🙈' : '👁️'}
+                    {showPassword ? <Icon name="eyeOff" size={18} /> : <Icon name="eye" size={18} />}
                   </button>
                 </div>
               </div>
@@ -169,7 +172,7 @@ export default function ResetPasswordPage() {
                     }}
                     title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   >
-                    {showPassword ? '🙈' : '👁️'}
+                    {showPassword ? <Icon name="eyeOff" size={18} /> : <Icon name="eye" size={18} />}
                   </button>
                 </div>
               </div>
@@ -180,7 +183,7 @@ export default function ResetPasswordPage() {
                   borderRadius: 10, padding: '0.75rem 1rem',
                   fontSize: '0.85rem', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: 8,
                 }}>
-                  <span>⚠️</span> {error}
+                  <Icon name="alert" size={16} style={{ flexShrink: 0 }} /> {error}
                 </div>
               )}
 

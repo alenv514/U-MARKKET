@@ -1,6 +1,7 @@
 'use client'
 
 import type { PendingListing } from '../types'
+import Icon from '@/components/Icon'
 
 interface ApprovalsTabProps {
   pendingListings: PendingListing[]
@@ -25,7 +26,9 @@ export default function ApprovalsTab({
         </div>
       ) : pendingListings.length === 0 ? (
         <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🎉</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem', color: '#00345e' }}>
+            <Icon name="sparkles" size={40} />
+          </div>
           <h3 style={{ fontWeight: 700, marginBottom: 8 }}>Sin publicaciones pendientes</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>¡Todo al día!</p>
         </div>
@@ -66,14 +69,14 @@ export default function ApprovalsTab({
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 ) : (
-                  '📦'
+                  <Icon name="package" size={28} />
                 )}
               </div>
 
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: 2 }}>{listing.title}</div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 4 }}>
-                  <span style={{ color: 'var(--accent-amber)', fontWeight: 800, fontSize: '0.9rem' }}>
+                  <span style={{ color: '#00345e', fontWeight: 800, fontSize: '0.9rem' }}>
                     ${listing.price}
                   </span>
                   <span className="badge badge-indigo">{listing.category}</span>
@@ -99,23 +102,23 @@ export default function ApprovalsTab({
               </div>
               <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                 <a href={`/listings/${listing.id}`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
-                  <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
-                    👁️ Ver Detalles
+                  <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <Icon name="eye" size={14} /> Ver Detalles
                   </button>
                 </a>
                 <button
                   onClick={() => onApprove(listing.id)}
                   className="btn-primary"
-                  style={{ padding: '6px 12px', fontSize: '0.78rem', background: '#10b981' }}
+                  style={{ padding: '6px 12px', fontSize: '0.78rem', background: '#00345e', display: 'inline-flex', alignItems: 'center', gap: 5 }}
                 >
-                  ✅ Aprobar
+                  <Icon name="checkCircle" size={14} /> Aprobar
                 </button>
                 <button
                   onClick={() => onReject(listing.id)}
                   className="btn-danger"
-                  style={{ padding: '6px 12px', fontSize: '0.78rem' }}
+                  style={{ padding: '6px 12px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: 5 }}
                 >
-                  ❌ Rechazar
+                  <Icon name="xCircle" size={14} /> Rechazar
                 </button>
               </div>
             </div>

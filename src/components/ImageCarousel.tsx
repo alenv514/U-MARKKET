@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
+import Icon from './Icon'
 
 interface ImageCarouselProps {
   images: string[]
@@ -57,12 +58,13 @@ export default function ImageCarousel({
       <div style={{
         width: '100%',
         aspectRatio: compact ? '4/3' : '16/9',
-        background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1))',
+        background: 'linear-gradient(135deg, rgba(0,52,94,0.06), rgba(0,75,135,0.08))',
+        color: '#00345e',
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         gap: 8, borderRadius: compact ? '16px 16px 0 0' : 16,
       }}>
-        <span style={{ fontSize: compact ? '2.5rem' : '4rem' }}>🛍️</span>
+        <Icon name="shoppingBag" size={compact ? 38 : 54} strokeWidth={1.6} />
         {!compact && <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Sin imágenes</span>}
       </div>
     )
@@ -105,9 +107,10 @@ export default function ImageCarousel({
             <div style={{
               width: '100%', height: '100%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1))',
+              background: 'linear-gradient(135deg, rgba(0,52,94,0.06), rgba(0,75,135,0.08))',
+              color: '#00345e',
             }}>
-              <span style={{ fontSize: '2.5rem' }}>🖼️</span>
+              <Icon name="image" size={38} strokeWidth={1.6} />
             </div>
           )}
         </div>

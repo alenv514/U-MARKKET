@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
+import Icon from '@/components/Icon'
 
 interface SuggestModalProps {
   isOpen: boolean
@@ -50,6 +51,7 @@ export default function SuggestModal({ isOpen, onClose }: SuggestModalProps) {
       >
         <button
           onClick={onClose}
+          aria-label="Cerrar"
           style={{
             position: 'absolute',
             top: 16,
@@ -67,10 +69,19 @@ export default function SuggestModal({ isOpen, onClose }: SuggestModalProps) {
             justifyContent: 'center',
           }}
         >
-          ✕
+          <Icon name="x" size={16} />
         </button>
 
-        <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem', textAlign: 'center' }}>💡</div>
+        <div
+          style={{
+            marginBottom: '0.75rem',
+            display: 'flex',
+            justifyContent: 'center',
+            color: '#00345e',
+          }}
+        >
+          <Icon name="lightbulb" size={38} />
+        </div>
         <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.5rem', color: '#0a192f', textAlign: 'center' }}>
           ¿Tienes una recomendación?
         </h2>
@@ -111,7 +122,7 @@ export default function SuggestModal({ isOpen, onClose }: SuggestModalProps) {
           href={
             suggestion.trim()
               ? `https://wa.me/593999752932?text=${encodeURIComponent(
-                  '💡 Recomendación para U-Market:\n\n' + suggestion.trim()
+                  'Recomendación para U-Market:\n\n' + suggestion.trim()
                 )}`
               : '#'
           }
@@ -144,7 +155,7 @@ export default function SuggestModal({ isOpen, onClose }: SuggestModalProps) {
             width: '100%',
           }}
         >
-          <span style={{ fontSize: '1.2rem' }}>💬</span>
+          <Icon name="message" size={18} />
           Enviar por WhatsApp
         </a>
 

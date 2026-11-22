@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import Navbar from '@/components/Navbar'
 import ListingCard from '@/components/ListingCard'
+import Icon from '@/components/Icon'
 import { createClient } from '@/lib/supabase/client'
 import { CATEGORIES, CAMPUSES, getCampusFromFaculty } from '@/types'
 import type { Listing, Campus } from '@/types'
@@ -287,9 +288,9 @@ export default function HomePage() {
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
                 transition: 'all 0.2s ease',
-                border: onlyUrgent ? '1px solid #d97706' : '1px solid #fed7aa',
-                background: onlyUrgent ? 'linear-gradient(135deg, #d97706, #b45309)' : '#fffbeb',
-                color: onlyUrgent ? '#ffffff' : '#b45309',
+                border: onlyUrgent ? '1px solid #00345e' : '1px solid #cbd5e1',
+                background: onlyUrgent ? 'linear-gradient(135deg, #00345e, #004b87)' : '#f8fafc',
+                color: onlyUrgent ? '#ffffff' : '#0a192f',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 5,
@@ -299,8 +300,9 @@ export default function HomePage() {
               }}
               title="Filtrar ventas y ofertas relámpago de hoy"
             >
-              <span>⚡ Ofertas de Hoy</span>
-              {onlyUrgent && <span style={{ fontSize: '0.7rem' }}>✕</span>}
+              <Icon name="bolt" size={14} />
+              <span>Ofertas de Hoy</span>
+              {onlyUrgent && <Icon name="x" size={12} />}
             </button>
           </div>
         </section>
@@ -337,7 +339,9 @@ export default function HomePage() {
             </div>
           ) : displayedListings.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-secondary)' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem', color: 'var(--text-muted)' }}>
+                <Icon name="search" size={44} />
+              </div>
               <h3 style={{ fontWeight: 700, marginBottom: 8 }}>No se encontraron publicaciones</h3>
               <p style={{ fontSize: '0.9rem' }}>
                 {search
@@ -383,9 +387,9 @@ export default function HomePage() {
               href="https://wa.me/593999752932?text=Hola!%20Tengo%20una%20consulta%20sobre%20U-Market." 
               target="_blank" 
               rel="noopener noreferrer" 
-              style={{ color: '#059669', textDecoration: 'none', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              style={{ color: '#00345e', textDecoration: 'none', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
-              💬 Contactar Administración / Negocios
+              <Icon name="message" size={16} /> Contactar Administración / Negocios
             </a>
           </div>
         </footer>

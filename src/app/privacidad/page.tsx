@@ -1,5 +1,6 @@
 import Navbar from '@/components/Navbar'
 import Link from 'next/link'
+import Icon from '@/components/Icon'
 
 export default function PrivacidadPage() {
   return (
@@ -26,11 +27,11 @@ export default function PrivacidadPage() {
                 fontWeight: 700,
                 letterSpacing: 1.5,
                 textTransform: 'uppercase',
-                color: 'rgba(99, 102, 241, 0.8)',
-                background: 'rgba(99, 102, 241, 0.08)',
+                color: '#ffffff',
+                background: 'rgba(255, 255, 255, 0.08)',
                 padding: '4px 10px',
                 borderRadius: 20,
-                border: '1px solid rgba(99, 102, 241, 0.15)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
                 display: 'inline-block',
                 marginBottom: 12
               }}>
@@ -52,22 +53,22 @@ export default function PrivacidadPage() {
 
               {/* 1. Responsable */}
               <div>
-                <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'rgba(165, 180, 252, 0.9)', marginBottom: '0.4rem' }}>
+                <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.4rem' }}>
                   1. Responsable del Tratamiento
                 </h2>
                 <p style={{ color: 'rgba(255, 255, 255, 0.55)' }}>
-                  El responsable del tratamiento de los datos en la plataforma U-Market es su desarrollador y titular, Alen Lenin Villamarín Velasco, con correo de contacto y soporte: <code style={{ color: '#a5b4fc' }}>avillamarin8139@uta.edu.ec</code>.
+                  El responsable del tratamiento de los datos en la plataforma U-Market es su desarrollador y titular, Alen Lenin Villamarín Velasco, con correo de contacto y soporte: <code style={{ color: '#93c5fd' }}>avillamarin8139@uta.edu.ec</code>.
                 </p>
               </div>
 
               {/* 2. Base Legal y Consentimiento */}
               <div style={{
-                background: 'rgba(99, 102, 241, 0.04)',
-                border: '1px solid rgba(99, 102, 241, 0.15)',
+                background: 'rgba(0, 75, 135, 0.16)',
+                border: '1px solid rgba(147, 197, 253, 0.25)',
                 padding: '1.25rem 1.5rem',
                 borderRadius: 16
               }}>
-                <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'rgba(165, 180, 252, 0.9)', marginBottom: '0.5rem' }}>
+                <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.5rem' }}>
                   2. Base Legal y Autorización del Titular
                 </h2>
                 <p style={{ color: 'rgba(255, 255, 255, 0.65)', margin: 0 }}>
@@ -102,8 +103,9 @@ export default function PrivacidadPage() {
                   <li>Monitorear la seguridad comunitaria y prevenir fraudes, estafas o publicaciones ilícitas.</li>
                   <li>Generar estadísticas institucionales anonimizadas sobre emprendimiento y comercio estudiantil.</li>
                 </ol>
-                <p style={{ color: '#a5b4fc', fontSize: '0.85rem', fontWeight: 600, marginTop: '0.5rem' }}>
-                  🛡️ Principio de No Comercialización: U-Market NO vende, NO alquila ni comparte tus datos personales con terceros con fines publicitarios o comerciales ajenos a la plataforma.
+                <p style={{ color: '#93c5fd', fontSize: '0.85rem', fontWeight: 600, marginTop: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                  <Icon name="shield" size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <span>Principio de No Comercialización: U-Market NO vende, NO alquila ni comparte tus datos personales con terceros con fines publicitarios o comerciales ajenos a la plataforma.</span>
                 </p>
               </div>
 
@@ -141,7 +143,7 @@ export default function PrivacidadPage() {
                   © 2026 U-Market · Cumplimiento de la Ley Orgánica de Protección de Datos Personales del Ecuador.
                 </div>
                 <Link href="/" style={{ textDecoration: 'none' }}>
-                  <button className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <button className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', background: 'rgba(255,255,255,0.06)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.18)' }}>
                     ← Volver al inicio
                   </button>
                 </Link>

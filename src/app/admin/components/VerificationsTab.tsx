@@ -1,6 +1,7 @@
 'use client'
 
 import type { Profile } from '@/types'
+import Icon from '@/components/Icon'
 
 interface VerificationsTabProps {
   verifications: Profile[]
@@ -37,13 +38,17 @@ export default function VerificationsTab({
           justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: '1rem',
-          border: verificationFeatureEnabled ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(245,158,11,0.3)',
-          background: verificationFeatureEnabled ? 'rgba(16,185,129,0.06)' : 'rgba(245,158,11,0.06)',
+          border: verificationFeatureEnabled ? '1px solid rgba(0,52,94,0.25)' : '1px solid #cbd5e1',
+          background: verificationFeatureEnabled ? 'rgba(0,52,94,0.06)' : '#f8fafc',
         }}
       >
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <span style={{ fontSize: '1.2rem' }}>{verificationFeatureEnabled ? '🟢' : '⏸️'}</span>
+            {verificationFeatureEnabled ? (
+              <Icon name="checkCircle" size={18} style={{ color: '#00345e', flexShrink: 0 }} />
+            ) : (
+              <Icon name="pause" size={18} style={{ color: '#0a192f', flexShrink: 0 }} />
+            )}
             <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
               Módulo de Verificación para Estudiantes: {verificationFeatureEnabled ? 'ACTIVADO' : 'DESACTIVADO (Oculto)'}
             </h3>
@@ -59,9 +64,15 @@ export default function VerificationsTab({
           <button
             onClick={onToggleFeature}
             className={verificationFeatureEnabled ? 'btn-danger' : 'btn-primary'}
-            style={{ padding: '0.5rem 1.25rem', fontSize: '0.82rem', fontWeight: 700 }}
+            style={{ padding: '0.5rem 1.25rem', fontSize: '0.82rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            {verificationFeatureEnabled ? 'Desactivar Función' : '🚀 Activar Función (Lanzamiento)'}
+            {verificationFeatureEnabled ? (
+              'Desactivar Función'
+            ) : (
+              <>
+                <Icon name="rocket" size={14} /> Activar Función (Lanzamiento)
+              </>
+            )}
           </button>
         )}
       </div>
@@ -74,7 +85,9 @@ export default function VerificationsTab({
         </div>
       ) : verifications.length === 0 ? (
         <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🎓</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem', color: '#00345e' }}>
+            <Icon name="graduation" size={40} />
+          </div>
           <h3 style={{ fontWeight: 700, marginBottom: 8 }}>Sin solicitudes de verificación pendientes</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Todas las credenciales han sido revisadas.</p>
         </div>
@@ -126,9 +139,13 @@ export default function VerificationsTab({
                       fontSize: '0.65rem',
                       textAlign: 'center',
                       padding: '2px 0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 3,
                     }}
                   >
-                    🔍 Ver
+                    <Icon name="search" size={10} /> Ver
                   </div>
                 </div>
               ) : (
@@ -141,11 +158,11 @@ export default function VerificationsTab({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '1.5rem',
+                    color: '#00345e',
                     flexShrink: 0,
                   }}
                 >
-                  🪪
+                  <Icon name="idCard" size={26} />
                 </div>
               )}
 
@@ -176,26 +193,32 @@ export default function VerificationsTab({
                   <button
                     onClick={() => onZoomImage(user.credential_url || '')}
                     className="btn-secondary"
-                    style={{ padding: '7px 14px', fontSize: '0.8rem' }}
+                    style={{ padding: '7px 14px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: 5 }}
                   >
-                    🔍 Ver Carnet
+                    <Icon name="search" size={14} /> Ver Carnet
                   </button>
                 )}
                 <button
                   onClick={() => onApprove(user.id)}
                   disabled={actionLoadingId === user.id}
                   className="btn-primary"
-                  style={{ padding: '7px 14px', fontSize: '0.8rem', background: '#10b981' }}
+                  style={{ padding: '7px 14px', fontSize: '0.8rem', background: '#00345e', display: 'inline-flex', alignItems: 'center', gap: 5 }}
                 >
-                  {actionLoadingId === user.id ? 'Aprobando...' : '✅ Aprobar Verificación'}
+                  {actionLoadingId === user.id ? (
+                    'Aprobando...'
+                  ) : (
+                    <>
+                      <Icon name="checkCircle" size={14} /> Aprobar Verificación
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={() => onReject(user.id)}
                   disabled={actionLoadingId === user.id}
                   className="btn-danger"
-                  style={{ padding: '7px 14px', fontSize: '0.8rem' }}
+                  style={{ padding: '7px 14px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: 5 }}
                 >
-                  ❌ Rechazar
+                  <Icon name="xCircle" size={14} /> Rechazar
                 </button>
               </div>
             </div>

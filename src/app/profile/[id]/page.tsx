@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import StarRating from '@/components/StarRating'
 import ReviewForm from '@/components/ReviewForm'
 import VerifiedBadge from '@/components/VerifiedBadge'
+import Icon from '@/components/Icon'
 import { computeReputation } from '@/lib/reputation'
 import type { Listing } from '@/types'
 
@@ -101,7 +102,11 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
             border: `1px solid ${rep.badgeColor}30`,
             padding: '3px 10px',
             borderRadius: 99,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
           }}>
+            <Icon name={rep.badgeIcon} size={13} />
             {rep.badgeLabel}
           </span>
         </div>
@@ -143,7 +148,9 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
                 }}
                 title={b.description}
               >
-                <div style={{ fontSize: '1.6rem', marginBottom: 3 }}>{b.icon}</div>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6, color: b.unlocked ? rep.badgeColor : 'var(--text-muted)' }}>
+                  <Icon name={b.icon} size={24} />
+                </div>
                 <div style={{ fontSize: '0.72rem', fontWeight: 700, color: b.unlocked ? 'var(--text-primary)' : 'var(--text-muted)', lineHeight: 1.2 }}>
                   {b.title}
                 </div>
@@ -171,12 +178,14 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img src={listing.image_url} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', opacity: 0.5 }}>📦</div>
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', opacity: 0.7 }}>
+                          <Icon name="package" size={26} />
+                        </div>
                       )}
                     </div>
                     <div>
                       <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{listing.title}</h3>
-                      <p style={{ color: '#10b981', fontWeight: 700 }}>${listing.price.toFixed(2)}</p>
+                      <p style={{ color: '#00345e', fontWeight: 700 }}>${listing.price.toFixed(2)}</p>
                     </div>
                   </div>
                 </Link>

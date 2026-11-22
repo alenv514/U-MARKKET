@@ -65,7 +65,7 @@ export function useImageUpload({
     const maxBytes = maxSizeMB * 1024 * 1024
     const oversized = compressedFiles.filter(f => f.size > maxBytes)
     if (oversized.length > 0) {
-      setError(`📸 La foto es demasiado pesada (supera los ${maxSizeMB}MB). Por favor, utiliza una app para bajar la resolución de la foto o comprimirla antes de subirla.`)
+      setError(`La foto es demasiado pesada (supera los ${maxSizeMB}MB). Por favor, utiliza una app para bajar la resolución de la foto o comprimirla antes de subirla.`)
       return
     }
 
@@ -153,7 +153,7 @@ export function useImageUpload({
       const msg = error?.message || ''
 
       if (msg.includes('exceeded') || msg.includes('large') || msg.includes('limit')) {
-        setError('📸 La foto es demasiado pesada para el servidor. Por favor, utiliza una app para bajar la resolución de la foto o comprimirla.')
+        setError('La foto es demasiado pesada para el servidor. Por favor, utiliza una app para bajar la resolución de la foto o comprimirla.')
       } else {
         setError(msg || 'Error al subir las imágenes')
       }
