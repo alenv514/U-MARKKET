@@ -78,10 +78,10 @@ export default function ResetPasswordPage() {
         <div className="glass-card animate-fade-in-up delay-100" style={{ padding: '2rem' }}>
           {success ? (
             <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem', color: '#ffffff' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem', color: '#00345e' }}>
                 <Icon name="sparkles" size={44} />
               </div>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.75rem', color: '#ffffff' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.75rem', color: '#0a192f' }}>
                 ¡Contraseña actualizada!
               </h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>

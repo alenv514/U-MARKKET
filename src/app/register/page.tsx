@@ -30,6 +30,7 @@ export default function RegisterPage() {
   const [otpCode, setOtpCode] = useState('')
   const [otpLoading, setOtpLoading] = useState(false)
   const [otpError, setOtpError] = useState('')
+  const [otpType, setOtpType] = useState<'signup' | 'email'>('signup')
 
   const supabase = createClient()
 
@@ -47,12 +48,19 @@ export default function RegisterPage() {
     setResendLoading(true)
     setResendMessage('')
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email.trim().toLowerCase(),
+      const res = await fetch('/api/auth/resend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
       })
-      if (error) throw error
-      setResendMessage('¡Correo de confirmación reenviado con éxito!')
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'No se pudo reenviar el código.')
+      }
+      if (data.otpType === 'email' || data.otpType === 'signup') {
+        setOtpType(data.otpType)
+      }
+      setResendMessage('¡Código de confirmación reenviado con éxito!')
       setResendTimer(180)
     } catch (err: unknown) {
       const e = err as Error
@@ -124,6 +132,9 @@ export default function RegisterPage() {
       return
     }
 
+    if (result.otpType === 'email' || result.otpType === 'signup') {
+      setOtpType(result.otpType)
+    }
     setSuccess(true)
     setResendTimer(180)
     setLoading(false)
@@ -144,7 +155,7 @@ export default function RegisterPage() {
       const { data, error } = await supabase.auth.verifyOtp({
         email: email.trim().toLowerCase(),
         token: cleanOtp,
-        type: 'signup',
+        type: otpType,
       })
 
       if (error) throw error
