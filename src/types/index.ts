@@ -90,6 +90,7 @@ export const UTA_FACULTY_CAREERS: Record<string, string[]> = {
 }
 
 export const SEMESTERS = [
+  'Nivelación',
   '1er semestre', '2do semestre', '3er semestre', '4to semestre',
   '5to semestre', '6to semestre', '7mo semestre', '8vo semestre',
   '9no semestre', '10mo semestre',
