@@ -2,6 +2,7 @@
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { R2_PUBLIC_URL } from '@/lib/r2'
+import { doStudentNamesMatch, verifyUtaCarnetByQrUrl } from '@/lib/uta-carnet'
 
 const ALLOWED_FEATURE_FLAGS = new Set(['student_verification_enabled'])
 
@@ -87,6 +88,117 @@ export async function submitVerificationAction(credentialUrl: string): Promise<{
   } catch (err: unknown) {
     console.error('Error submitVerificationAction:', err)
     return { success: false, error: 'Error interno al enviar credencial' }
+  }
+}
+
+/**
+ * Verificación automática de estudiante autenticado mediante el QR oficial de la credencial UTA.
+ */
+export async function verifyStudentQrAction(qrUrl: string): Promise<{
+  success: boolean
+  officialName?: string
+  academicPeriod?: string | null
+  needManualReview?: boolean
+  error?: string
+}> {
+  try {
+    if (!qrUrl || typeof qrUrl !== 'string') {
+      return { success: false, error: 'No se detectó la URL del código QR.' }
+    }
+
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: 'No autenticado' }
+
+    const supabaseAdmin = createServiceClient()
+
+    const { data: flag } = await supabaseAdmin
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'student_verification_enabled')
+      .maybeSingle()
+
+    if (!flag || (flag.value !== true && flag.value !== 'true')) {
+      return { success: false, error: 'La verificación estudiantil no está habilitada actualmente.' }
+    }
+
+    const { data: currentProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('is_active, is_verified, full_name')
+      .eq('id', user.id)
+      .single()
+
+    if (!currentProfile || currentProfile.is_active === false) {
+      return { success: false, error: 'Tu cuenta no está activa.' }
+    }
+    if (currentProfile.is_verified) {
+      return { success: false, error: 'Tu cuenta ya está verificada.' }
+    }
+
+    const result = await verifyUtaCarnetByQrUrl(qrUrl)
+    if (!result.valid || !result.cedulaHash || !result.officialName) {
+      return { success: false, error: result.error || 'Credencial UTA no válida.' }
+    }
+
+    const { data: duplicateOwner, error: lookupErr } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('cedula_hash', result.cedulaHash)
+      .neq('id', user.id)
+      .maybeSingle()
+
+    if (lookupErr) {
+      console.error('Error comprobando duplicidad de cedula_hash:', lookupErr.message)
+      return { success: false, error: 'No se pudo comprobar la unicidad de la cédula en la base de datos.' }
+    }
+
+    if (duplicateOwner?.id) {
+      return {
+        success: false,
+        error: 'Esta cédula ya se encuentra verificada y vinculada a otra cuenta de U-Market.',
+      }
+    }
+
+    if (!doStudentNamesMatch(currentProfile.full_name || '', result.officialName)) {
+      return {
+        success: false,
+        needManualReview: true,
+        error: 'El nombre registrado en tu perfil no coincide con el titular de esta credencial UTA. Puedes enviar la imagen para revisión manual.',
+      }
+    }
+
+    const now = new Date().toISOString()
+    const { error: updateErr } = await supabaseAdmin
+      .from('profiles')
+      .update({
+        full_name: result.officialName,
+        cedula_hash: result.cedulaHash,
+        is_verified: true,
+        verification_status: 'approved',
+        verification_rejected_reason: null,
+        verified_at: now,
+        verification_submitted_at: now,
+      })
+      .eq('id', user.id)
+
+    if (updateErr) {
+      if (updateErr.code === '23505') {
+        return {
+          success: false,
+          error: 'Esta cédula ya está vinculada a otra cuenta verificada de U-Market.',
+        }
+      }
+      return { success: false, error: 'No se pudo completar la verificación de la credencial.' }
+    }
+
+    return {
+      success: true,
+      officialName: result.officialName,
+      academicPeriod: result.academicPeriod ?? null,
+    }
+  } catch (err: unknown) {
+    console.error('Error verifyStudentQrAction:', err)
+    return { success: false, error: 'Error interno al verificar la credencial UTA.' }
   }
 }
 

@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { createRateLimiter } from '@/lib/rate-limit'
+import { isSyntheticQrEmail } from '@/lib/utils'
+import { computeCedulaHash } from '@/lib/uta-carnet'
 
-// Rate limiter adaptado a redes de campus universitario compartidas (NAT Wi-Fi UTA):
-// - Límite global por IP amplio para no bloquear laboratorios de cómputo o Wi-Fi institucional.
-// - Límite estricto por cuenta (correo) para proteger contra ataques de fuerza bruta.
 const isIpRateLimited = createRateLimiter(100, 60_000)
-const isEmailRateLimited = createRateLimiter(5, 60_000)
+const isAccountRateLimited = createRateLimiter(5, 60_000)
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
@@ -22,22 +21,58 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : ''
+    const rawIdentifier = typeof body?.identifier === 'string'
+      ? body.identifier
+      : typeof body?.email === 'string'
+        ? body.email
+        : ''
+    const identifier = rawIdentifier.trim()
     const password = typeof body?.password === 'string' ? body.password : ''
 
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Correo y contraseña son requeridos' }, { status: 400 })
+    if (!identifier || !password) {
+      return NextResponse.json({ error: 'Usuario/correo y contraseña son requeridos' }, { status: 400 })
     }
 
-    if (isEmailRateLimited(`login:${email}`)) {
+    const rateKey = identifier.toLowerCase()
+    if (isAccountRateLimited(`login:${rateKey}`)) {
       return NextResponse.json(
-        { error: 'Demasiados intentos fallidos para este correo. Intenta de nuevo en 1 minuto.' },
+        { error: 'Demasiados intentos fallidos para esta cuenta. Intenta de nuevo en 1 minuto.' },
         { status: 429 }
       )
     }
 
+    let resolvedEmail: string | null = null
+
+    if (identifier.includes('@')) {
+      const normalized = identifier.toLowerCase()
+      if (isSyntheticQrEmail(normalized)) {
+        return NextResponse.json({ error: 'Credenciales incorrectas' }, { status: 401 })
+      }
+      resolvedEmail = normalized
+    } else if (/^[A-Za-z0-9-]{6,20}$/.test(identifier) && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const cedulaHash = computeCedulaHash(identifier)
+      const serviceClient = createServiceClient()
+      const { data: profile } = await serviceClient
+        .from('profiles')
+        .select('id')
+        .eq('cedula_hash', cedulaHash)
+        .maybeSingle()
+
+      if (profile?.id) {
+        const { data: authUser } = await serviceClient.auth.admin.getUserById(profile.id)
+        resolvedEmail = authUser?.user?.email ?? null
+      }
+    }
+
+    if (!resolvedEmail) {
+      return NextResponse.json({ error: 'Credenciales incorrectas' }, { status: 401 })
+    }
+
     const supabase = await createClient()
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: resolvedEmail,
+      password,
+    })
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 401 })

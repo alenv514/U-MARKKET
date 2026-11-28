@@ -100,7 +100,7 @@ export default function AdminPage() {
         .order('created_at', { ascending: false }),
       supabase.rpc('get_weekly_stats'),
       supabase.from('profiles')
-        .select('*')
+        .select('id, full_name, avatar_url, role, is_active, faculty, semester, is_verified, verification_status, credential_url, verification_rejected_reason, verified_at, verification_submitted_at, rating_avg, review_count, created_at, updated_at')
         .eq('verification_status', 'pending')
         .order('verification_submitted_at', { ascending: false }),
       getFeatureFlagAction('student_verification_enabled'),

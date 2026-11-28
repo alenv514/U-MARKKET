@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { createClient } from '@/lib/supabase/client'
 import { CATEGORIES, UserRole } from '@/types'
-import { sanitize, isValidPrice, isValidEcuadorPhone, checkBannedWords } from '@/lib/utils'
+import { sanitize, isValidPrice, isValidEcuadorPhone, checkBannedWords, isSyntheticQrEmail } from '@/lib/utils'
 import { useImageUpload } from '@/hooks/useImageUpload'
 import Icon from '@/components/Icon'
 
@@ -47,13 +47,17 @@ export default function NewListingPage() {
     const checkRole = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
-      setUserEmail(user.email ?? '')
-
       const [profileRes, settingsRes, approvalSettingsRes] = await Promise.all([
-        supabase.from('profiles').select('role, is_active, faculty, semester').eq('id', user.id).single(),
+        supabase.from('profiles').select('role, is_active, faculty, semester, full_name').eq('id', user.id).single(),
         supabase.from('platform_settings').select('value').eq('key', 'free_publishing_mode').single(),
         supabase.from('platform_settings').select('value').eq('key', 'listings_require_approval').single()
       ])
+
+      setUserEmail(
+        isSyntheticQrEmail(user.email)
+          ? (profileRes.data?.full_name || 'Estudiante verificado por QR UTA')
+          : (user.email ?? '')
+      )
 
       setUserRole(profileRes.data?.role ?? 'buyer')
       setUserIsActive(profileRes.data?.is_active !== false)

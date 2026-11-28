@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { UTA_FACULTY_CAREERS, SEMESTERS } from '@/types'
 import Icon from '@/components/Icon'
+import UtaCredentialQrPicker from '@/components/UtaCredentialQrPicker'
 
 export default function RegisterPage() {
+  const [registerMode, setRegisterMode] = useState<'qr' | 'email'>('qr')
   const [fullName, setFullName] = useState('')
+  const [cedula, setCedula] = useState('')
   const [email, setEmail] = useState('')
   const [faculty, setFaculty] = useState('')
   const [career, setCareer] = useState('')
@@ -21,7 +23,17 @@ export default function RegisterPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [showAlreadyRegisteredModal, setShowAlreadyRegisteredModal] = useState(false)
+  const [alreadyRegisteredReason, setAlreadyRegisteredReason] = useState<'email' | 'cedula'>('email')
   const [showPassword, setShowPassword] = useState(false)
+
+  const [verifiedQr, setVerifiedQr] = useState<{
+    officialName: string
+    cedula: string
+    academicPeriod: string | null
+    token: string
+  } | null>(null)
+  const [qrLoading, setQrLoading] = useState(false)
+  const [qrError, setQrError] = useState('')
   
   const [resendTimer, setResendTimer] = useState(180)
   const [resendLoading, setResendLoading] = useState(false)
@@ -31,8 +43,6 @@ export default function RegisterPage() {
   const [otpLoading, setOtpLoading] = useState(false)
   const [otpError, setOtpError] = useState('')
   const [otpType, setOtpType] = useState<'signup' | 'email'>('signup')
-
-  const supabase = createClient()
 
   // Countdown timer for resend
   useEffect(() => {
@@ -78,13 +88,59 @@ export default function RegisterPage() {
 
   const validateEmail = (email: string) => /^[^\s@]+@uta\.edu\.ec$/i.test(email)
 
+  const handleQrDecoded = async (qrUrl: string) => {
+    setQrLoading(true)
+    setQrError('')
+    setError('')
+    try {
+      const res = await fetch('/api/uta/verify-qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ qrUrl }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        if (res.status === 409 || data.code === 'CEDULA_EXISTS') {
+          setAlreadyRegisteredReason('cedula')
+          setShowAlreadyRegisteredModal(true)
+        }
+        setQrError(data.error || 'No se pudo validar tu credencial UTA.')
+        return
+      }
+
+      setVerifiedQr({
+        officialName: data.officialName,
+        cedula: data.cedula || '',
+        academicPeriod: data.academicPeriod ?? null,
+        token: data.token,
+      })
+      setFullName(data.officialName || '')
+      setCedula(data.cedula || '')
+    } catch {
+      setQrError('Error de conexión al validar el código QR con el servidor de la UTA.')
+    } finally {
+      setQrLoading(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
-    if (!validateEmail(email)) {
-      setError('Solo se permiten correos @uta.edu.ec')
-      return
+    if (registerMode === 'qr') {
+      if (!verifiedQr?.token) {
+        setError('Primero sube o escanea el código QR de tu Credencial Digital UTA vigente.')
+        return
+      }
+    } else {
+      if (fullName.trim().length < 3) {
+        setError('Por favor ingresa tu nombre completo')
+        return
+      }
+      if (!validateEmail(email)) {
+        setError('Solo se permiten correos @uta.edu.ec')
+        return
+      }
     }
     if (!faculty) {
       setError('Por favor selecciona tu facultad')
@@ -113,22 +169,56 @@ export default function RegisterPage() {
 
     setLoading(true)
 
-    // Validación adicional en "backend" (API route)
+    const payload = registerMode === 'qr'
+      ? {
+          mode: 'qr',
+          password,
+          fullName: verifiedQr!.officialName,
+          phone,
+          faculty,
+          career,
+          semester,
+          qrVerificationToken: verifiedQr!.token,
+        }
+      : {
+          mode: 'email',
+          email,
+          password,
+          fullName: fullName.trim(),
+          phone,
+          faculty,
+          career,
+          semester,
+        }
+
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, fullName, phone, faculty, career, semester }),
+      body: JSON.stringify(payload),
     })
     const result = await res.json()
 
     if (!res.ok) {
       const errMsg = (result.error || '').toLowerCase()
-      if (res.status === 409 || errMsg.includes('registrado') || errMsg.includes('already')) {
+      if (result.code === 'CEDULA_EXISTS') {
+        setAlreadyRegisteredReason('cedula')
+        setShowAlreadyRegisteredModal(true)
+      } else if (res.status === 409 || result.code === 'EMAIL_EXISTS' || errMsg.includes('registrado') || errMsg.includes('already')) {
+        setAlreadyRegisteredReason('email')
         setShowAlreadyRegisteredModal(true)
       } else {
         setError(result.error || 'Error al registrarse')
       }
       setLoading(false)
+      return
+    }
+
+    if (registerMode === 'qr' || result.mode === 'qr') {
+      if (result.hasSession) {
+        window.location.href = '/dashboard'
+      } else {
+        window.location.href = '/login?verified=true'
+      }
       return
     }
 
@@ -152,15 +242,22 @@ export default function RegisterPage() {
     setOtpError('')
 
     try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        email: email.trim().toLowerCase(),
-        token: cleanOtp,
-        type: otpType,
+      const res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          token: cleanOtp,
+          type: otpType,
+        }),
       })
+      const data = await res.json()
 
-      if (error) throw error
+      if (!res.ok) {
+        throw new Error(data.error || 'Código incorrecto o expirado. Verifica los números ingresados.')
+      }
 
-      if (data?.session) {
+      if (data?.hasSession) {
         window.location.href = '/dashboard'
       } else {
         window.location.href = '/login?verified=true'
@@ -344,41 +441,152 @@ export default function RegisterPage() {
         </div>
 
         {/* Form card */}
-        <div className="glass-card animate-fade-in-up delay-100" style={{ padding: '2rem' }}>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="glass-card animate-fade-in-up delay-100" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {registerMode === 'qr' && (
+            <UtaCredentialQrPicker
+              onQrDecoded={handleQrDecoded}
+              verifiedSummary={
+                verifiedQr
+                  ? {
+                      officialName: verifiedQr.officialName,
+                      academicPeriod: verifiedQr.academicPeriod,
+                    }
+                  : null
+              }
+              onResetVerified={() => {
+                setVerifiedQr(null)
+                setFullName('')
+                setCedula('')
+                setQrError('')
+                setError('')
+              }}
+              busy={qrLoading}
+              error={qrError}
+              onClearError={() => setQrError('')}
+              title="Sube o escanea tu Credencial Digital UTA"
+              subtitle="Validaremos tus datos en la UTA para llenar automáticamente tu nombre y cédula, usar tu cédula como usuario y otorgarte la insignia de Estudiante Verificado."
+            />
+          )}
 
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
-                Nombre completo
-              </label>
-              <input
-                id="register-name"
-                type="text"
-                placeholder="Juan Pérez"
-                value={fullName}
-                onChange={e => setFullName(e.target.value)}
-                className="input-field"
-                required
-              />
-            </div>
+          {registerMode === 'email' && (
+            <button
+              type="button"
+              onClick={() => {
+                setRegisterMode('qr')
+                setError('')
+                setQrError('')
+                if (verifiedQr) {
+                  setFullName(verifiedQr.officialName)
+                  setCedula(verifiedQr.cedula)
+                } else {
+                  setFullName('')
+                }
+              }}
+              className="btn-secondary"
+              style={{
+                width: '100%',
+                padding: '0.6rem 0.9rem',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: '#00345e',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+              }}
+            >
+              <Icon name="qrCode" size={15} /> Usar Credencial Digital UTA (QR)
+            </button>
+          )}
 
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
-                Correo institucional
-              </label>
-              <input
-                id="register-email"
-                type="email"
-                placeholder="nombre@uta.edu.ec"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="input-field"
-                required
-              />
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Icon name="alert" size={13} style={{ flexShrink: 0 }} /> Solo se aceptan correos @uta.edu.ec
-              </p>
-            </div>
+          {(registerMode === 'email' || verifiedQr) && (
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {registerMode === 'qr' && verifiedQr ? (
+                <>
+                  <div style={{
+                    background: 'rgba(0, 52, 94, 0.05)',
+                    border: '1px solid rgba(0, 52, 94, 0.16)',
+                    borderRadius: 12,
+                    padding: '0.7rem 0.9rem',
+                    fontSize: '0.78rem',
+                    color: '#00345e',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    fontWeight: 600,
+                  }}>
+                    <Icon name="graduation" size={16} style={{ flexShrink: 0 }} />
+                    <span>Al completar el registro obtendrás la insignia de <strong>Estudiante Verificado UTA</strong>.</span>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                      Nombre completo (UTA)
+                    </label>
+                    <input
+                      id="register-name"
+                      type="text"
+                      value={fullName}
+                      readOnly
+                      disabled
+                      className="input-field"
+                      style={{ background: '#f1f5f9', color: '#475569', cursor: 'not-allowed' }}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                      Cédula (tu usuario para iniciar sesión)
+                    </label>
+                    <input
+                      id="register-cedula"
+                      type="text"
+                      value={cedula}
+                      readOnly
+                      disabled
+                      className="input-field"
+                      style={{ background: '#f1f5f9', color: '#475569', cursor: 'not-allowed', fontWeight: 700 }}
+                      required
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                      Nombre completo
+                    </label>
+                    <input
+                      id="register-name"
+                      type="text"
+                      placeholder="Juan Pérez"
+                      value={fullName}
+                      onChange={e => setFullName(e.target.value)}
+                      className="input-field"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                      Correo institucional
+                    </label>
+                    <input
+                      id="register-email"
+                      type="email"
+                      placeholder="nombre@uta.edu.ec"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      className="input-field"
+                      required
+                    />
+                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <Icon name="alert" size={13} style={{ flexShrink: 0 }} /> Solo se aceptan correos @uta.edu.ec
+                    </p>
+                  </div>
+                </>
+              )}
 
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
@@ -599,11 +807,58 @@ export default function RegisterPage() {
                   <span className="animate-spin" style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', display: 'inline-block' }} />
                   Registrando...
                 </span>
-              ) : 'Crear cuenta'}
-            </button>
-          </form>
+                ) : registerMode === 'qr' ? 'Crear cuenta verificada' : 'Crear cuenta'}
+              </button>
+            </form>
+          )}
 
-          <div className="divider" />
+          {registerMode === 'qr' && !verifiedQr && (
+            <div style={{
+              marginTop: '0.25rem',
+              paddingTop: '1rem',
+              borderTop: '1px solid var(--border)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.65rem',
+            }}>
+              <span style={{
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                color: 'var(--text-secondary)',
+                textAlign: 'center',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}>
+                Opciones de ingreso
+              </span>
+              <button
+                type="button"
+                id="switch-email-register"
+                onClick={() => {
+                  setRegisterMode('email')
+                  setError('')
+                  setQrError('')
+                  setFullName('')
+                }}
+                className="btn-secondary"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  color: '#00345e',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}
+              >
+                <Icon name="mail" size={16} /> Por correo institucional (@uta.edu.ec)
+              </button>
+            </div>
+          )}
+
+          <div className="divider" style={{ margin: '0.5rem 0' }} />
 
           <p style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
             ¿Ya tienes cuenta?{' '}
@@ -667,11 +922,15 @@ export default function RegisterPage() {
             </div>
 
             <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.75rem', color: '#ffffff' }}>
-              Esta cuenta ya existe
+              {alreadyRegisteredReason === 'cedula' ? 'Cédula ya registrada' : 'Esta cuenta ya existe'}
             </h2>
 
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.75rem' }}>
-              El correo <strong style={{ color: '#ffffff' }}>{email}</strong> ya se encuentra registrado en U-Market. Si es tu cuenta, inicia sesión o recupera tu clave.
+              {alreadyRegisteredReason === 'cedula' ? (
+                <>La cédula asociada a esta credencial UTA ya está vinculada a una cuenta existente en U-Market. Cada estudiante puede tener una sola cuenta.</>
+              ) : (
+                <>El correo <strong style={{ color: '#ffffff' }}>{email}</strong> ya se encuentra registrado en U-Market. Si es tu cuenta, inicia sesión o recupera tu clave.</>
+              )}
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

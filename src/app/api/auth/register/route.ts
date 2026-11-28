@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { sanitize, isValidEcuadorPhone } from '@/lib/utils'
+import { sanitize, isValidEcuadorPhone, isSyntheticQrEmail } from '@/lib/utils'
 import { createRateLimiter } from '@/lib/rate-limit'
 import { isMailerConfigured, sendRegistrationCodeEmail } from '@/lib/mailer'
+import { buildQrSyntheticAuthEmail, verifyQrVerificationToken } from '@/lib/uta-carnet'
 
-// ── Rate limiter adaptado a registros simultáneos en campus UTA (aulas, inducción) ──
 const isIpRateLimited = createRateLimiter(60, 60_000)
-const isEmailRateLimited = createRateLimiter(3, 60_000)
+const isAccountRateLimited = createRateLimiter(3, 60_000)
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting por IP general (permite hasta 60 registros/minuto por red de campus)
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       ?? request.headers.get('x-real-ip')
       ?? 'unknown'
@@ -22,30 +21,22 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { email, password, fullName, phone, faculty, career, semester } = body
+    const {
+      mode,
+      email,
+      password,
+      fullName,
+      phone,
+      faculty,
+      career,
+      semester,
+      qrVerificationToken,
+    } = body
 
-    // ── Validación de dominio en el backend ──
-    if (!email || typeof email !== 'string') {
-      return NextResponse.json({ error: 'Correo requerido' }, { status: 400 })
-    }
-
-    const normalizedEmail = email.trim().toLowerCase()
-
-    // Rate limiting específico por correo para evitar abusos sobre una misma cuenta
-    if (isEmailRateLimited(`reg_email:${normalizedEmail}`)) {
-      return NextResponse.json(
-        { error: 'Demasiados intentos de registro para este correo. Intenta de nuevo en 1 minuto.' },
-        { status: 429 }
-      )
-    }
-
-    const emailRegex = /^[^\s@]+@uta\.edu\.ec$/i
-    if (!emailRegex.test(normalizedEmail)) {
-      return NextResponse.json(
-        { error: 'Solo se permiten correos @uta.edu.ec' },
-        { status: 403 }
-      )
-    }
+    const registerMode: 'qr' | 'email' =
+      mode === 'email' || (!qrVerificationToken && typeof email === 'string' && email.trim().length > 0)
+        ? 'email'
+        : 'qr'
 
     if (typeof password !== 'string' || password.length < 8 || password.length > 20) {
       return NextResponse.json(
@@ -54,8 +45,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Sanitizar inputs de texto
-    const safeFullName = typeof fullName === 'string' ? sanitize(fullName).slice(0, 120) : ''
     const safePhone = typeof phone === 'string' ? sanitize(phone).slice(0, 20) : ''
     const safeFaculty = typeof faculty === 'string' ? sanitize(faculty).slice(0, 120) : ''
     const safeCareer = typeof career === 'string' ? sanitize(career).slice(0, 120) : ''
@@ -71,6 +60,174 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // ── FLUJO 1: REGISTRO INMEDIATO CON CREDENCIAL DIGITAL UTA (QR -> usuario = cédula) ──
+    if (registerMode === 'qr') {
+      const verifiedQr = typeof qrVerificationToken === 'string'
+        ? verifyQrVerificationToken(qrVerificationToken)
+        : null
+
+      if (!verifiedQr) {
+        return NextResponse.json(
+          {
+            error: 'Debes validar primero el código QR de tu Credencial Digital UTA vigente.',
+            code: 'QR_REQUIRED',
+          },
+          { status: 400 }
+        )
+      }
+
+      if (isAccountRateLimited(`reg_qr:${verifiedQr.cedulaHash}`)) {
+        return NextResponse.json(
+          { error: 'Demasiados intentos para esta credencial. Intenta de nuevo en 1 minuto.' },
+          { status: 429 }
+        )
+      }
+
+      if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        return NextResponse.json(
+          { error: 'Servicio de registro por QR no configurado en el servidor.' },
+          { status: 500 }
+        )
+      }
+
+      const serviceClient = createServiceClient()
+      const { data: existingCedula, error: cedulaLookupErr } = await serviceClient
+        .from('profiles')
+        .select('id')
+        .eq('cedula_hash', verifiedQr.cedulaHash)
+        .maybeSingle()
+
+      if (cedulaLookupErr) {
+        console.error('Error verificando unicidad de cédula en registro QR:', cedulaLookupErr.message)
+        return NextResponse.json(
+          { error: 'No se pudo validar la unicidad de tu cédula. Intenta de nuevo.' },
+          { status: 500 }
+        )
+      }
+
+      if (existingCedula?.id) {
+        return NextResponse.json(
+          {
+            error: 'Esta cédula ya se encuentra registrada en otra cuenta de U-Market.',
+            code: 'CEDULA_EXISTS',
+          },
+          { status: 409 }
+        )
+      }
+
+      const officialFullName = sanitize(verifiedQr.officialName).slice(0, 120)
+      const qrAuthEmail = buildQrSyntheticAuthEmail(verifiedQr.cedulaHash)
+      const now = new Date().toISOString()
+
+      const { data: createdAuth, error: createAuthErr } = await serviceClient.auth.admin.createUser({
+        email: qrAuthEmail,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: officialFullName,
+          phone: safePhone,
+          faculty: safeFaculty || null,
+          semester: safeSemester || null,
+          auth_method: 'qr',
+        },
+      })
+
+      if (createAuthErr || !createdAuth?.user) {
+        const msg = createAuthErr?.message?.toLowerCase() || ''
+        if (msg.includes('already') || createAuthErr?.code === 'email_exists') {
+          return NextResponse.json(
+            {
+              error: 'Esta cédula ya se encuentra registrada en otra cuenta de U-Market.',
+              code: 'CEDULA_EXISTS',
+            },
+            { status: 409 }
+          )
+        }
+        console.error('Error creando usuario por QR:', createAuthErr?.message)
+        return NextResponse.json(
+          { error: 'No se pudo completar el registro con tu credencial UTA.' },
+          { status: 400 }
+        )
+      }
+
+      const { error: profileUpsertErr } = await serviceClient
+        .from('profiles')
+        .upsert({
+          id: createdAuth.user.id,
+          full_name: officialFullName,
+          email: null,
+          phone: safePhone || null,
+          faculty: safeFaculty || null,
+          semester: safeSemester || null,
+          role: 'buyer',
+          is_active: true,
+          cedula_hash: verifiedQr.cedulaHash,
+          is_verified: true,
+          verification_status: 'approved',
+          verification_rejected_reason: null,
+          verified_at: now,
+          verification_submitted_at: now,
+        }, { onConflict: 'id' })
+
+      if (profileUpsertErr) {
+        await serviceClient.auth.admin.deleteUser(createdAuth.user.id).catch(() => {})
+        if (profileUpsertErr.code === '23505') {
+          return NextResponse.json(
+            {
+              error: 'Esta cédula ya se encuentra registrada en otra cuenta de U-Market.',
+              code: 'CEDULA_EXISTS',
+            },
+            { status: 409 }
+          )
+        }
+        console.error('Error guardando perfil tras registro QR:', profileUpsertErr.message)
+        return NextResponse.json(
+          { error: 'No se pudo guardar tu perfil estudiantil.' },
+          { status: 500 }
+        )
+      }
+
+      const supabase = await createClient()
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email: qrAuthEmail,
+        password,
+      })
+
+      return NextResponse.json({
+        success: true,
+        mode: 'qr',
+        hasSession: !signInErr,
+      })
+    }
+
+    // ── FLUJO 2: REGISTRO CLÁSICO POR CORREO INSTITUCIONAL (@uta.edu.ec + OTP) ──
+    if (!email || typeof email !== 'string') {
+      return NextResponse.json({ error: 'Correo requerido' }, { status: 400 })
+    }
+
+    const normalizedEmail = email.trim().toLowerCase()
+    if (isAccountRateLimited(`reg_email:${normalizedEmail}`)) {
+      return NextResponse.json(
+        { error: 'Demasiados intentos de registro para este correo. Intenta de nuevo en 1 minuto.' },
+        { status: 429 }
+      )
+    }
+
+    if (isSyntheticQrEmail(normalizedEmail) || !/^[^\s@]+@uta\.edu\.ec$/i.test(normalizedEmail)) {
+      return NextResponse.json(
+        { error: 'Solo se permiten correos @uta.edu.ec' },
+        { status: 403 }
+      )
+    }
+
+    const safeFullName = typeof fullName === 'string' ? sanitize(fullName).slice(0, 120) : ''
+    if (safeFullName.length < 3) {
+      return NextResponse.json(
+        { error: 'Ingresa tu nombre completo' },
+        { status: 400 }
+      )
+    }
+
     if (isMailerConfigured() && process.env.SUPABASE_SERVICE_ROLE_KEY) {
       const serviceClient = createServiceClient()
       const userMetadata = {
@@ -78,6 +235,7 @@ export async function POST(request: NextRequest) {
         phone: safePhone,
         faculty: safeFaculty || null,
         semester: safeSemester || null,
+        auth_method: 'email',
       }
 
       let targetUserId: string | undefined
@@ -109,15 +267,14 @@ export async function POST(request: NextRequest) {
           .maybeSingle()
 
         if (!existingProfile?.id) {
-          return NextResponse.json({ error: 'Este correo ya está registrado' }, { status: 409 })
+          return NextResponse.json({ error: 'Este correo ya está registrado', code: 'EMAIL_EXISTS' }, { status: 409 })
         }
 
         const { data: existingAuth } = await serviceClient.auth.admin.getUserById(existingProfile.id)
         if (!existingAuth?.user || existingAuth.user.email_confirmed_at) {
-          return NextResponse.json({ error: 'Este correo ya está registrado' }, { status: 409 })
+          return NextResponse.json({ error: 'Este correo ya está registrado', code: 'EMAIL_EXISTS' }, { status: 409 })
         }
 
-        // Cuenta aún sin confirmar: actualizar contraseña/datos y reenviar nuevo OTP vía SMTP propio
         const { error: updateErr } = await serviceClient.auth.admin.updateUserById(existingAuth.user.id, {
           password,
           user_metadata: userMetadata,
@@ -186,12 +343,10 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      return NextResponse.json({ success: true, userId: targetUserId, otpType })
+      return NextResponse.json({ success: true, mode: 'email', userId: targetUserId, otpType })
     }
 
     const supabase = await createClient()
-
-    // Crear usuario en Supabase Auth (respaldo si no hay mailer SMTP configurado)
     const { data, error } = await supabase.auth.signUp({
       email: normalizedEmail,
       password,
@@ -201,6 +356,7 @@ export async function POST(request: NextRequest) {
           phone: safePhone,
           faculty: safeFaculty || null,
           semester: safeSemester || null,
+          auth_method: 'email',
         },
       },
     })
@@ -208,15 +364,13 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Registration failed:', error.message)
       if (error.message.includes('already registered') || error.message.includes('User already registered')) {
-        return NextResponse.json({ error: 'Este correo ya está registrado' }, { status: 409 })
+        return NextResponse.json({ error: 'Este correo ya está registrado', code: 'EMAIL_EXISTS' }, { status: 409 })
       }
       return NextResponse.json({ error: error.message || 'Error al procesar el registro' }, { status: 400 })
     }
 
-    // Supabase devuelve usuario con identities vacío cuando el correo ya existe
-    // en lugar de lanzar un error (comportamiento de "email enumeration protection")
     if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
-      return NextResponse.json({ error: 'Este correo ya está registrado' }, { status: 409 })
+      return NextResponse.json({ error: 'Este correo ya está registrado', code: 'EMAIL_EXISTS' }, { status: 409 })
     }
 
     if (data.user) {
@@ -242,8 +396,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, userId: data.user?.id, otpType: 'signup' })
-  } catch {
+    return NextResponse.json({ success: true, mode: 'email', userId: data.user?.id, otpType: 'signup' })
+  } catch (err) {
+    console.error('Registration endpoint error:', err)
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }

@@ -7,11 +7,12 @@ import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types'
 import { UTA_FACULTY_CAREERS, SEMESTERS } from '@/types'
 import { useImageUpload } from '@/hooks/useImageUpload'
-import { detectFace } from '@/lib/utils'
+import { detectFace, isSyntheticQrEmail } from '@/lib/utils'
 import { deleteOwnAccountAction } from '@/actions/account'
-import { submitVerificationAction, getFeatureFlagAction } from '@/actions/verification'
+import { submitVerificationAction, verifyStudentQrAction, getFeatureFlagAction } from '@/actions/verification'
 import VerifiedBadge from '@/components/VerifiedBadge'
 import Icon from '@/components/Icon'
+import UtaCredentialQrPicker from '@/components/UtaCredentialQrPicker'
 import { computeReputation } from '@/lib/reputation'
 
 export default function ProfilePage() {
@@ -35,12 +36,12 @@ export default function ProfilePage() {
   const [credentialFile, setCredentialFile] = useState<File | null>(null)
   const [credentialPreview, setCredentialPreview] = useState<string>('')
   const [submittingVerification, setSubmittingVerification] = useState(false)
+  const [verifyingQr, setVerifyingQr] = useState(false)
   const [verificationSuccess, setVerificationSuccess] = useState('')
   const [verificationError, setVerificationError] = useState('')
   const [badgeNotice, setBadgeNotice] = useState('')
   const [activeListingCount, setActiveListingCount] = useState(0)
   const [bookListingCount, setBookListingCount] = useState(0)
-  const credentialInputRef = useRef<HTMLInputElement>(null)
 
   const {
     newFiles,
@@ -108,23 +109,45 @@ export default function ProfilePage() {
     fetchProfile()
   }, [router, supabase])
 
-  const handleCredentialFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? [])
-    if (!files.length) return
-    const file = files[0]
+  const handleProfileQrDecoded = async (qrUrl: string, file?: File) => {
+    setVerifyingQr(true)
     setVerificationError('')
     setVerificationSuccess('')
-    
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp']
-    if (!validTypes.includes(file.type.toLowerCase())) {
-      setVerificationError('Formato no válido. Sube una captura en formato JPG, PNG o WEBP.')
-      return
-    }
-    if (file.size > 8 * 1024 * 1024) {
-      setVerificationError('La imagen es muy pesada (máx 8MB).')
-      return
-    }
 
+    try {
+      const res = await verifyStudentQrAction(qrUrl)
+      if (res.success) {
+        setVerificationSuccess('¡Estudiante verificado al instante mediante código QR oficial de la UTA!')
+        setProfile(prev => prev ? {
+          ...prev,
+          full_name: res.officialName || prev.full_name,
+          is_verified: true,
+          verification_status: 'approved',
+          verification_rejected_reason: null,
+        } : null)
+        if (res.officialName) setFullName(res.officialName)
+        setCredentialFile(null)
+        setCredentialPreview('')
+        return
+      }
+
+      if (res.needManualReview && file) {
+        setCredentialFile(file)
+        setCredentialPreview(URL.createObjectURL(file))
+      }
+      setVerificationError(res.error || 'No se pudo verificar la credencial con el código QR.')
+    } catch {
+      setVerificationError('Error al validar el código QR con el servidor de la UTA.')
+    } finally {
+      setVerifyingQr(false)
+    }
+  }
+
+  const handleProfileFileFallback = (file: File) => {
+    setVerificationError(
+      'No se pudo leer el código QR automáticamente en esta imagen. Puedes enviarla para revisión manual del equipo.'
+    )
+    setVerificationSuccess('')
     setCredentialFile(file)
     setCredentialPreview(URL.createObjectURL(file))
   }
@@ -385,11 +408,11 @@ export default function ProfilePage() {
                   type="text"
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
-                  readOnly={hasLockedAcademicData}
-                  disabled={hasLockedAcademicData}
+                  readOnly={hasLockedAcademicData || Boolean(profile?.is_verified)}
+                  disabled={hasLockedAcademicData || Boolean(profile?.is_verified)}
                   className="input-field"
                   placeholder="Tu nombre y apellido"
-                  style={hasLockedAcademicData ? lockedFieldStyle : undefined}
+                  style={(hasLockedAcademicData || profile?.is_verified) ? lockedFieldStyle : undefined}
                   required
                 />
               </div>
@@ -412,11 +435,11 @@ export default function ProfilePage() {
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
-                  Correo institucional
+                  {isSyntheticQrEmail(email || profile?.email) ? 'Acceso de cuenta' : 'Correo institucional'}
                 </label>
                 <input
                   type="text"
-                  value={email || profile?.email || ''}
+                  value={isSyntheticQrEmail(email || profile?.email) ? 'Ingreso por Cédula (Credencial Digital UTA)' : (email || profile?.email || '')}
                   readOnly
                   disabled
                   className="input-field"
@@ -543,7 +566,7 @@ export default function ProfilePage() {
             </form>
             
             {/* Módulo de Verificación Estudiantil con Carnet UTA */}
-            {verificationEnabled && (
+            {(verificationEnabled || profile?.is_verified) && (
               <div id="verificacion-uta" style={{ marginTop: '2.5rem', paddingTop: '1.75rem', borderTop: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: 8 }}>
                   <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -567,7 +590,7 @@ export default function ProfilePage() {
                 </div>
 
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                  Obtén la <strong>insignia oficial de verificación</strong> subiendo una captura de tu <strong>credencial digital UTA</strong> (carnet universitario). Tu perfil generará mayor confianza y tus publicaciones tendrán mayor visibilidad en el campus.
+                  Obtén la <strong>insignia oficial de verificación al instante</strong> escaneando o subiendo tu <strong>credencial digital UTA</strong> (el QR valida tu matrícula vigente y previene cuentas duplicadas por cédula).
                 </p>
 
                 {profile?.is_verified ? (
@@ -650,15 +673,6 @@ export default function ProfilePage() {
                       </div>
                     )}
 
-                    <input
-                      ref={credentialInputRef}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      onChange={handleCredentialFileChange}
-                      style={{ display: 'none' }}
-                      id="credential-upload-input"
-                    />
-
                     {credentialPreview ? (
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -677,12 +691,12 @@ export default function ProfilePage() {
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
                           <button
                             type="button"
-                            onClick={() => { setCredentialFile(null); setCredentialPreview(''); if (credentialInputRef.current) credentialInputRef.current.value = '' }}
+                            onClick={() => { setCredentialFile(null); setCredentialPreview(''); setVerificationError('') }}
                             className="btn-secondary"
                             disabled={submittingVerification}
                             style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
                           >
-                            Cambiar imagen
+                            Volver / reintentar QR
                           </button>
                           <button
                             type="button"
@@ -698,38 +712,20 @@ export default function ProfilePage() {
                               </span>
                             ) : (
                               <>
-                                <Icon name="send" size={14} /> Enviar credencial para verificación
+                                <Icon name="send" size={14} /> Enviar credencial para verificación manual
                               </>
                             )}
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => credentialInputRef.current?.click()}
-                        style={{
-                          background: 'rgba(0, 52, 94, 0.04)',
-                          border: '2px dashed rgba(0, 52, 94, 0.25)',
-                          borderRadius: 14,
-                          padding: '1.5rem',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 8,
-                          cursor: 'pointer',
-                          color: 'var(--text-secondary)',
-                          transition: 'all 0.2s ease',
-                          width: '100%',
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#00345e'; e.currentTarget.style.background = 'rgba(0, 52, 94, 0.08)' }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0, 52, 94, 0.25)'; e.currentTarget.style.background = 'rgba(0, 52, 94, 0.04)' }}
-                      >
-                        <Icon name="idCard" size={32} style={{ color: '#00345e' }} />
-                        <strong style={{ color: '#00345e', fontSize: '0.9rem' }}>Subir captura de Credencial Digital UTA</strong>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Formatos JPG, PNG o WEBP (máx. 8MB)</span>
-                      </button>
+                      <UtaCredentialQrPicker
+                        onQrDecoded={handleProfileQrDecoded}
+                        onFileWithoutQr={handleProfileFileFallback}
+                        busy={verifyingQr}
+                        title="Verificar al instante con tu Carnet Digital UTA"
+                        subtitle="Sube una captura del carnet o escanea el QR con la cámara. Si el QR es legible, tu cuenta se verifica al momento."
+                      />
                     )}
 
                     {verificationError && (

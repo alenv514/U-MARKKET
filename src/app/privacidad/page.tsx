@@ -82,7 +82,7 @@ export default function PrivacidadPage() {
                   3. Categorías de Datos Recopilados
                 </h2>
                 <ul style={{ paddingLeft: '1.25rem', color: 'rgba(255, 255, 255, 0.55)', fontSize: '0.85rem' }}>
-                  <li><strong>Datos de Identificación y Contacto:</strong> Nombre completo, correo electrónico institucional (<code>@uta.edu.ec</code>), número de teléfono/WhatsApp (opcional) y avatar o foto de perfil.</li>
+                  <li><strong>Datos de Identificación y Contacto:</strong> Nombre completo, correo electrónico institucional (<code>@uta.edu.ec</code>), hash criptográfico irreversible de validación estudiantil (derivado de la cédula tras verificar el QR de la Credencial Digital UTA, sin guardar la cédula en texto plano), número de teléfono/WhatsApp (opcional) y avatar o foto de perfil.</li>
                   <li><strong>Datos Académicos:</strong> Facultad, carrera universitaria y semestre en curso para verificar tu condición estudiantil.</li>
                   <li><strong>Datos de Actividad Comercial:</strong> Títulos, descripciones, categorías, precios y fotografías de los productos o servicios que decidas publicar.</li>
                   <li><strong>Mensajes:</strong> Comunicaciones internas enviadas a través del chat de la plataforma con fines exclusivos de coordinación de compraventa.</li>

@@ -1,3 +1,10 @@
+export const QR_AUTH_EMAIL_DOMAIN = '@qr.umarket.ec'
+
+/** Indica si el correo interno de Auth corresponde a una cuenta registrada mediante QR UTA (cédula como usuario). */
+export function isSyntheticQrEmail(email?: string | null): boolean {
+  return Boolean(email && email.trim().toLowerCase().endsWith(QR_AUTH_EMAIL_DOMAIN))
+}
+
 /** Elimina tags HTML y atributos maliciosos para prevenir XSS almacenado. */
 export function sanitize(val: string): string {
   if (!val) return ''

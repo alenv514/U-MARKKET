@@ -88,7 +88,8 @@ export default function TerminosPage() {
                   Al registrarte en U-Market, otorgas tu <strong>consentimiento libre, específico, inequívoco e informado</strong>, en conformidad con la <strong>Ley Orgánica de Protección de Datos Personales (LOPDP)</strong> del Ecuador, para que la plataforma recopile, almacene y procese los siguientes datos:
                 </p>
                 <ul style={{ paddingLeft: '1.25rem', marginBottom: '0.6rem', color: 'rgba(255, 255, 255, 0.55)', fontSize: '0.85rem' }}>
-                  <li>Nombre completo y correo institucional (<code>@uta.edu.ec</code>).</li>
+                  <li>Nombre completo oficial y correo institucional (<code>@uta.edu.ec</code>).</li>
+                  <li>Validación institucional de credencial digital UTA mediante código QR (<code>verificarcarnet.uta.edu.ec</code>), registrando únicamente un identificador criptográfico hash irreversible derivado de la cédula para evitar duplicidad de cuentas (sin almacenar la cédula en texto plano).</li>
                   <li>Facultad, carrera universitaria y semestre en curso.</li>
                   <li>Número de contacto telefónico/WhatsApp y fotografía de perfil (si son proporcionados).</li>
                   <li>Contenido e imágenes de las publicaciones y mensajes dentro del chat interno.</li>
@@ -104,7 +105,7 @@ export default function TerminosPage() {
                   3. Cuentas y Verificación Estudiantil
                 </h2>
                 <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                  El servicio está destinado a la comunidad de la Universidad Técnica de Ambato (UTA). Requiere registro mediante un correo institucional activo (<code style={{ color: '#93c5fd' }}>@uta.edu.ec</code>). El usuario es responsable de mantener la confidencialidad de sus credenciales y de la veracidad de los datos académicos ingresados.
+                  El servicio está destinado a la comunidad de la Universidad Técnica de Ambato (UTA). Requiere registro mediante Credencial Digital UTA vigente (código QR) o correo institucional activo (<code style={{ color: '#93c5fd' }}>@uta.edu.ec</code>). El usuario es responsable de mantener la confidencialidad de sus credenciales y de la veracidad de los datos académicos ingresados.
                 </p>
               </div>
 

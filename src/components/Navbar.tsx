@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { isSyntheticQrEmail } from '@/lib/utils'
 import type { User } from '@supabase/supabase-js'
 import PushManager from './PushManager'
 import { NavLink, LightbulbIcon, QuestionIcon, DownloadIcon, ShieldIcon } from './navbar/NavLinks'
@@ -24,6 +25,7 @@ interface NavigatorWithStandalone extends Navigator {
 export default function Navbar() {
   const [user, setUser] = useState<User | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [profileInitial, setProfileInitial] = useState<string | null>(null)
   const [unreadCount, setUnreadCount] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
   const [showSuggestModal, setShowSuggestModal] = useState(false)
@@ -105,8 +107,9 @@ export default function Navbar() {
 
   useEffect(() => {
     const fetchProfileData = async (userId: string) => {
-      const { data } = await supabase.from('profiles').select('avatar_url, role').eq('id', userId).single()
+      const { data } = await supabase.from('profiles').select('avatar_url, role, full_name').eq('id', userId).single()
       if (data?.avatar_url) setAvatarUrl(data.avatar_url)
+      if (data?.full_name) setProfileInitial(data.full_name.trim()[0]?.toUpperCase() || null)
       if (data?.role === 'admin') {
         setIsAdmin(true)
         setIsModerator(false)
@@ -131,6 +134,7 @@ export default function Navbar() {
       if (session?.user) fetchProfileData(session.user.id)
       else {
         setAvatarUrl(null)
+        setProfileInitial(null)
         setIsAdmin(false)
         setIsModerator(false)
       }
@@ -414,7 +418,7 @@ export default function Navbar() {
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
                     ) : (
-                      user.email?.[0].toUpperCase()
+                      profileInitial || (!isSyntheticQrEmail(user.email) ? user.email?.[0]?.toUpperCase() : 'U') || 'U'
                     )}
                   </div>
                 </Link>

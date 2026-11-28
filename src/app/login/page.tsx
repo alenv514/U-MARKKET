@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Icon from '@/components/Icon'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -45,7 +45,7 @@ export default function LoginPage() {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ identifier, password }),
     })
     const result = await res.json()
 
@@ -56,9 +56,9 @@ export default function LoginPage() {
         startCooldown()
         setError('Demasiados intentos. Espera 1 minuto antes de intentar de nuevo.')
       } else if (errMsg.includes('confirm') || errMsg.includes('verified')) {
-        setError('Por favor, confirma tu correo electrónico usando el enlace enviado a tu bandeja de entrada.')
+        setError('Por favor, confirma tu correo electrónico usando el enlace o código enviado a tu bandeja.')
       } else {
-        setError('Correo o contraseña incorrectos')
+        setError('Cédula/correo o contraseña incorrectos')
       }
       setLoading(false)
       return
@@ -97,17 +97,17 @@ export default function LoginPage() {
 
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
-                Correo institucional
+                Cédula o Correo institucional
               </label>
               <input
                 id="login-email"
-                type="email"
-                placeholder="nombre@uta.edu.ec"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
+                type="text"
+                placeholder="180XXXXXXX o nombre@uta.edu.ec"
+                value={identifier}
+                onChange={e => setIdentifier(e.target.value)}
                 className="input-field"
                 required
-                autoComplete="email"
+                autoComplete="username"
               />
             </div>
 
